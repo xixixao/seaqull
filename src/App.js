@@ -18,6 +18,7 @@ function App() {
   const [nodeState, setNodeState] = useImmer({
     nodes: {
       0: { type: FromNode, id: 0, name: null },
+      1: { type: FromNode, id: 1, name: null },
     },
     selectedNodeID: 0,
   });
@@ -40,18 +41,30 @@ function App() {
           height: "100%",
         }}
       >
-        <div style={{ background: "#ddd", height: "65%", padding: 4 }}>
-          {nodeList(nodeState).map((node) => {
-            const { Component } = node.type;
-            return (
-              <Component
-                key={node.id}
-                node={node}
-                nodeState={nodeState}
-                setNodeState={setNodeState}
-              />
-            );
-          })}
+        <div
+          style={{
+            background: "#eff2f5",
+            height: "65%",
+            padding: 4,
+            display: "flex",
+            borderBottom: "1px solid gray",
+          }}
+        >
+          {nodeLists(nodeState).map((nodeList) => (
+            <div>
+              {nodeList.map((node) => {
+                const { Component } = node.type;
+                return (
+                  <Component
+                    key={node.id}
+                    node={node}
+                    nodeState={nodeState}
+                    setNodeState={setNodeState}
+                  />
+                );
+              })}
+            </div>
+          ))}
         </div>
         <div style={{ padding: 8 }}>
           <Table nodeState={nodeState} setNodeState={setNodeState} />
@@ -61,14 +74,18 @@ function App() {
   );
 }
 
-function nodeList(nodeState) {
-  let parent = nodeState.nodes[0];
-  const list = [parent];
-  while (parent.child != null) {
-    parent = nodeState.nodes[parent.child];
-    list.push(parent);
-  }
-  return list;
+function nodeLists(nodeState) {
+  return Object.values(nodeState.nodes)
+    .filter((node) => node.type === FromNode)
+    .map((fromNode) => {
+      let parent = fromNode;
+      const list = [parent];
+      while (parent.child != null) {
+        parent = nodeState.nodes[parent.child];
+        list.push(parent);
+      }
+      return list;
+    });
 }
 
 const DeletedNode = {
@@ -97,28 +114,24 @@ const FromNode = {
   name: "FromNode",
   Component({ node, nodeState, setNodeState, setTable }) {
     const { id, name } = node;
-    const { selectedNodeID } = nodeState;
-    const isSelected = id === selectedNodeID;
     return (
-      <div>
-        <Box isSelected={isSelected}>
-          <Selectable node={node} setNodeState={setNodeState}>
-            FROM{" "}
-            <Input
-              focused
-              value={name}
-              onChange={(name) => {
-                setNodeState((nodeState) => {
-                  nodeState.nodes[id].name = name;
-                });
-              }}
-            />
-          </Selectable>
-        </Box>
-        {name?.length > 0 && isSelected ? (
-          <Tools selectedNodeID={selectedNodeID} setNodeState={setNodeState} />
-        ) : null}
-      </div>
+      <NodeUI
+        node={node}
+        nodeState={nodeState}
+        showTools={name?.length > 0}
+        setNodeState={setNodeState}
+      >
+        FROM{" "}
+        <Input
+          focused
+          value={name}
+          onChange={(name) => {
+            setNodeState((nodeState) => {
+              nodeState.nodes[id].name = name;
+            });
+          }}
+        />
+      </NodeUI>
     );
   },
   data(nodeState, { name }) {
@@ -144,25 +157,19 @@ const FromNode = {
 const SelectNode = {
   name: "SelectNode",
   Component({ node, nodeState, setNodeState, setTable }) {
-    const { id } = node;
-    const { selectedNodeID } = nodeState;
-    const isSelected = id === selectedNodeID;
     const selectedColumnNames = SelectNode.columnNames(nodeState, node);
     return (
-      <div>
-        <Box isSelected={isSelected}>
-          <Selectable node={node} setNodeState={setNodeState}>
-            SELECT{" "}
-            {(node.selectedColumnNames ?? []).length > 0
-              ? selectedColumnNames.join(", ")
-              : "*"}{" "}
-          </Selectable>
-          <DeleteNodeButton node={node} setNodeState={setNodeState} />
-        </Box>
-        {isSelected ? (
-          <Tools selectedNodeID={selectedNodeID} setNodeState={setNodeState} />
-        ) : null}
-      </div>
+      <NodeUI
+        node={node}
+        nodeState={nodeState}
+        showTools={true}
+        setNodeState={setNodeState}
+      >
+        SELECT{" "}
+        {(node.selectedColumnNames ?? []).length > 0
+          ? selectedColumnNames.join(", ")
+          : "*"}{" "}
+      </NodeUI>
     );
   },
   data(nodeState, { source }) {
@@ -227,21 +234,16 @@ const SelectNode = {
 const WhereNode = {
   name: "WhereNode",
   Component({ node, nodeState, setNodeState, setTable }) {
-    const { selectedNodeID } = nodeState;
-    const { id, filters } = node;
-    const isSelected = id === selectedNodeID;
+    const { filters } = node;
     return (
-      <div>
-        <Box isSelected={isSelected}>
-          <Selectable node={node} setNodeState={setNodeState}>
-            WHERE {"id > 4 AND dau = 0"}
-          </Selectable>{" "}
-          <DeleteNodeButton node={node} setNodeState={setNodeState} />
-        </Box>
-        {isSelected ? (
-          <Tools selectedNodeID={selectedNodeID} setNodeState={setNodeState} />
-        ) : null}
-      </div>
+      <NodeUI
+        node={node}
+        nodeState={nodeState}
+        showTools={true}
+        setNodeState={setNodeState}
+      >
+        WHERE {"id > 4 AND dau = 0"}
+      </NodeUI>
     );
   },
   data(nodeState, { source }) {
@@ -265,25 +267,19 @@ const WhereNode = {
 };
 
 function GroupNodeComponent({ node, nodeState, setNodeState, setTable }) {
-  const { id } = node;
-  const { selectedNodeID } = nodeState;
-  const isSelected = id === selectedNodeID;
   const selectedColumnNames = SelectNode.columnNames(nodeState, node);
   return (
-    <div>
-      <Box isSelected={isSelected}>
-        <Selectable node={node} setNodeState={setNodeState}>
-          GROUP BY{" "}
-          {(node.selectedColumnNames ?? []).length > 0
-            ? selectedColumnNames.join(", ")
-            : "∅"}{" "}
-        </Selectable>
-        <DeleteNodeButton node={node} setNodeState={setNodeState} />
-      </Box>
-      {isSelected ? (
-        <Tools selectedNodeID={selectedNodeID} setNodeState={setNodeState} />
-      ) : null}
-    </div>
+    <NodeUI
+      node={node}
+      nodeState={nodeState}
+      showTools={true}
+      setNodeState={setNodeState}
+    >
+      GROUP BY{" "}
+      {(node.selectedColumnNames ?? []).length > 0
+        ? selectedColumnNames.join(", ")
+        : "∅"}{" "}
+    </NodeUI>
   );
 }
 
@@ -299,7 +295,6 @@ const GroupNode = {
         return [i, Array.from(new Set(rows.map((row) => row[i])))];
       })
     );
-    console.log(uniqueValues);
     return produce(rows, (rows) => {
       rows.forEach((row, j) => {
         row.forEach((_, i) => {
@@ -389,20 +384,17 @@ const OrderNode = {
           " DESC"
         : null;
     return (
-      <div>
-        <Box isSelected={isSelected}>
-          <Selectable node={node} setNodeState={setNodeState}>
-            ORDER BY
-            {ascClause}
-            {descClause}
-            {ascClause == null && descClause == null ? "∅" : ""}{" "}
-          </Selectable>
-          <DeleteNodeButton node={node} setNodeState={setNodeState} />
-        </Box>
-        {isSelected ? (
-          <Tools selectedNodeID={selectedNodeID} setNodeState={setNodeState} />
-        ) : null}
-      </div>
+      <NodeUI
+        node={node}
+        nodeState={nodeState}
+        showTools={true}
+        setNodeState={setNodeState}
+      >
+        ORDER BY
+        {ascClause}
+        {descClause}
+        {ascClause == null && descClause == null ? "∅" : ""}{" "}
+      </NodeUI>
     );
   },
   data(nodeState, { source, columnToOrder }) {
@@ -478,6 +470,24 @@ const OrderNode = {
   },
 };
 
+function NodeUI({ node, nodeState, showTools, setNodeState, children }) {
+  const { selectedNodeID } = nodeState;
+  const isSelected = node.id === selectedNodeID;
+  return (
+    <div>
+      <Box isSelected={isSelected}>
+        <Selectable node={node} setNodeState={setNodeState}>
+          {children}
+        </Selectable>
+      </Box>
+      <DeleteNodeButton node={node} setNodeState={setNodeState} />
+      {isSelected && showTools ? (
+        <Tools selectedNodeID={selectedNodeID} setNodeState={setNodeState} />
+      ) : null}
+    </div>
+  );
+}
+
 function Selectable({ node, children, setNodeState }) {
   return (
     <span
@@ -495,6 +505,7 @@ function Selectable({ node, children, setNodeState }) {
 function DeleteNodeButton({ node: { id, source }, setNodeState }) {
   return (
     <Button
+      style={{ fontSize: 12 }}
       onClick={() => {
         setNodeState((nodeState) => {
           nodeState.nodes[id].type = DeletedNode;
@@ -507,7 +518,7 @@ function DeleteNodeButton({ node: { id, source }, setNodeState }) {
         });
       }}
     >
-      🗑
+      ×
     </Button>
   );
 }
@@ -572,11 +583,12 @@ function Box(props) {
     <div
       style={{
         display: "inline-block",
-        border: `${props.isSelected ? 3 : 1}px solid ${
-          props.isSelected ? "#cf0" : "black"
-        }`,
-        padding: props.isSelected ? 1 : 3,
-        background: "white",
+        borderRadius: 4,
+        boxShadow: "rgb(201 204 209) 0px 0px 0px 1px",
+        boxSizing: "border-box",
+        padding: "2px 8px",
+        margin: "0 4px 2px 0",
+        background: props.isSelected ? "#e7f2fd" : "white",
       }}
     >
       {props.children}
@@ -742,12 +754,14 @@ function Button(props) {
     <div
       className="button"
       style={{
-        background: "white",
+        ...(props.style ?? {}),
+        background: "rgb(228, 230, 235)",
         display: "inline-block",
-        border: "1px solid black",
-        borderRadius: 4,
-        padding: "0 2px",
+        // border: "1px solid black",
+        borderRadius: 6,
+        padding: "2px 4px",
         cursor: "pointer",
+        margin: "0 2px 2px 0",
       }}
       onClick={props.onClick}
     >
