@@ -118,17 +118,11 @@ const DeletedNode = {
   query(nodeState, { source }) {
     return getQuery(nodeState, source);
   },
-  rowColumnOrdering(nodeState, { source }) {
-    return getRowColumnOrdering(nodeState, source);
+  queryAdditionalValues(nodeState, { source }) {
+    return getQueryAdditionalValues(nodeState, source);
   },
   columnNames(nodeState, { source }) {
     return getColumnNames(nodeState, source);
-  },
-  availableColumnNamesSet(nodeState, { source }) {
-    return new Set(getColumnNames(nodeState, source));
-  },
-  allColumnNames(nodeState, { source }) {
-    return getAllColumnNames(nodeState, source);
   },
 };
 
@@ -165,12 +159,6 @@ const FromNode = {
   columnNames() {
     return COLUMNS.map(([column]) => column);
   },
-  // availableColumnNamesSet(nodeState, node) {
-  //   return new Set(node.type.columnNames());
-  // },
-  // allColumnNames(nodeState, node) {
-  //   return node.type.columnNames();
-  // },
   columnControl() {
     return null;
   },
@@ -262,31 +250,6 @@ const SelectNode = {
       ? node.selectedColumnNames
       : getColumnNames(nodeState, node.source);
   },
-  // columnNames(nodeState, node) {
-  //   const { selectedColumnNames } = node;
-  //   const selectedColumnNamesNotNull = selectedColumnNames ?? [];
-  //   const availableColumnNamesSet = SelectNode.availableColumnNamesSet(
-  //     nodeState,
-  //     node
-  //   );
-  //   return selectedColumnNamesNotNull.length === 0
-  //     ? getColumnNames(nodeState, node.source)
-  //     : selectedColumnNamesNotNull.filter((columnName) =>
-  //         availableColumnNamesSet.has(columnName)
-  //       );
-  // },
-  // availableColumnNamesSet(nodeState, { source }) {
-  //   return new Set(getColumnNames(nodeState, source));
-  // },
-  // allColumnNames(nodeState, node) {
-  //   const selectedColumnNames = SelectNode.columnNames(nodeState, node);
-  //   const selectedColumnNamesSet = new Set(selectedColumnNames);
-  //   return selectedColumnNames.concat(
-  //     getAllColumnNames(nodeState, node.source).filter(
-  //       (column) => !selectedColumnNamesSet.has(column)
-  //     )
-  //   );
-  // },
   columnControl(nodeState, node, columnName, setNodeState) {
     // const selectableColumnNames = getColumnNames(nodeState, node.source);
     // TODO: Fix O(N^2) algo to be nlogn
@@ -318,7 +281,7 @@ const SelectNode = {
 const WhereNode = {
   name: "WhereNode",
   Component({ node, nodeState, setNodeState, setTable }) {
-    const { filters } = node;
+    // const { filters: _ } = node;
     return (
       <NodeUI
         node={node}
@@ -335,23 +298,10 @@ const WhereNode = {
     return `SELECT * from (${fromQuery}) WHERE id > 4 AND dau = 0`;
   },
   queryAdditionalValues(nodeState, { source }) {
-    const fromQuery = getQuery(nodeState, source);
-    return [
-      null,
-      // `SELECT "✓" as ✓, * from (${fromQuery}) WHERE id > 4 AND dau = 0
-      // UNION
-      // SELECT "" as ✓, *  from (${fromQuery}) WHERE NOT(id > 4 AND dau = 0)
-      // ORDER BY 1 DESC`,
-    ];
+    return [];
   },
   columnNames(nodeState, { source }) {
     return getColumnNames(nodeState, source);
-  },
-  availableColumnNamesSet(nodeState, { source }) {
-    return new Set(getColumnNames(nodeState, source));
-  },
-  allColumnNames(nodeState, { source }) {
-    return getAllColumnNames(nodeState, source);
   },
   columnControl() {
     return null;
@@ -415,29 +365,6 @@ const GroupNode = {
     return (node.selectedColumnNames ?? []).length > 0
       ? node.selectedColumnNames
       : getColumnNames(nodeState, node.source);
-    // const { selectedColumnNames } = node;
-    // const selectedColumnNamesNotNull = selectedColumnNames ?? [];
-    // const availableColumnNamesSet = SelectNode.availableColumnNamesSet(
-    //   nodeState,
-    //   node
-    // );
-    // return selectedColumnNamesNotNull.length === 0
-    //   ? getColumnNames(nodeState, node.source)
-    //   : selectedColumnNamesNotNull.filter((columnName) =>
-    //       availableColumnNamesSet.has(columnName)
-    //     );
-  },
-  availableColumnNamesSet(nodeState, { source }) {
-    return new Set(getColumnNames(nodeState, source));
-  },
-  allColumnNames(nodeState, node) {
-    const selectedColumnNames = SelectNode.columnNames(nodeState, node);
-    const selectedColumnNamesSet = new Set(selectedColumnNames);
-    return selectedColumnNames.concat(
-      getAllColumnNames(nodeState, node.source).filter(
-        (column) => !selectedColumnNamesSet.has(column)
-      )
-    );
   },
   columnControl(nodeState, node, columnName, setNodeState) {
     const selectableColumnNames = getColumnNames(nodeState, node.source);
@@ -470,43 +397,40 @@ const GroupNode = {
 const OrderNode = {
   name: "OrderNode",
   Component({ node, nodeState, setNodeState, setTable }) {
-    const { id } = node;
-    const { selectedNodeID } = nodeState;
-    const isSelected = id === selectedNodeID;
-
     return (
-      <NodeUI
+      <NodeInput
+        label="ORDER BY"
+        value={
+          Object.keys(node.columnToOrder ?? {}).length === 0
+            ? "∅"
+            : OrderNode.orderClause(node)
+        }
         node={node}
         nodeState={nodeState}
         showTools={true}
         setNodeState={setNodeState}
-      >
-        ORDER BY
-        {Object.keys(node.columnToOrder ?? {}).length === 0
-          ? "∅"
-          : OrderNode.orderClause(node)}{" "}
-      </NodeUI>
+        onChange={(orderClause) => {
+          setNodeState((nodeState) => {
+            let columnToOrder = {};
+            orderClause
+              .split(/, */)
+              .map((columnOrder) => columnOrder.split(/ +/))
+              .filter(([column]) => column !== "∅")
+              .forEach(([column, order]) => {
+                columnToOrder[column] = order ?? "ASC";
+              });
+            nodeState.nodes[node.id].columnToOrder = columnToOrder;
+          });
+        }}
+      />
     );
   },
   // TODO: Should leave the order entirely to the user
   orderClause(node) {
     const columnToOrder = node.columnToOrder ?? {};
-    const ascColumns = Object.keys(columnToOrder).filter(
-      (column) => columnToOrder[column] === "ASC"
-    );
-    const descColumns = Object.keys(columnToOrder).filter(
-      (column) => columnToOrder[column] === "DESC"
-    );
-    const ascClause =
-      ascColumns.length > 0 ? " " + ascColumns.join(", ") + " ASC" : null;
-    const descClause =
-      descColumns.length > 0
-        ? (ascClause != null ? "," : "") +
-          " " +
-          descColumns.join(", ") +
-          " DESC"
-        : null;
-    return (ascClause ?? "") + (descClause ?? "");
+    return Object.keys(columnToOrder)
+      .map((column) => `${column} ${columnToOrder[column]}`)
+      .join(", ");
   },
   query(nodeState, node) {
     const fromQuery = getQuery(nodeState, node.source);
@@ -516,14 +440,11 @@ const OrderNode = {
     return `SELECT * FROM  (${fromQuery})
     ORDER BY ${OrderNode.orderClause(node)}`;
   },
+  queryAdditionalValues() {
+    return null;
+  },
   columnNames(nodeState, { source }) {
     return getColumnNames(nodeState, source);
-  },
-  availableColumnNamesSet(nodeState, { source }) {
-    return new Set(getColumnNames(nodeState, source));
-  },
-  allColumnNames(nodeState, { source }) {
-    return getAllColumnNames(nodeState, source);
   },
   columnControl(nodeState, node, columnName, setNodeState) {
     // const selectableColumnNames = getColumnNames(nodeState, node.source);
@@ -573,6 +494,35 @@ const OrderNode = {
   },
 };
 
+function NodeInput({
+  label,
+  node,
+  nodeState,
+  value,
+  showTools,
+  setNodeState,
+  children,
+  onChange,
+}) {
+  const { selectedNodeID } = nodeState;
+  const isSelected = node.id === selectedNodeID;
+  return (
+    <NodeUI
+      node={node}
+      nodeState={nodeState}
+      showTools={showTools}
+      setNodeState={setNodeState}
+    >
+      {label}{" "}
+      <Input
+        displayValue={isSelected ? value : value.slice(0, 10) + "..."}
+        value={value}
+        onChange={onChange}
+      />
+    </NodeUI>
+  );
+}
+
 function NodeUI({ node, nodeState, showTools, setNodeState, children }) {
   const { selectedNodeID } = nodeState;
   const isSelected = node.id === selectedNodeID;
@@ -615,7 +565,6 @@ function DeleteNodeButton({ node: { id, source }, setNodeState }) {
           nodeState.nodes[id].type = DeletedNode;
         });
         setNodeState((nodeState) => {
-          console.log(original(nodeState.nodes), nodeState.selectedNodeID);
           nodeState.nodes[id].type = DeletedNode;
           if (nodeState.selectedNodeID === id) {
             const nodes = original(nodeState.nodes);
@@ -659,32 +608,14 @@ function getQuery(nodeState, id) {
   return node.type.query(nodeState, node);
 }
 
-function getQueryWhenSelected(nodeState) {
-  const node = nodeState.nodes[nodeState.selectedNodeID];
-  return node.type.queryWhenSelected(nodeState, node);
-}
-
 function getQueryAdditionalValues(nodeState) {
   const node = nodeState.nodes[nodeState.selectedNodeID];
   return node.type.queryAdditionalValues(nodeState, node);
 }
 
-function getRowColumnOrdering(nodeState, id) {
-  const node = nodeState.nodes[id];
-  return node.type.rowColumnOrdering(nodeState, node);
-}
-
 function getColumnNames(nodeState, id) {
   const node = nodeState.nodes[id];
   return node.type.columnNames(nodeState, node);
-}
-function getAvailableColumnNamesSet(nodeState, id) {
-  const node = nodeState.nodes[id];
-  return node.type.availableColumnNamesSet(nodeState, node);
-}
-function getAllColumnNames(nodeState, id) {
-  const node = nodeState.nodes[id];
-  return node.type.allColumnNames(nodeState, node);
 }
 
 function Tools({ setNodeState }) {
@@ -770,16 +701,6 @@ function Box(props) {
   );
 }
 
-function ColumnSelector() {
-  const [/* shown, */ setShown] = useState(false);
-
-  return (
-    <span style={{ cursor: "pointer" }} onClick={() => setShown(true)}>
-      <Button>∇</Button>
-    </span>
-  );
-}
-
 function Table({ nodeState, setNodeState }) {
   const [tableState, setTableState] = useState();
   const [updated, setUpdated] = useState();
@@ -840,7 +761,6 @@ function TableLoaded({
   if (selectedNode == null) {
     return null;
   }
-  console.log(table);
   const columns = table.columns.concat(
     ...additionalTables.map((table) => [""].concat(table.columns))
   );
@@ -900,7 +820,7 @@ function getSelectedNode(nodeState) {
   return nodeState.nodes[nodeState.selectedNodeID];
 }
 
-function Input({ focused, label, value, onChange: setValue }) {
+function Input({ displayValue, focused, label, value, onChange: setValue }) {
   const [edited, setEdited] = useState(focused ?? false ? "" : null);
   const [defaultValue] = useState(value);
   const inputRef = useRef();
@@ -955,7 +875,7 @@ function Input({ focused, label, value, onChange: setValue }) {
           style={{ cursor: "pointer" }}
           onClick={() => setEdited(value ?? "")}
         >
-          {value}
+          {displayValue ?? value}
         </div>
       )}
     </div>
@@ -992,7 +912,7 @@ function Button(props) {
 }
 
 function execQuery(db, sql) {
-  console.log(sql);
+  // console.log(sql);
   try {
     return db.exec(sql)[0];
   } catch (e) {
