@@ -9150,6 +9150,11 @@
   "resolved" "https://registry.npmjs.org/sprintf-js/-/sprintf-js-1.0.3.tgz"
   "version" "1.0.3"
 
+"sql.js@^1.6.2":
+  "integrity" "sha512-9iucI5fXQa+Gspeqf/BNB20PxJIn5LhXDt4mjXoFPqXdR+NqtFs15SdKpSIJ6s529aGL9zFR9p2eSCIEiMsNGA=="
+  "resolved" "https://registry.npmjs.org/sql.js/-/sql.js-1.6.2.tgz"
+  "version" "1.6.2"
+
 "sshpk@^1.7.0":
   "resolved" "https://registry.npmjs.org/sshpk/-/sshpk-1.16.1.tgz"
   "version" "1.16.1"
