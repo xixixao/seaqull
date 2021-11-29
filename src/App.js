@@ -93,7 +93,7 @@ function Content() {
 
   return (
     <ElementsContext.Provider value={[nodeState, setNodeState]}>
-      <div style={{ padding: "0 4px 4px" }}>
+      {/* <div style={{ padding: "0 4px 4px" }}>
         <Input label="namespace" value={namespace} onChange={setNamespace} />
         <HorizontalSpace />
         <Input
@@ -102,7 +102,7 @@ function Content() {
           onChange={setNotebookName}
         />
         <HorizontalSpace />
-      </div>
+      </div> */}
       <div
         style={{
           display: "flex",
@@ -136,16 +136,21 @@ function NodesPane({ nodeState, setNodeState }) {
   //   const onElementsRemove = (elementsToRemove) =>
   //     setElements((els) => removeElements(elementsToRemove, els));
   // const onConnect = (params) => setElements((els) => addEdge(params, els));
+  const updateNodePosDiff = useStoreActions(
+    (actions) => actions.updateNodePosDiff
+  );
   return (
     <ReactFlow
       elements={nodeState.nodes}
       nodeTypes={NODE_COMPONENTS}
+      edgeTypes={EDGE_COMPONENTS}
       onSelectionChange={(nodes) =>
         setNodeState((nodeState) => {
           // nodeState.selectedNodeID = 0;
           nodeState.selectedNodeID = (nodes ?? [])[0]?.id ?? null;
         })
       }
+      onNodeDrag={(event, draggableData) => {}}
       // onElementsRemove={onElementsRemove}
       // onConnect={onConnect}
       // onLoad={onLoad}
@@ -224,11 +229,13 @@ const FromNode = {
         />
         <Handle
           type="source"
-          position="bottom"
-          style={{
-            background: "white",
-            border: `1px solid ${selected ? "#0041d0" : "#1a192b"}`,
-          }}
+          position="right"
+          style={
+            {
+              // background: "white",
+              // border: `1px solid ${selected ? "#0041d0" : "#1a192b"}`,
+            }
+          }
           // onConnect={(params) => console.log('handle onConnect', params)}
           // isConnectable={isConnectable}
         />
@@ -256,7 +263,6 @@ const SelectNode = {
     const [, setNodeState] = useElementsContext();
     return (
       <NodeUI node={node} showTools={true}>
-        <Handle type="target" position="top" />
         SELECT{" "}
         <Input
           value={
@@ -271,7 +277,8 @@ const SelectNode = {
             });
           }}
         />
-        <Handle type="source" position="bottom" />
+        {/* <Handle type="target" position="top" /> */}
+        <Handle type="source" position="right" />
       </NodeUI>
     );
   },
@@ -617,8 +624,8 @@ function NodeUI({ node, showTools, children }) {
   return (
     <div>
       <Box isSelected={isSelected}>{children}</Box>
+      {/* <HorizontalSpace /> */}
       {/* <DeleteNodeButton node={node} /> */}
-      <HorizontalSpace />
       {isSelected && showTools ? (
         <div style={{ position: "absolute", top: "110%", width: 300 }}>
           <Tools />
@@ -658,6 +665,10 @@ function DeleteNodeButton({ node }) {
       ×
     </Button>
   );
+}
+
+function TightEdge() {
+  return <></>;
 }
 
 function subtractArrays(a, b) {
@@ -734,12 +745,12 @@ function AttachNodeButton({ children, type }) {
   );
 }
 
-function newEdge(source, target, is) {
+function newEdge(source, target, isTight) {
   return {
     id: `e${source}${target}`,
     source: source,
     target: target,
-    data: {},
+    type: isTight ? "tight" : "default",
   };
 }
 
@@ -1019,6 +1030,9 @@ const NODE_TYPES = {
   order: OrderNode,
 };
 const NODE_COMPONENTS = objectMap(NODE_TYPES, (type) => type.Component);
+const EDGE_COMPONENTS = {
+  tight: TightEdge,
+};
 
 // todo move inside setup
 const COLUMNS = [
