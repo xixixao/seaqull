@@ -21,7 +21,8 @@ import ReactFlow, {
   ReactFlowProvider,
   useStoreState,
   Handle,
-} from "react-flow-renderer";
+  updateEdge,
+} from "./react-flow";
 
 const database = initSqlJs({
   // Required to load the wasm binary asynchronously. Of course, you can host it wherever you want
@@ -144,13 +145,18 @@ function NodesPane({ nodeState, setNodeState }) {
       elements={nodeState.nodes}
       nodeTypes={NODE_COMPONENTS}
       edgeTypes={EDGE_COMPONENTS}
-      onSelectionChange={(nodes) =>
+      onNodeDrag={(event, node, draggableData) => {
         setNodeState((nodeState) => {
-          // nodeState.selectedNodeID = 0;
-          nodeState.selectedNodeID = (nodes ?? [])[0]?.id ?? null;
-        })
-      }
-      onNodeDrag={(event, draggableData) => {}}
+          const draggedNode = getNode(nodeState, node.id);
+          [draggedNode]
+            .concat(getAllTightDescendants(nodeState, node))
+            .forEach((node) => {
+              node.position.x += draggableData.deltaX;
+              node.position.y += draggableData.deltaY;
+            });
+        });
+        return false;
+      }}
       // onElementsRemove={onElementsRemove}
       // onConnect={onConnect}
       // onLoad={onLoad}
@@ -227,7 +233,7 @@ const FromNode = {
             });
           }}
         />
-        <Handle
+        {/* <Handle
           type="source"
           position="right"
           style={
@@ -238,7 +244,7 @@ const FromNode = {
           }
           // onConnect={(params) => console.log('handle onConnect', params)}
           // isConnectable={isConnectable}
-        />
+        /> */}
       </NodeUI>
     );
   },
@@ -278,7 +284,7 @@ const SelectNode = {
           }}
         />
         {/* <Handle type="target" position="top" /> */}
-        <Handle type="source" position="right" />
+        {/* <Handle type="source" position="right" /> */}
       </NodeUI>
     );
   },
@@ -339,9 +345,10 @@ const SelectNode = {
     return [`SELECT ${otherColumns} FROM (${fromQuery})`];
   },
   columnNames(nodeState, node) {
-    return (node.selectedColumnNames ?? []).length > 0
-      ? node.selectedColumnNames
-      : getColumnNames(nodeState, node.source);
+    const sourceNode = getSource(nodeState, node);
+    return (node.data.selectedColumnNames ?? []).length > 0
+      ? node.data.selectedColumnNames
+      : getColumnNames(nodeState, sourceNode.id);
   },
   columnControl(nodeState, node, columnName, setNodeState) {
     // const selectableColumnNames = getColumnNames(nodeState, node.source);
@@ -404,17 +411,13 @@ const WhereNode = {
   },
 };
 
-function GroupNodeComponent({ node, nodeState, setNodeState }) {
+function GroupNodeComponent(node) {
+  const [nodeState] = useElementsContext();
   const selectedColumnNames = SelectNode.columnNames(nodeState, node);
   return (
-    <NodeUI
-      node={node}
-      nodeState={nodeState}
-      showTools={true}
-      setNodeState={setNodeState}
-    >
+    <NodeUI node={node} showTools={true}>
       GROUP BY{" "}
-      {(node.selectedColumnNames ?? []).length > 0
+      {(node.data.selectedColumnNames ?? []).length > 0
         ? selectedColumnNames.join(", ")
         : "∅"}{" "}
     </NodeUI>
@@ -424,12 +427,13 @@ function GroupNodeComponent({ node, nodeState, setNodeState }) {
 const GroupNode = {
   Component: GroupNodeComponent,
   queryWhenSelected(nodeState, node) {
-    const fromQuery = getQuery(nodeState, node.source);
+    const sourceNode = getSource(nodeState, node);
+    const fromQuery = getQuery(nodeState, sourceNode.id);
     if ((node.selectedColumnNames ?? []).length === 0) {
       return `SELECT * from (${fromQuery})`;
     }
     const selectedColumnSet = new Set(node.selectedColumnNames ?? []);
-    const otherColumns = getColumnNames(nodeState, node.source).filter(
+    const otherColumns = getColumnNames(nodeState, sourceNode.id).filter(
       (column) => !selectedColumnSet.has(column)
     );
     return `SELECT ${node.selectedColumnNames
@@ -438,7 +442,8 @@ const GroupNode = {
       ORDER BY ${node.selectedColumnNames.join(", ")}`;
   },
   query(nodeState, node) {
-    const fromQuery = getQuery(nodeState, node.source);
+    const sourceNode = getSource(nodeState, node);
+    const fromQuery = getQuery(nodeState, sourceNode.id);
     if ((node.selectedColumnNames ?? []).length === 0) {
       return `SELECT * from (${fromQuery})`;
     }
@@ -447,9 +452,10 @@ const GroupNode = {
       GROUP BY ${node.selectedColumnNames.join(", ")}`;
   },
   queryAdditionalValues(nodeState, node) {
-    const fromQuery = getQuery(nodeState, node.source);
+    const sourceNode = getSource(nodeState, node);
+    const fromQuery = getQuery(nodeState, sourceNode.id);
     const otherColumns = subtractArrays(
-      getColumnNames(nodeState, node.source),
+      getColumnNames(nodeState, sourceNode.id),
       node.selectedColumnNames ?? []
     );
     if (otherColumns.length === 0) {
@@ -458,17 +464,19 @@ const GroupNode = {
     return [`SELECT ${otherColumns} FROM (${fromQuery})`];
   },
   columnNames(nodeState, node) {
+    const sourceNode = getSource(nodeState, node);
     return (node.selectedColumnNames ?? []).length > 0
       ? node.selectedColumnNames
-      : getColumnNames(nodeState, node.source);
+      : getColumnNames(nodeState, sourceNode.id);
   },
   columnControl(nodeState, node, columnName, setNodeState) {
-    const selectableColumnNames = getColumnNames(nodeState, node.source);
+    const sourceNode = getSource(nodeState, node);
+    const selectableColumnNames = getColumnNames(nodeState, sourceNode.id);
     // TODO: Fix O(N^2) algo to be nlogn
     if (!selectableColumnNames.find((column) => column === columnName)) {
       return null;
     }
-    const selectedColumnNamesNotNull = node.selectedColumnNames ?? [];
+    const selectedColumnNamesNotNull = node.data.selectedColumnNames ?? [];
     const selectedColumnNamesSet = new Set(selectedColumnNamesNotNull);
     return (
       <input
@@ -477,7 +485,7 @@ const GroupNode = {
         type="checkbox"
         onChange={(event) => {
           setNodeState((nodeState) => {
-            getSelectedNode(nodeState).selectedColumnNames =
+            getSelectedNode(nodeState).data.selectedColumnNames =
               !selectedColumnNamesSet.has(columnName)
                 ? selectedColumnNamesNotNull.concat([columnName])
                 : selectedColumnNamesNotNull.filter(
@@ -627,11 +635,33 @@ function NodeUI({ node, showTools, children }) {
       {/* <HorizontalSpace /> */}
       {/* <DeleteNodeButton node={node} /> */}
       {isSelected && showTools ? (
-        <div style={{ position: "absolute", top: "110%", width: 300 }}>
-          <Tools />
-        </div>
+        <>
+          <div
+            style={{
+              position: "absolute",
+              top: 2,
+              left: "100%",
+              width: 300,
+            }}
+          >
+            <HorizontalSpace />
+            <AddConnectedFromNodeButon />
+          </div>
+          <div style={{ position: "absolute", top: "110%", width: 300 }}>
+            <Tools />
+          </div>
+        </>
       ) : null}
     </div>
+  );
+}
+
+function AddConnectedFromNodeButon() {
+  const [, setNodeState] = useElementsContext();
+  return (
+    <AddNodeButton setNodeState={setNodeState} type={FromNode}>
+      +FROM
+    </AddNodeButton>
   );
 }
 
@@ -680,8 +710,42 @@ function getNode(nodeState, id) {
   return nodeState.nodes.find((node) => node.id === id);
 }
 
+const TO_SOURCE = false;
+const TO_TARGET = true;
+
 function getSource(nodeState, node) {
-  return getIncomers(node, nodeState.nodes)[0];
+  return getTightChild(nodeState, node, TO_SOURCE);
+}
+
+function getTarget(nodeState, node) {
+  return getTightChild(nodeState, node, TO_TARGET);
+}
+
+function getTightChild(nodeState, node, direction) {
+  return (
+    direction === TO_SOURCE
+      ? getIncomers(node, nodeState.nodes)
+      : getOutgoers(node, nodeState.nodes)
+  )[0];
+}
+
+function getTightDescendants(nodeState, node, direction) {
+  const descendants = [];
+  let parent = node;
+  do {
+    const tightChild = getTightChild(nodeState, parent, direction);
+    if (tightChild != null) {
+      descendants.push(tightChild);
+    }
+    parent = tightChild;
+  } while (parent != null);
+  return descendants;
+}
+
+function getAllTightDescendants(nodeState, node) {
+  return getTightDescendants(nodeState, node, TO_SOURCE).concat(
+    getTightDescendants(nodeState, node, TO_TARGET)
+  );
 }
 
 function getType(node) {
@@ -716,26 +780,39 @@ function Tools() {
 
 function AttachNodeButton({ children, type }) {
   const [, setNodeState] = useElementsContext();
+  const nodePositions = useStoreState((store) => store.nodes);
   const attachNodeHandler = (type) => () => {
     setNodeState((nodeState) => {
       let { nodes } = nodeState;
-      const newID = String(Math.max(...nodes.map((node) => +node.id)) + 1);
+      const newID = String(
+        Math.max(
+          ...nodes
+            .filter(({ id }) => !id.startsWith("e"))
+            .map((node) => +node.id)
+        ) + 1
+      );
       const {
         position: { x, y },
-      } = getSelectedNode(nodeState);
-      nodes.push({ id: newID, type, data: {}, position: { x: x, y: y + 26 } });
-      nodes.push(newEdge(nodeState.selectedNodeID, newID, true));
-      // const selectedNode = getSelectedNode(nodeState);
-      // if (selectedNode != null) {
-      //   nodes.push(newEdge(newID, newID));
-      // }
-      // getOutgoers(selectedNode, nodes).forEach(child => {
-      //   if (canNodeHaveManySources(child)) {
+      } = /* getSelectedNode(nodeState); */ nodePositions.find(
+        (node) => node.id === nodeState.selectedNodeID
+      ).__rf;
 
-      //   }
-      // });
-      // nodes[nodeState.selectedNodeID].child = newID;
+      const selectedNode = getSelectedNode(nodeState);
+      const currentTarget = getTarget(nodeState, selectedNode);
+      if (currentTarget != null) {
+        nodes = removeElement(
+          nodes,
+          edgeTight(selectedNode.id, currentTarget.id)
+        );
+        nodes.push(edgeTight(newID, currentTarget.id));
+        getTightDescendants(nodeState, selectedNode).forEach((node) => {
+          node.position.y += 26;
+        });
+      }
+      nodes.push({ id: newID, type, data: {}, position: { x: x, y: y + 26 } });
+      nodes.push(edgeTight(selectedNode.id, newID));
       nodeState.selectedNodeID = newID;
+      nodeState.nodes = nodes;
     });
   };
   return (
@@ -745,7 +822,15 @@ function AttachNodeButton({ children, type }) {
   );
 }
 
-function newEdge(source, target, isTight) {
+function removeElement(array, element) {
+  return array.filter(({ id }) => id !== element.id);
+}
+
+function edgeTight(source, target, isTight) {
+  return edge(source, target, true);
+}
+
+function edge(source, target, isTight) {
   return {
     id: `e${source}${target}`,
     source: source,
