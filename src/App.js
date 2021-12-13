@@ -1,4 +1,4 @@
-import {
+import React, {
   createContext,
   useCallback,
   useContext,
@@ -57,6 +57,8 @@ function useElementsContext() {
   return useContext(ElementsContext);
 }
 
+const INIT_Y = 30;
+
 function Content() {
   const [namespace, setNamespace] = useState("foo_team");
   const [notebookName, setNotebookName] = useState("Untitled");
@@ -66,7 +68,7 @@ function Content() {
       id: "0",
       type: "from",
       data: { name: "users" },
-      position: { x: 40, y: 30 },
+      position: { x: 40, y: INIT_Y },
     },
     // 1: { type: FromNode, id: 1, name: null },
   ]);
@@ -111,15 +113,7 @@ function Content() {
           height: "100%",
         }}
       >
-        <div
-          style={{
-            height: "65%",
-            borderBottom: "1px solid #ccc",
-            borderTop: "1px solid #ccc",
-          }}
-        >
-          <NodesPane nodeState={nodeState} setNodeState={setNodeState} />
-        </div>
+        <NodesPane nodeState={nodeState} setNodeState={setNodeState} />
         <div style={{ padding: 8, overflowX: "scroll", flexGrow: 1 }}>
           <Table nodeState={nodeState} setNodeState={setNodeState} />
         </div>
@@ -137,31 +131,52 @@ function NodesPane({ nodeState, setNodeState }) {
   //   const onElementsRemove = (elementsToRemove) =>
   //     setElements((els) => removeElements(elementsToRemove, els));
   // const onConnect = (params) => setElements((els) => addEdge(params, els));
-  const updateNodePosDiff = useStoreActions(
-    (actions) => actions.updateNodePosDiff
-  );
+  // const updateNodePosDiff = useStoreActions(
+  //   (actions) => actions.updateNodePosDiff
+  // );
   return (
-    <ReactFlow
-      elements={nodeState.nodes}
-      nodeTypes={NODE_COMPONENTS}
-      edgeTypes={EDGE_COMPONENTS}
-      onNodeDrag={(event, node, draggableData) => {
-        setNodeState((nodeState) => {
-          const draggedNode = getNode(nodeState, node.id);
-          [draggedNode]
-            .concat(getAllTightDescendants(nodeState, node))
-            .forEach((node) => {
-              node.position.x += draggableData.deltaX;
-              node.position.y += draggableData.deltaY;
-            });
-        });
-        return false;
+    <div
+      style={{
+        height: "65%",
+        borderBottom: "1px solid #ccc",
+        borderTop: "1px solid #ccc",
+        outline: "none",
       }}
-      // onElementsRemove={onElementsRemove}
-      // onConnect={onConnect}
-      // onLoad={onLoad}
+      tabIndex="-1"
+      onKeyDown={(e) => {
+        if (e.key === "Backspace") {
+          setNodeState((nodeState) => {
+            if (nodeState.selectedNodeID != null) {
+              nodeState.nodes = removeElement(nodeState.nodes, {
+                id: nodeState.selectedNodeID,
+              });
+              nodeState.selectedNodeID = null;
+            }
+          });
+        }
+      }}
     >
-      {/* <MiniMap
+      <ReactFlow
+        elements={nodeState.nodes}
+        nodeTypes={NODE_COMPONENTS}
+        edgeTypes={EDGE_COMPONENTS}
+        onNodeDrag={(event, node, draggableData) => {
+          setNodeState((nodeState) => {
+            const draggedNode = getNode(nodeState, node.id);
+            [draggedNode]
+              .concat(getAllTightDescendants(nodeState, node))
+              .forEach((node) => {
+                node.position.x += draggableData.deltaX;
+                node.position.y += draggableData.deltaY;
+              });
+          });
+          return false;
+        }}
+        // onElementsRemove={onElementsRemove}
+        // onConnect={onConnect}
+        // onLoad={onLoad}
+      >
+        {/* <MiniMap
         nodeStrokeColor={(n) => {
           if (n.style?.background) return n.style.background;
           if (n.type === "input") return "#0041d0";
@@ -178,23 +193,22 @@ function NodesPane({ nodeState, setNodeState }) {
         nodeBorderRadius={2}
       /> */}
 
-      <div
-        style={{
-          position: "absolute",
-          padding: 4,
-          display: "flex",
-          justifyContent: "center",
-          width: "100%",
-          zIndex: 5,
-        }}
-      >
-        <AddNodeButton setNodeState={setNodeState} type={FromNode}>
-          +FROM
-        </AddNodeButton>
-      </div>
-      <Controls showInteractive={false} />
-      <Background color="#aaa" gap={16} />
-    </ReactFlow>
+        <div
+          style={{
+            position: "absolute",
+            padding: 4,
+            zIndex: 5,
+            transform: "translate(-50%, 0)",
+            top: 0,
+            left: "50%",
+          }}
+        >
+          <AddNodeButton type="from">+FROM</AddNodeButton>
+        </div>
+        <Controls showInteractive={false} />
+        <Background color="#aaa" gap={16} />
+      </ReactFlow>
+    </div>
   );
 }
 
@@ -217,12 +231,11 @@ const FromNode = {
   Component(node) {
     const {
       id,
-      selected,
       data: { name },
     } = node;
     const [, setNodeState] = useElementsContext();
     return (
-      <NodeUI node={node} showTools={name?.length > 0}>
+      <NodeUI node={node} showTools={name?.length > 0} tools={<Tools />}>
         FROM{" "}
         <Input
           focused={name == null}
@@ -268,7 +281,7 @@ const SelectNode = {
     // const selectedColumnNames = SelectNode.columnNames(nodeState, node);
     const [, setNodeState] = useElementsContext();
     return (
-      <NodeUI node={node} showTools={true}>
+      <NodeUI node={node} showTools={true} tools={<FromAndTools />}>
         SELECT{" "}
         <Input
           value={
@@ -627,14 +640,45 @@ function NodeInput({
   );
 }
 
-function NodeUI({ node, showTools, children }) {
+function NodeUI({ node, showTools, tools, children }) {
   const isSelected = node.selected;
+  const [nodeState] = useElementsContext();
+
+  const isLast = getTarget(nodeState, node) == null;
+  const toolsWithPosition = (
+    <div
+      style={{
+        position: "absolute",
+        // bottom: -34,
+        left: 0,
+        // transform: "translate(0, -50%)",
+        // width: 340,
+      }}
+    >
+      {tools}
+    </div>
+  );
   return (
     <div>
       <Box isSelected={isSelected}>{children}</Box>
+      {!showTools || !isSelected ? null : isLast ? (
+        toolsWithPosition
+      ) : (
+        <FloatOnHover
+          style={{
+            position: "absolute",
+            top: 13,
+            left: -20,
+            transform: "translate(0, -50%)",
+          }}
+          trigger={<Button>+</Button>}
+        >
+          {toolsWithPosition}
+        </FloatOnHover>
+      )}
       {/* <HorizontalSpace /> */}
       {/* <DeleteNodeButton node={node} /> */}
-      {isSelected && showTools ? (
+      {/* {isSelected && showTools ? (
         <>
           <div
             style={{
@@ -651,18 +695,30 @@ function NodeUI({ node, showTools, children }) {
             <Tools />
           </div>
         </>
-      ) : null}
+      ) : null} */}
     </div>
   );
 }
 
-function AddConnectedFromNodeButon() {
-  const [, setNodeState] = useElementsContext();
+function FloatOnHover({ style, trigger, children }) {
+  const [isFloating, setIsFloating] = useState(false);
+  // const floated = React.cloneElement(React.Children.only(children), {
+  //   onMouseLeave: () => setIsFloating(false),
+  // });
   return (
-    <AddNodeButton setNodeState={setNodeState} type={FromNode}>
-      +FROM
-    </AddNodeButton>
+    <>
+      <div style={style} onMouseEnter={() => setIsFloating(true)}>
+        {trigger}
+      </div>
+      {isFloating ? (
+        <div onMouseLeave={() => setIsFloating(false)}>{children}</div>
+      ) : null}
+    </>
   );
+}
+
+function AddConnectedFromNodeButon() {
+  return <AddNodeButton type={FromNode}>+FROM</AddNodeButton>;
 }
 
 // function Selectable({ node, children }) {
@@ -767,14 +823,23 @@ function getColumnNames(nodeState, id) {
   return getType(node).columnNames(nodeState, node);
 }
 
+function FromAndTools() {
+  return (
+    <>
+      <AddConnectedFromNodeButon />
+      <Tools />
+    </>
+  );
+}
+
 function Tools() {
   return (
-    <div>
+    <>
       <AttachNodeButton type="where">+WHERE</AttachNodeButton>
-      <AttachNodeButton type="select">+SELECT</AttachNodeButton>
       <AttachNodeButton type="group">+GROUP BY</AttachNodeButton>
+      <AttachNodeButton type="select">+SELECT</AttachNodeButton>
       <AttachNodeButton type="order">+ORDER BY</AttachNodeButton>
-    </div>
+    </>
   );
 }
 
@@ -784,13 +849,7 @@ function AttachNodeButton({ children, type }) {
   const attachNodeHandler = (type) => () => {
     setNodeState((nodeState) => {
       let { nodes } = nodeState;
-      const newID = String(
-        Math.max(
-          ...nodes
-            .filter(({ id }) => !id.startsWith("e"))
-            .map((node) => +node.id)
-        ) + 1
-      );
+      const newID = getNewNodeID(nodeState);
       const {
         position: { x, y },
       } = /* getSelectedNode(nodeState); */ nodePositions.find(
@@ -822,6 +881,16 @@ function AttachNodeButton({ children, type }) {
   );
 }
 
+function getNewNodeID(nodeState) {
+  return String(
+    Math.max(
+      ...nodeState.nodes
+        .filter(({ id }) => !id.startsWith("e"))
+        .map((node) => +node.id)
+    ) + 1
+  );
+}
+
 function removeElement(array, element) {
   return array.filter(({ id }) => id !== element.id);
 }
@@ -843,15 +912,22 @@ function canNodeHaveManySources(node) {
   return getType(node).canHaveManySources();
 }
 
-function AddNodeButton({ children, type, setNodeState }) {
+function AddNodeButton({ children, type }) {
+  const [, setNodeState] = useElementsContext();
+  const nodePositions = useStoreState((store) => store.nodes);
   const addNodeHandler = (type) => () => {
     setNodeState((nodeState) => {
-      const { nodes } = nodeState;
-      const newID = Math.max(...Object.keys(nodes)) + 1;
-      nodes[newID] = {
+      const newID = getNewNodeID(nodeState);
+      console.log(nodePositions);
+      const maxX = Math.max(
+        ...nodePositions.map(({ __rf }) => __rf.position.x + __rf.width)
+      );
+      nodeState.nodes.push({
         id: newID,
         type,
-      };
+        data: {},
+        position: { x: maxX + 30, y: INIT_Y },
+      });
       nodeState.selectedNodeID = newID;
     });
   };
@@ -895,7 +971,7 @@ function Table({ nodeState, setNodeState }) {
     }
     console.log(nodeState);
     const query = getQuery(nodeState, nodeState.selectedNodeID);
-    console.log(query);
+    // console.log(query);
     const queryAdditionalValues = getQueryAdditionalValues(nodeState);
     if (query != null) {
       setIsLoading(true);
