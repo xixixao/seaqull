@@ -1,11 +1,11 @@
 import React, { memo, useCallback, useEffect, useState } from "react";
 import cc from "classcat";
 import { useStoreState, useStoreActions } from "../../store/hooks";
-import { ReactComponent as PlusIcon } from "../../../assets/icons/plus.svg";
-import { ReactComponent as MinusIcon } from "../../../assets/icons/minus.svg";
-import { ReactComponent as FitviewIcon } from "../../../assets/icons/fitview.svg";
-import { ReactComponent as LockIcon } from "../../../assets/icons/lock.svg";
-import { ReactComponent as UnlockIcon } from "../../../assets/icons/unlock.svg";
+import PlusIcon from "../../../assets/icons/plus.svg?component";
+import MinusIcon from "../../../assets/icons/minus.svg?component";
+import FitviewIcon from "../../../assets/icons/fitview.svg?component";
+import LockIcon from "../../../assets/icons/lock.svg?component";
+import UnlockIcon from "../../../assets/icons/unlock.svg?component";
 import useZoomPanHelper from "../../hooks/useZoomPanHelper";
 export const ControlButton = ({ children, className, ...rest }) => (
   <button

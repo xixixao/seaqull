@@ -9,6 +9,7 @@ import React, {
 import { useImmer } from "use-immer";
 import { produce, original } from "immer";
 import initSqlJs from "sql.js";
+import { styled } from "./style";
 
 import ReactFlow, {
   removeElements,
@@ -23,6 +24,7 @@ import ReactFlow, {
   Handle,
   updateEdge,
 } from "./react-flow";
+import { Button } from "./components/Button";
 
 const database = initSqlJs({
   // Required to load the wasm binary asynchronously. Of course, you can host it wherever you want
@@ -740,7 +742,6 @@ function DeleteNodeButton({ node }) {
   const [, setNodeState] = useElementsContext();
   return (
     <Button
-      style={{ fontSize: 12 }}
       onClick={() => {
         setNodeState((nodeState) => {
           nodeState.selectedNodeID = getSource(nodeState, node).id;
@@ -874,11 +875,7 @@ function AttachNodeButton({ children, type }) {
       nodeState.nodes = nodes;
     });
   };
-  return (
-    <Button style={{ fontSize: 12 }} onClick={attachNodeHandler(type)}>
-      {children}
-    </Button>
-  );
+  return <Button onClick={attachNodeHandler(type)}>{children}</Button>;
 }
 
 function getNewNodeID(nodeState) {
@@ -931,11 +928,7 @@ function AddNodeButton({ children, type }) {
       nodeState.selectedNodeID = newID;
     });
   };
-  return (
-    <Button style={{ fontSize: 12 }} onClick={addNodeHandler(type)}>
-      {children}
-    </Button>
-  );
+  return <Button onClick={addNodeHandler(type)}>{children}</Button>;
 }
 
 function Box(props) {
@@ -1150,27 +1143,6 @@ function Label(props) {
 
 function HorizontalSpace() {
   return <span style={{ display: "inline-block", width: 4 }}></span>;
-}
-
-function Button(props) {
-  return (
-    <div
-      className="button"
-      style={{
-        ...(props.style ?? {}),
-        background: "rgb(228, 230, 235)",
-        display: "inline-block",
-        // border: "1px solid black",
-        borderRadius: 6,
-        padding: "2px 4px",
-        cursor: "pointer",
-        margin: "0 2px 2px 0",
-      }}
-      onClick={props.onClick}
-    >
-      {props.children}
-    </div>
-  );
 }
 
 function execQuery(db, sql) {
