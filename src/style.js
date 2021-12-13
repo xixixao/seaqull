@@ -199,7 +199,7 @@ const { styled, css, createTheme, globalCss, keyframes } = createStitches({
       h1: "32px",
       h2: "22px",
       h3: "17px",
-      body: "15px",
+      body: "14px",
       detail: "13px",
     },
     lineHeights: {

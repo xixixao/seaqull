@@ -16,12 +16,12 @@ export const Button = styled("button", {
 
   // Custom
   cursor: "pointer",
-  height: "$28",
   paddingHori: "6px",
   // fontFamily: '$untitled',
   // fontSize: '$2',
   // fontWeight: 500,
   fontVariantNumeric: "tabular-nums",
+  borderRadius: "6px",
 
   "&:disabled": {
     backgroundColor: "$slate2",
@@ -32,20 +32,23 @@ export const Button = styled("button", {
 
   variants: {
     size: {
-      1: {
-        borderRadius: "$4",
+      body: {
+        height: "$28",
+        font: "$body",
         // height: "$5",
         // px: "$2",
         // fontSize: "$1",
         // lineHeight: "$sizes$5",
       },
-      // 2: {
-      //   borderRadius: "$2",
-      //   height: "$6",
-      //   px: "$3",
-      //   fontSize: "$3",
-      //   lineHeight: "$sizes$6",
-      // },
+      detail: {
+        height: "25px",
+        font: "$detail",
+        // borderRadius: "$2",
+        // height: "$6",
+        // px: "$3",
+        // fontSize: "$3",
+        // lineHeight: "$sizes$6",
+      },
       // 3: {
       //   borderRadius: "$2",
       //   height: "$7",
@@ -56,18 +59,18 @@ export const Button = styled("button", {
     },
     variant: {
       gray: {
-        backgroundColor: "$slate3",
+        backgroundColor: "$slate4",
         // boxShadow: "inset 0 0 0 1px $colors$slate7",
         color: "$slate12",
         "@hover": {
           "&:hover": {
-            backgroundColor: "$slate4",
+            backgroundColor: "$slate5",
             // boxShadow: "inset 0 0 0 1px $colors$slate8",
           },
         },
         "&:active": {
           // backgroundColor: "$slate2",
-          backgroundColor: "$slate5",
+          backgroundColor: "$slate6",
           // boxShadow: "inset 0 0 0 1px $colors$slate8",
         },
         "&:focus": {
@@ -324,7 +327,7 @@ export const Button = styled("button", {
     },
   ],
   defaultVariants: {
-    size: "1",
+    size: "body",
     variant: "gray",
   },
 });

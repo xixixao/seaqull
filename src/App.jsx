@@ -25,6 +25,7 @@ import ReactFlow, {
   updateEdge,
 } from "./react-flow";
 import { Button } from "./components/Button";
+import { Row } from "./components/Row";
 
 const database = initSqlJs({
   // Required to load the wasm binary asynchronously. Of course, you can host it wherever you want
@@ -129,6 +130,8 @@ function Content() {
 //   // reactFlowInstance.fitView();
 // };
 
+const Div = styled("div");
+
 function NodesPane({ nodeState, setNodeState }) {
   //   const onElementsRemove = (elementsToRemove) =>
   //     setElements((els) => removeElements(elementsToRemove, els));
@@ -137,11 +140,11 @@ function NodesPane({ nodeState, setNodeState }) {
   //   (actions) => actions.updateNodePosDiff
   // );
   return (
-    <div
-      style={{
+    <Div
+      css={{
         height: "65%",
-        borderBottom: "1px solid #ccc",
-        borderTop: "1px solid #ccc",
+        borderBottom: "1px solid $slate7",
+        // borderTop: "1px solid $slate7",
         outline: "none",
       }}
       tabIndex="-1"
@@ -210,7 +213,7 @@ function NodesPane({ nodeState, setNodeState }) {
         <Controls showInteractive={false} />
         <Background color="#aaa" gap={16} />
       </ReactFlow>
-    </div>
+    </Div>
   );
 }
 
@@ -826,10 +829,11 @@ function getColumnNames(nodeState, id) {
 
 function FromAndTools() {
   return (
-    <>
+    <Row>
       <AddConnectedFromNodeButon />
+      <HorizontalSpace />
       <Tools />
-    </>
+    </Row>
   );
 }
 
@@ -837,8 +841,11 @@ function Tools() {
   return (
     <>
       <AttachNodeButton type="where">+WHERE</AttachNodeButton>
+      <HorizontalSpace />
       <AttachNodeButton type="group">+GROUP BY</AttachNodeButton>
+      <HorizontalSpace />
       <AttachNodeButton type="select">+SELECT</AttachNodeButton>
+      <HorizontalSpace />
       <AttachNodeButton type="order">+ORDER BY</AttachNodeButton>
     </>
   );
@@ -869,7 +876,7 @@ function AttachNodeButton({ children, type }) {
           node.position.y += 26;
         });
       }
-      nodes.push({ id: newID, type, data: {}, position: { x: x, y: y + 26 } });
+      nodes.push({ id: newID, type, data: {}, position: { x: x, y: y + 30 } });
       nodes.push(edgeTight(selectedNode.id, newID));
       nodeState.selectedNodeID = newID;
       nodeState.nodes = nodes;
@@ -931,28 +938,28 @@ function AddNodeButton({ children, type }) {
   return <Button onClick={addNodeHandler(type)}>{children}</Button>;
 }
 
-function Box(props) {
-  return (
-    <div
-      style={{
-        cursor: "move",
-        display: "inline-block",
-        background: "white",
-        borderRadius: 3,
-        border: `1px solid ${props.isSelected ? "#0041d0" : "#1a192b"}`,
-        boxShadow: props.isSelected ? "0 0 0 0.5px #0041d0" : "none",
-        // borderRadius: 4,
-        // boxShadow: "rgb(201 204 209) 0px 0px 0px 1px",
-        // background: props.isSelected ? "#e7f2fd" : "white",
-        boxSizing: "border-box",
-        padding: "2px 8px",
-        // margin: "0 4px 2px 0",
-      }}
-    >
-      {props.children}
-    </div>
-  );
-}
+const Box = styled("div", {
+  cursor: "move",
+  // display: "inline-block",
+  background: "$slate1",
+  borderRadius: "8px",
+  border: `1px solid $slate7`,
+  // boxShadow: props.isSelected ? "0 0 0 0.5px #0041d0" : "none",
+  // borderRadius: 4,
+  // boxShadow: "rgb(201 204 209) 0px 0px 0px 1px",
+  // background: props.isSelected ? "#e7f2fd" : "white",
+  // boxSizing: "border-box",
+  padding: "2px 8px",
+  variants: {
+    isSelected: {
+      true: {
+        borderColor: "#0041d0",
+        boxShadow: "0 0 0 0.5px #0041d0",
+      },
+    },
+  },
+  // margin: "0 4px 2px 0",
+});
 
 function Table({ nodeState, setNodeState }) {
   const [tableState, setTableState] = useState();
@@ -1142,7 +1149,7 @@ function Label(props) {
 }
 
 function HorizontalSpace() {
-  return <span style={{ display: "inline-block", width: 4 }}></span>;
+  return <div style={{ flex: "0 0 2px" }}></div>;
 }
 
 function execQuery(db, sql) {
