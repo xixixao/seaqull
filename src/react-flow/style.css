@@ -162,23 +162,6 @@
   height: 100%;
 }
 
-.react-flow__controls {
-  position: absolute;
-  z-index: 5;
-  bottom: 10px;
-  left: 10px;
-}
-
-.react-flow__controls-button {
-  width: 24px;
-  height: 24px;
-  border: none;
-}
-
-.react-flow__controls-button svg {
-  width: 100%;
-}
-
 .react-flow__minimap {
   position: absolute;
   z-index: 5;

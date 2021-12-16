@@ -19,7 +19,6 @@ export function ThemeToggle(props) {
   return (
     <Tooltip content="Toggle theme" side="bottom" align="end">
       <IconButton
-        variant="ghost"
         onClick={() => {
           setTheme(theme === "dark" ? "light" : "dark");
         }}

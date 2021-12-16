@@ -14,7 +14,6 @@ import { styled } from "./style";
 import ReactFlow, {
   removeElements,
   addEdge,
-  Controls,
   Background,
   useStoreActions,
   getOutgoers,
@@ -26,6 +25,7 @@ import ReactFlow, {
 } from "./react-flow";
 import { Button } from "./components/Button";
 import { Row } from "./components/Row";
+import { PaneControls } from "./components/PaneControls";
 
 const database = initSqlJs({
   // Required to load the wasm binary asynchronously. Of course, you can host it wherever you want
@@ -210,7 +210,7 @@ function NodesPane({ nodeState, setNodeState }) {
         >
           <AddNodeButton type="from">+FROM</AddNodeButton>
         </div>
-        <Controls showInteractive={false} />
+        <PaneControls showInteractive={false} />
         <Background color="#aaa" gap={16} />
       </ReactFlow>
     </Div>
