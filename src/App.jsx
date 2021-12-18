@@ -26,6 +26,9 @@ import ReactFlow, {
 import { Button } from "./components/Button";
 import { Row } from "./components/Row";
 import { PaneControls } from "./components/PaneControls";
+import { ButtonWithIcon } from "./components/ButtonWithIcon";
+import { PlusIcon } from "@modulz/radix-icons";
+import { IconButton } from "./components/IconButton";
 
 const database = initSqlJs({
   // Required to load the wasm binary asynchronously. Of course, you can host it wherever you want
@@ -208,7 +211,7 @@ function NodesPane({ nodeState, setNodeState }) {
             left: "50%",
           }}
         >
-          <AddNodeButton type="from">+FROM</AddNodeButton>
+          <AddNodeButton type="from">FROM</AddNodeButton>
         </div>
         <PaneControls showInteractive={false} />
         <Background color="#aaa" gap={16} />
@@ -240,7 +243,15 @@ const FromNode = {
     } = node;
     const [, setNodeState] = useElementsContext();
     return (
-      <NodeUI node={node} showTools={name?.length > 0} tools={<Tools />}>
+      <NodeUI
+        node={node}
+        showTools={name?.length > 0}
+        tools={
+          <Row>
+            <Tools />
+          </Row>
+        }
+      >
         FROM{" "}
         <Input
           focused={name == null}
@@ -654,7 +665,7 @@ function NodeUI({ node, showTools, tools, children }) {
     <div
       style={{
         position: "absolute",
-        // bottom: -34,
+        top: "calc(100% + 4px)",
         left: 0,
         // transform: "translate(0, -50%)",
         // width: 340,
@@ -672,11 +683,15 @@ function NodeUI({ node, showTools, tools, children }) {
         <FloatOnHover
           style={{
             position: "absolute",
-            top: 13,
-            left: -20,
-            transform: "translate(0, -50%)",
+            top: "50%",
+            left: 0,
+            transform: "translate(-100%, -50%)",
           }}
-          trigger={<Button>+</Button>}
+          trigger={
+            <IconButton>
+              <PlusIcon />
+            </IconButton>
+          }
         >
           {toolsWithPosition}
         </FloatOnHover>
@@ -723,7 +738,7 @@ function FloatOnHover({ style, trigger, children }) {
 }
 
 function AddConnectedFromNodeButon() {
-  return <AddNodeButton type={FromNode}>+FROM</AddNodeButton>;
+  return <AddNodeButton type={FromNode}>FROM</AddNodeButton>;
 }
 
 // function Selectable({ node, children }) {
@@ -840,13 +855,13 @@ function FromAndTools() {
 function Tools() {
   return (
     <>
-      <AttachNodeButton type="where">+WHERE</AttachNodeButton>
+      <AttachNodeButton type="where">WHERE</AttachNodeButton>
       <HorizontalSpace />
-      <AttachNodeButton type="group">+GROUP BY</AttachNodeButton>
+      <AttachNodeButton type="group">GROUP BY</AttachNodeButton>
       <HorizontalSpace />
-      <AttachNodeButton type="select">+SELECT</AttachNodeButton>
+      <AttachNodeButton type="select">SELECT</AttachNodeButton>
       <HorizontalSpace />
-      <AttachNodeButton type="order">+ORDER BY</AttachNodeButton>
+      <AttachNodeButton type="order">ORDER BY</AttachNodeButton>
     </>
   );
 }
@@ -882,7 +897,11 @@ function AttachNodeButton({ children, type }) {
       nodeState.nodes = nodes;
     });
   };
-  return <Button onClick={attachNodeHandler(type)}>{children}</Button>;
+  return (
+    <ButtonWithIcon icon={<PlusIcon />} onClick={attachNodeHandler(type)}>
+      {children}
+    </ButtonWithIcon>
+  );
 }
 
 function getNewNodeID(nodeState) {
@@ -935,7 +954,11 @@ function AddNodeButton({ children, type }) {
       nodeState.selectedNodeID = newID;
     });
   };
-  return <Button onClick={addNodeHandler(type)}>{children}</Button>;
+  return (
+    <ButtonWithIcon icon={<PlusIcon />} onClick={addNodeHandler(type)}>
+      {children}
+    </ButtonWithIcon>
+  );
 }
 
 const Box = styled("div", {
@@ -1116,7 +1139,12 @@ function Input({ displayValue, focused, label, value, onChange: setValue }) {
     };
   }, [edited, handleReset]);
   return (
-    <div style={{ display: "inline-block" }}>
+    <div
+      style={{ display: "inline-block" }}
+      onKeyDown={(event) => {
+        event.stopPropagation();
+      }}
+    >
       {label != null ? <Label>{label}</Label> : null}
       {edited != null ? (
         <input

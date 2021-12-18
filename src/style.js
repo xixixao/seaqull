@@ -401,4 +401,15 @@ globalCss({
     font: "$body",
     background: "$panel",
   },
+  table: {
+    borderCollapse: "collapse",
+  },
+  th: {
+    border: "1px solid $slate7",
+    padding: "0 2px",
+  },
+  td: {
+    border: "1px solid $slate7",
+    padding: "0 2px",
+  },
 })();
