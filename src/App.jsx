@@ -417,7 +417,7 @@ const SelectNode = {
         />
         {/* <Handle type="target" position="top" /> */}
         <Handle
-          style={visibleIf(Nodes.hasChildren(nodeState, node))}
+          style={visibleIf(Nodes.hasDetachedChildren(nodeState, node))}
           type="source"
           position="right"
         />
@@ -843,7 +843,7 @@ function NodeUI({ node, showTools, tools, children }) {
   const isSelected = node.selected;
   const [nodeState] = useElementsContext();
 
-  const isLast = !Nodes.hasChildren(nodeState, node);
+  const isLast = !Nodes.hasTightChildren(nodeState, node);
   const toolsWithPosition = (
     <div
       style={{
@@ -1054,7 +1054,7 @@ function FromAndTools() {
     <Row>
       <Tools />
       <HorizontalSpace />
-      <AttachNodeButton onAdd={attachFromNode}>FROM</AttachNodeButton>
+      <AttachNodeButton onAdd={attachJoinNode}>JOIN</AttachNodeButton>
     </Row>
   );
 }
@@ -1106,7 +1106,7 @@ function attachTightNode(type) {
   };
 }
 
-function attachFromNode(nodeState, nodePositions) {
+function attachJoinNode(nodeState, nodePositions) {
   const selectedNode = onlyThrows(Nodes.selected(nodeState));
   Nodes.ensureLabel(nodeState, selectedNode);
   const data = FromNode.emptyNodeData(Node.label(selectedNode));

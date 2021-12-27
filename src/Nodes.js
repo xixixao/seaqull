@@ -65,6 +65,16 @@ export function hasChildren(nodeState, node) {
   return Edges.children(nodeState, node).length > 0;
 }
 
+export function hasTightChildren(nodeState, node) {
+  return children(nodeState, node).filter(Node.isTight).length > 0;
+}
+
+export function hasDetachedChildren(nodeState, node) {
+  return (
+    children(nodeState, node).filter((node) => !Node.isTight(node)).length > 0
+  );
+}
+
 export function add(nodeState, node) {
   nodes(nodeState).set(Node.id(node), node);
 }
