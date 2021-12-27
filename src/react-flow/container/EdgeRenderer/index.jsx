@@ -51,10 +51,13 @@ const Edge = ({
   const EdgeComponent = props.edgeTypes[edgeType] || props.edgeTypes.default;
   const targetNodeBounds = targetNode.__rf.handleBounds;
   // when connection type is loose we can define all handles as sources
-  const targetNodeHandles =
-    connectionMode === ConnectionMode.Strict
-      ? targetNodeBounds.target
-      : targetNodeBounds.target || targetNodeBounds.source;
+  // const targetNodeHandles =
+  //   connectionMode === ConnectionMode.Strict
+  //     ? targetNodeBounds.target
+  //     : targetNodeBounds.target || targetNodeBounds.source;
+  const targetNodeHandles = true
+    ? targetNodeBounds.target
+    : targetNodeBounds.target || targetNodeBounds.source;
   const sourceHandle = getHandle(
     sourceNode.__rf.handleBounds.source,
     sourceHandleId

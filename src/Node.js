@@ -27,6 +27,14 @@ export function move(node, x, y) {
   node.position.y = y;
 }
 
+export function label(node, label) {
+  return node.data.label;
+}
+
+export function setLabel(node, label) {
+  node.data.label = label;
+}
+
 export function isTight(node) {
   // Think about how to make this colocated with type config, not randomly here
   return node.type !== "from";

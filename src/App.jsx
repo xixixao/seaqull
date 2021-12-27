@@ -1,3 +1,7 @@
+import * as Arrays from "./Arrays";
+import * as FromNodes from "./FromNodes";
+import * as NameNodes from "./NameNodes";
+import * as SelectNodes from "./SelectNodes";
 import React, {
   createContext,
   useCallback,
@@ -32,11 +36,19 @@ import { Button } from "./components/Button";
 import { Row } from "./components/Row";
 import { PaneControls } from "./components/PaneControls";
 import { ButtonWithIcon } from "./components/ButtonWithIcon";
-import { PlusIcon } from "@modulz/radix-icons";
+import { DropdownMenuIcon, PlusIcon } from "@modulz/radix-icons";
 import { IconButton } from "./components/IconButton";
 import { only, onlyThrows } from "./Arrays";
 import { createDraft, finishDraft } from "immer";
 import * as GroupByNode from "./GroupByNode";
+import { Tooltip } from "./components/Tooltip";
+import { Column } from "./components/Column";
+import { invariant } from "./invariant";
+// import {
+//   DropdownMenu,
+//   DropdownMenuContent,
+//   DropdownMenuTrigger,
+// } from "./components/DropdownMenu";
 
 const database = initSqlJs({
   // Required to load the wasm binary asynchronously. Of course, you can host it wherever you want
@@ -69,6 +81,18 @@ const ElementsContext = createContext();
 
 function useElementsContext() {
   return useContext(ElementsContext);
+}
+
+function useSetSelectedNodeState() {
+  const [, setNodeState] = useElementsContext();
+  return useCallback(
+    (producer) => {
+      setNodeState((nodeState) => {
+        producer(onlyThrows(Nodes.selected(nodeState)));
+      });
+    },
+    [setNodeState]
+  );
 }
 
 const INIT_Y = 30;
@@ -202,18 +226,21 @@ function NodesPane({ elements, setNodeState }) {
         )}
         nodeTypes={NODE_COMPONENTS}
         edgeTypes={EDGE_COMPONENTS}
-        // onNodeDrag={(event, node, draggableData) => {
-        //   // setNodeState((nodeState) => {
-        //   //   const draggedNode = getNode(nodeState, node.id);
-        //   //   [draggedNode]
-        //   //     .concat(getAllTightDescendants(nodeState, node))
-        //   //     .forEach((node) => {
-        //   //       node.position.x += draggableData.deltaX;
-        //   //       node.position.y += draggableData.deltaY;
-        //   //     });
-        //   // });
-        //   // return false;
-        // }}
+        onNodeDrag={(event, node, draggableData) => {
+          setNodeState((nodeState) => {
+            const draggedNodeRoots = Nodes.dedupe(
+              Nodes.selected(nodeState).map((node) =>
+                Nodes.tightRoot(nodeState, node)
+              )
+            );
+            draggedNodeRoots.forEach((node) => {
+              node.position.x += draggableData.deltaX;
+              node.position.y += draggableData.deltaY;
+              Nodes.layout(nodeState, node);
+            });
+          });
+          return false;
+        }}
         // onElementsRemove={onElementsRemove}
         // onConnect={onConnect}
         // onLoad={onLoad}
@@ -271,11 +298,9 @@ function nodeLists(nodeState) {
 const FromNode = {
   name: "FromNode",
   Component(node) {
-    const {
-      id,
-      data: { name },
-    } = node;
-    const [, setNodeState] = useElementsContext();
+    const name = FromNodes.name(node);
+    const setSelectedNodeState = useSetSelectedNodeState();
+    const [nodeState] = useElementsContext();
     return (
       <NodeUI
         node={node}
@@ -291,8 +316,8 @@ const FromNode = {
           focused={name == null}
           value={name}
           onChange={(name) => {
-            setNodeState((nodeState) => {
-              nodeState.nodes[id].data.name = name;
+            setSelectedNodeState((node) => {
+              FromNodes.setName(node, name);
             });
           }}
         />
@@ -308,10 +333,23 @@ const FromNode = {
           // onConnect={(params) => console.log('handle onConnect', params)}
           // isConnectable={isConnectable}
         /> */}
+        <Handle
+          style={visibleIf(Nodes.hasParents(nodeState, node))}
+          type="target"
+          position="left"
+        />
       </NodeUI>
     );
   },
-  query(nodeState, { data: { name } }) {
+  emptyNodeData: FromNodes.empty,
+  query(nodeState, node) {
+    const name = FromNodes.name(node);
+    const existingNode = only(
+      Arrays.filter(Nodes.nodes(nodeState), (node) => Node.label(node) === name)
+    );
+    if (existingNode != null) {
+      return getQuery(nodeState, existingNode);
+    }
     return (name ?? "").length > 0 ? `SELECT * from ${name}` : null;
   },
   queryAdditionalValues(nodeState, node) {
@@ -325,24 +363,17 @@ const FromNode = {
   },
 };
 
-const SelectNode = {
-  name: "SelectNode",
+const NameNode = {
+  name: "NameNode",
   Component(node) {
-    // const selectedColumnNames = SelectNode.columnNames(nodeState, node);
-    const [, setNodeState] = useElementsContext();
+    const setSelectedNodeState = useSetSelectedNodeState();
     return (
       <NodeUI node={node} showTools={true} tools={<FromAndTools />}>
-        SELECT{" "}
         <Input
-          value={
-            (node.data.selectedColumnNames ?? []).length > 0
-              ? node.data.selectedColumnNames.join(", ")
-              : "*"
-          }
-          onChange={(columns) => {
-            setNodeState((nodeState) => {
-              nodeState.nodes[node.id].data.selectedColumnNames =
-                columns.split(/, */);
+          value={NameNodes.name(node)}
+          onChange={(name) => {
+            setSelectedNodeState((node) => {
+              NameNodes.setName(node, name);
             });
           }}
         />
@@ -350,6 +381,51 @@ const SelectNode = {
         {/* <Handle type="source" position="right" /> */}
       </NodeUI>
     );
+  },
+  emptyNodeData() {
+    return NameNodes.empty();
+  },
+  query(nodeState, node) {
+    return getQuery(nodeState, Nodes.parentX(nodeState, node));
+  },
+  queryAdditionalValues(nodeState, node) {
+    return null;
+  },
+  columnNames(nodeState, node) {
+    return getColumnNames2(nodeState, Nodes.parentX(nodeState, node));
+  },
+  columnControl(nodeState, node, columnName, setNodeState) {
+    return null;
+  },
+};
+
+const SelectNode = {
+  name: "SelectNode",
+  Component(node) {
+    const setSelectedNodeState = useSetSelectedNodeState();
+    const [nodeState] = useElementsContext();
+    return (
+      <NodeUI node={node} showTools={true} tools={<FromAndTools />}>
+        SELECT{" "}
+        <Input
+          value={someOrAllColumnList(SelectNodes.selectedColumns(node))}
+          onChange={(columns) => {
+            setSelectedNodeState((node) => {
+              SelectNodes.setSelectedColumns(node, columns.split(/, */));
+            });
+          }}
+        />
+        {/* <Handle type="target" position="top" /> */}
+        <Handle
+          style={visibleIf(Nodes.hasChildren(nodeState, node))}
+          type="source"
+          position="right"
+        />
+      </NodeUI>
+    );
+  },
+  emptyNodeData() {
+    return SelectNodes.empty();
   },
   query(nodeState, node) {
     const sourceNode = getSource(nodeState, node);
@@ -422,7 +498,7 @@ const SelectNode = {
     const selectedColumnNamesNotNull = node.data.selectedColumnNames ?? [];
     const selectedColumnNamesSet = new Set(selectedColumnNamesNotNull);
     return (
-      <>
+      <Row align="center">
         <input
           checked={selectedColumnNamesSet.has(columnName)}
           style={{ cursor: "pointer" }}
@@ -438,11 +514,18 @@ const SelectNode = {
             });
           }}
         />
+        <HorizontalSpace />
+        <HorizontalSpace />
         {columnName}
-      </>
+        <HorizontalSpace />
+      </Row>
     );
   },
 };
+
+function visibleIf(bool) {
+  return { visibility: bool ? "visible" : "hidden" };
+}
 
 const WhereNode = {
   name: "WhereNode",
@@ -459,6 +542,7 @@ const WhereNode = {
       </NodeUI>
     );
   },
+  emptyNodeData() {},
   canHaveManySources() {
     return false;
   },
@@ -478,63 +562,71 @@ const WhereNode = {
 };
 
 function GroupNodeComponent(node) {
-  // const [nodeState] = useElementsContext();
-  // const selectedColumnNames = SelectNode.columnNames(nodeState, node);
-  const selectedColumns = GroupByNode.selectedColumns(node);
   return (
     <NodeUI node={node} showTools={true} tools={<FromAndTools />}>
       <div>
-        GROUP BY {selectedColumns.length > 0 ? selectedColumns.join(", ") : "∅"}
+        GROUP BY {someOrNoneColumnList(GroupByNode.groupedColumns(node))}
       </div>
+      <div>SELECT {someOrAllColumnList(GroupByNode.selectedColumns(node))}</div>
     </NodeUI>
   );
 }
 
+function someOrNoneColumnList(columnNames) {
+  return columnNames.length > 0 ? columnNames.join(", ") : "∅";
+}
+
+function someOrAllColumnList(columnNames) {
+  return columnNames.length > 0 ? columnNames.join(", ") : "*";
+}
+
 const GroupNode = {
   Component: GroupNodeComponent,
-  queryWhenSelected(nodeState, node) {
-    const sourceNode = getSource(nodeState, node);
-    const fromQuery = getQuery(nodeState, sourceNode);
-    const selectedColumns = GroupByNode.selectedColumns(node);
-    if ((selectedColumns ?? []).length === 0) {
-      return `SELECT * from (${fromQuery})`;
-    }
-    const selectedColumnSet = new Set(selectedColumns ?? []);
-    const otherColumns = getColumnNames(nodeState, sourceNode.id).filter(
-      (column) => !selectedColumnSet.has(column)
-    );
-    return `SELECT ${selectedColumns
-      .concat(otherColumns)
-      .join(", ")} FROM (${fromQuery})
-      ORDER BY ${selectedColumns.join(", ")}`;
-  },
+  emptyNodeData: GroupByNode.empty,
+  // queryWhenSelected(nodeState, node) {
+  //   const sourceNode = getSource(nodeState, node);
+  //   const fromQuery = getQuery(nodeState, sourceNode);
+  //   const selectedColumns = GroupByNode.selectedColumns(node);
+  //   if (selectedColumns.length === 0) {
+  //     return `SELECT * from (${fromQuery})`;
+  //   }
+  //   const selectedColumnSet = new Set(selectedColumns ?? []);
+  //   const otherColumns = getColumnNames(nodeState, sourceNode.id).filter(
+  //     (column) => !selectedColumnSet.has(column)
+  //   );
+  //   return `SELECT ${selectedColumns
+  //     .concat(otherColumns)
+  //     .join(", ")} FROM (${fromQuery})
+  //     ORDER BY ${selectedColumns.join(", ")}`;
+  // },
   query(nodeState, node) {
     const sourceNode = getSource(nodeState, node);
     const fromQuery = getQuery(nodeState, sourceNode);
     const selectedColumns = GroupByNode.selectedColumns(node);
-    if ((selectedColumns ?? []).length === 0) {
+    if (selectedColumns.length === 0) {
       return `SELECT * from (${fromQuery})`;
     }
+
     return `SELECT ${selectedColumns.join(", ")}
       FROM (${fromQuery})
-      GROUP BY ${selectedColumns.join(", ")}`;
+      GROUP BY ${GroupByNode.groupedColumns(node).join(", ")}`;
   },
   queryAdditionalValues(nodeState, node) {
     const sourceNode = getSource(nodeState, node);
     const fromQuery = getQuery(nodeState, sourceNode);
-    const selectedColumns = GroupByNode.selectedColumns(node);
+    const selectedColumns = GroupByNode.groupedColumns(node);
+    if ((selectedColumns ?? []).length === 0) {
+      return null;
+    }
     const otherColumns = subtractArrays(
       getColumnNames(nodeState, sourceNode.id),
       selectedColumns ?? []
     );
-    if (otherColumns.length === 0) {
-      return null;
-    }
     return [`SELECT ${otherColumns} FROM (${fromQuery})`];
   },
   columnNames(nodeState, node) {
     const sourceNode = getSource(nodeState, node);
-    const selectedColumns = GroupByNode.selectedColumns(node);
+    const selectedColumns = GroupByNode.groupedColumns(node);
     return (selectedColumns ?? []).length > 0
       ? selectedColumns
       : getColumnNames(nodeState, sourceNode.id);
@@ -549,7 +641,7 @@ const GroupNode = {
     const selectedColumnNamesNotNull = node.data.selectedColumnNames ?? [];
     const selectedColumnNamesSet = new Set(selectedColumnNamesNotNull);
     return (
-      <>
+      <Row align="center">
         <input
           checked={selectedColumnNamesSet.has(columnName)}
           style={{ cursor: "pointer" }}
@@ -565,11 +657,57 @@ const GroupNode = {
             });
           }}
         />
+        <HorizontalSpace />
+        <HorizontalSpace />
         {columnName}
-      </>
+        <AggregationSelector
+          onChange={(aggregation) => {
+            setNodeState((nodeState) => {
+              GroupByNode.addAggregation(
+                onlyThrows(Nodes.selected(nodeState)),
+                columnName,
+                aggregation
+              );
+            });
+          }}
+        />
+      </Row>
     );
   },
 };
+
+function AggregationSelector({ onChange }) {
+  return (
+    <ShowOnClick
+      css={{ position: "absolute", top: "100%", background: "$slate7" }}
+      trigger={
+        <IconButton>
+          <DropdownMenuIcon />
+        </IconButton>
+      }
+    >
+      <Column>
+        {Object.keys(GroupByNode.AGGREGATIONS).map((aggregation) => (
+          <Button
+            css={{ marginTop: "$4" }}
+            key={aggregation}
+            onClick={() => onChange(aggregation)}
+          >
+            {aggregation}
+          </Button>
+        ))}
+      </Column>
+    </ShowOnClick>
+    /* <Tooltip content="Select aggregation" side="bottom" align="start">
+      <DropdownMenu>
+        <DropdownMenuTrigger>
+          <DropdownMenuIcon />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent>Hello</DropdownMenuContent>
+      </DropdownMenu>
+    </Tooltip> */
+  );
+}
 
 const OrderNode = {
   name: "OrderNode",
@@ -602,6 +740,7 @@ const OrderNode = {
       />
     );
   },
+  emptyNodeData() {},
   // TODO: Should leave the order entirely to the user
   orderClause(node) {
     const columnToOrder = node.columnToOrder ?? {};
@@ -721,6 +860,16 @@ function NodeUI({ node, showTools, tools, children }) {
   return (
     <div>
       <Box isSelected={isSelected}>{children}</Box>
+      <Div
+        css={{
+          position: "absolute",
+          left: "100%",
+          top: "100%",
+          transform: "translate(-100%, -30%)",
+        }}
+      >
+        {Node.label(node)}
+      </Div>
       {!showTools || !isSelected ? null : isLast ? (
         toolsWithPosition
       ) : (
@@ -781,8 +930,18 @@ function FloatOnHover({ style, trigger, children }) {
   );
 }
 
-function AddConnectedFromNodeButon() {
-  return <AddNodeButton type={FromNode}>FROM</AddNodeButton>;
+function ShowOnClick({ css, trigger, children }) {
+  const [isShowing, setIsShowing] = useState(false);
+  return (
+    <div style={{ position: "relative" }}>
+      <div onClick={() => setIsShowing(true)}>{trigger}</div>
+      {isShowing ? (
+        <Box css={css} onMouseLeave={() => setIsShowing(false)}>
+          {children}
+        </Box>
+      ) : null}
+    </div>
+  );
 }
 
 // function Selectable({ node, children }) {
@@ -868,7 +1027,9 @@ function getAllTightDescendants(nodeState, node) {
 }
 
 function getType(node) {
-  return NODE_TYPES[node.type];
+  const type = NODE_TYPES[node.type];
+  invariant(type != null);
+  return type;
 }
 
 function getQuery(nodeState, node) {
@@ -884,12 +1045,16 @@ function getColumnNames(nodeState, id) {
   return getType(node).columnNames(nodeState, node);
 }
 
+function getColumnNames2(nodeState, node) {
+  return getType(node).columnNames(nodeState, node);
+}
+
 function FromAndTools() {
   return (
     <Row>
       <Tools />
       <HorizontalSpace />
-      <AddConnectedFromNodeButon />
+      <AttachNodeButton onAdd={attachFromNode}>FROM</AttachNodeButton>
     </Row>
   );
 }
@@ -897,70 +1062,72 @@ function FromAndTools() {
 function Tools() {
   return (
     <>
-      <AttachNodeButton type="where">WHERE</AttachNodeButton>
+      <AttachNodeButton onAdd={attachTightNode("where")}>
+        WHERE
+      </AttachNodeButton>
       <HorizontalSpace />
-      <AttachNodeButton type="group">GROUP BY</AttachNodeButton>
+      <AttachNodeButton onAdd={attachTightNode("group")}>
+        GROUP BY
+      </AttachNodeButton>
       <HorizontalSpace />
-      <AttachNodeButton type="select">SELECT</AttachNodeButton>
+      <AttachNodeButton onAdd={attachTightNode("select")}>
+        SELECT
+      </AttachNodeButton>
       <HorizontalSpace />
-      <AttachNodeButton type="order">ORDER BY</AttachNodeButton>
+      <AttachNodeButton onAdd={attachTightNode("order")}>
+        ORDER BY
+      </AttachNodeButton>
     </>
   );
 }
 
-function AttachNodeButton({ children, type }) {
+function AttachNodeButton({ children, onAdd }) {
+  const nodePositions = useStoreState((store) => store.nodes);
   const [, setNodeState] = useElementsContext();
-  // const nodePositions = useStoreState((store) => store.nodes);
-  const attachNodeHandler = (type) => () => {
-    setNodeState((nodeState) => {
-      const newNode = Nodes.newNode(nodeState, { type });
-      const selectedNode = onlyThrows(Nodes.selected(nodeState));
-      const selectedNodeChildren = Nodes.children(nodeState, selectedNode);
-      const selectedNodeChildEdges = Edges.children(nodeState, selectedNode);
-      Edges.removeAll(nodeState, selectedNodeChildEdges);
-      Edges.addChildren(nodeState, newNode, selectedNodeChildren);
-      Edges.addChild(nodeState, selectedNode, newNode);
-      Nodes.add(nodeState, newNode);
-      Nodes.select(nodeState, [newNode]);
-      Nodes.layout(nodeState, selectedNode);
-    });
-  };
   return (
-    <ButtonWithIcon icon={<PlusIcon />} onClick={attachNodeHandler(type)}>
+    <ButtonWithIcon
+      icon={<PlusIcon />}
+      onClick={() =>
+        setNodeState((nodeState) => onAdd(nodeState, nodePositions))
+      }
+    >
       {children}
     </ButtonWithIcon>
   );
 }
 
-function getNewNodeID(nodeState) {
-  return String(
-    Math.max(
-      ...nodeState.nodes
-        .filter(({ id }) => !id.startsWith("e"))
-        .map((node) => +node.id)
-    ) + 1
-  );
-}
-
-function removeElement(array, element) {
-  return array.filter(({ id }) => id !== element.id);
-}
-
-function edgeTight(source, target, isTight) {
-  return edge(source, target, true);
-}
-
-function edge(source, target, isTight) {
-  return {
-    id: `e${source}${target}`,
-    source: source,
-    target: target,
-    type: isTight ? "tight" : "default",
+function attachTightNode(type) {
+  return (nodeState) => {
+    const data = getType({ type }).emptyNodeData();
+    const newNode = Nodes.newNode(nodeState, { type, data });
+    const selectedNode = onlyThrows(Nodes.selected(nodeState));
+    addAndSelectNode(nodeState, newNode);
+    Nodes.layout(nodeState, selectedNode);
   };
 }
 
-function canNodeHaveManySources(node) {
-  return getType(node).canHaveManySources();
+function attachFromNode(nodeState, nodePositions) {
+  const selectedNode = onlyThrows(Nodes.selected(nodeState));
+  Nodes.ensureLabel(nodeState, selectedNode);
+  const data = FromNode.emptyNodeData(Node.label(selectedNode));
+  const newNode = Nodes.newNode(nodeState, { type: "from", data });
+  addAndSelectNode(nodeState, newNode);
+  Nodes.layoutDetached(selectedNode, newNode, nodePositions);
+}
+
+function addAndSelectNode(nodeState, newNode) {
+  const selectedNode = onlyThrows(Nodes.selected(nodeState));
+  const selectedNodeChildren = Nodes.children(nodeState, selectedNode).filter(
+    (node) => Node.isTight(node)
+  );
+  const selectedNodeChildEdges = Edges.children(nodeState, selectedNode).filter(
+    (edge) => Edges.isTight(nodeState, edge)
+  );
+  Edges.removeAll(nodeState, selectedNodeChildEdges);
+  Edges.addChildren(nodeState, newNode, selectedNodeChildren);
+  Edges.addChild(nodeState, selectedNode, newNode);
+  Nodes.add(nodeState, newNode);
+  Nodes.select(nodeState, [newNode]);
 }
 
 function AddNodeButton({ children, type }) {
@@ -968,17 +1135,11 @@ function AddNodeButton({ children, type }) {
   const nodePositions = useStoreState((store) => store.nodes);
   const addNodeHandler = (type) => () => {
     setNodeState((nodeState) => {
-      const newID = getNewNodeID(nodeState);
-      const maxX = Math.max(
-        ...nodePositions.map(({ __rf }) => __rf.position.x + __rf.width)
-      );
-      nodeState.nodes.push({
-        id: newID,
-        type,
-        data: {},
-        position: { x: maxX + 30, y: INIT_Y },
-      });
-      nodeState.selectedNodeID = newID;
+      const data = getType({ type }).emptyNodeData();
+      const newNode = Nodes.newNode(nodeState, { type, data });
+      Nodes.add(nodeState, newNode);
+      Nodes.select(nodeState, [newNode]);
+      Nodes.layoutStandalone(newNode, nodePositions);
     });
   };
   return (
@@ -987,6 +1148,10 @@ function AddNodeButton({ children, type }) {
     </ButtonWithIcon>
   );
 }
+
+// function canNodeHaveManySources(node) {
+//   return getType(node).canHaveManySources();
+// }
 
 const Box = styled("div", {
   cursor: "move",
@@ -1040,7 +1205,8 @@ function Table({ nodeState, setNodeState }) {
             nodeState: nodeState,
           });
         }
-        setTimeout(() => setUpdated(false), 1000);
+        const DELAY_OF_SHOWING_RESULTS = 10;
+        setTimeout(() => setUpdated(false), DELAY_OF_SHOWING_RESULTS);
       }, 300)
     );
   }, [nodeState]);
@@ -1058,6 +1224,9 @@ function Table({ nodeState, setNodeState }) {
     />
   );
 }
+
+const TH = styled("th");
+const TD = styled("td");
 
 function TableLoaded({
   updated,
@@ -1081,17 +1250,19 @@ function TableLoaded({
     ...additionalTables.map((table) => [[[""]], table.values])
   );
   const rowCount = Math.max(...values.map((rows) => rows.length));
+  const primaryColumnCount = table.columns.length;
   return (
     <>
       <table className={updated ? "updated" : null}>
         <thead>
           <tr>
             {columns.map((column, i) => (
-              <th
+              <TH
                 key={i}
-                style={{
+                css={{
                   textAlign: "start",
                   whiteSpace: "nowrap",
+                  color: i >= primaryColumnCount ? "$slate11" : null,
                   // color: availableColumnNamesSet.has(column) ? "black" : "#ddd",
                 }}
               >
@@ -1106,18 +1277,24 @@ function TableLoaded({
                       return control ?? column;
                     })()
                   : null}
-              </th>
+              </TH>
             ))}
           </tr>
         </thead>
         <tbody>
           {[...Array(rowCount)].map((_, j) => (
             <tr key={j}>
-              {values.map((rows) =>
+              {values.map((rows, tableIndex) =>
                 rows[0].map((_, i) => (
-                  <td style={{ whiteSpace: "nowrap" }} key={i}>
+                  <TD
+                    css={{
+                      whiteSpace: "nowrap",
+                      color: tableIndex > 0 ? "$slate11" : null,
+                    }}
+                    key={i}
+                  >
                     {(rows[j] ?? [])[i] ?? ""}
-                  </td>
+                  </TD>
                 ))
               )}
             </tr>
@@ -1222,6 +1399,7 @@ function execQuery(db, sql) {
 
 const NODE_TYPES = {
   from: FromNode,
+  name: NameNode,
   select: SelectNode,
   where: WhereNode,
   group: GroupNode,

@@ -1,8 +1,10 @@
 import * as Node from "./Node";
 import * as Edge from "./Edge";
 import * as Edges from "./Edges";
+import * as Iterable from "./Iterable";
 import * as Arrays from "./Arrays";
 import { only, onlyThrows } from "./Arrays";
+import { invariant } from "./invariant";
 
 export function select(nodeState, nodes) {
   nodeState.selectedNodeIDs = nodes.map((node) => Node.id(node));
@@ -51,6 +53,14 @@ export function parents(nodeState, node) {
   );
 }
 
+export function parentX(nodeState, node) {
+  return onlyThrows(parents(nodeState, node));
+}
+
+export function hasParents(nodeState, node) {
+  return Edges.parents(nodeState, node).length > 0;
+}
+
 export function hasChildren(nodeState, node) {
   return Edges.children(nodeState, node).length > 0;
 }
@@ -72,6 +82,38 @@ export function tightParent(nodeState, node) {
   return Node.isTight(node) ? only(parents(nodeState, node)) : null;
 }
 
+export function tightRoot(nodeState, node) {
+  if (!Node.isTight(node)) {
+    return node;
+  }
+  const parent = only(parents(nodeState, node));
+  if (parent == null) {
+    return node;
+  }
+  return tightRoot(nodeState, parent);
+}
+
+export function idSet(nodes) {
+  return new Set(nodes.map(Node.id));
+}
+
+export function dedupe(nodes) {
+  return Array.from(new Set(nodes));
+}
+
+const GENERATED_NAMES = "abcdefghijklmnopqrstuvwxyz".split("");
+
+export function ensureLabel(nodeState, node) {
+  if (Node.label(node) == null || Node.label(node) === "") {
+    const usedNames = new Set(Iterable.map(nodes(nodeState), Node.label));
+    const generatedName = GENERATED_NAMES.filter(
+      (name) => !usedNames.has(name)
+    )[0];
+    invariant(generatedName != null);
+    Node.setLabel(node, generatedName);
+  }
+}
+
 function newNodeID(nodeState) {
   return String(
     Math.max(...Arrays.map(nodes(nodeState), (node) => Node.intID(node))) + 1
@@ -79,13 +121,39 @@ function newNodeID(nodeState) {
 }
 
 // TODO: `layout` can stay here but the algo should go into a separate module
-export function layout(nodeState, node) {
+export function layout(nodeState, node /* , excludeSet = new Set() */) {
   const NODE_HEIGHT_OFFSET = 30;
 
   children(nodeState, node).forEach((child) => {
-    if (Node.isTight(child)) {
+    if (Node.isTight(child) /* && !excludeSet.has(child) */) {
       Node.move(child, Node.x(node), Node.y(node) + NODE_HEIGHT_OFFSET);
       layout(nodeState, child);
     }
   });
+}
+
+// TODO: `layout` can stay here but the algo should go into a separate module
+export function layoutStandalone(node, nodePositions) {
+  const INIT_Y = 30;
+  const NODE_HORIZONTAL_OFFSET = 30;
+
+  const maxX = Math.max(
+    ...nodePositions.map(({ __rf }) => __rf.position.x + __rf.width)
+  );
+
+  Node.move(node, maxX + NODE_HORIZONTAL_OFFSET, INIT_Y);
+}
+
+// TODO: `layout` can stay here but the algo should go into a separate module
+export function layoutDetached(parent, node, nodePositions) {
+  const NODE_HORIZONTAL_OFFSET = 30;
+
+  const {
+    __rf: {
+      position: { x, y },
+      width,
+    },
+  } = nodePositions.find(({ id }) => Node.hasID(parent, id));
+
+  Node.move(node, x + width + NODE_HORIZONTAL_OFFSET, y);
 }
