@@ -194,7 +194,6 @@ const ReactFlow = forwardRef(
             onEdgeUpdateEnd={onEdgeUpdateEnd}
             edgeUpdaterRadius={edgeUpdaterRadius}
           />
-          <ElementUpdater elements={elements} />
           {onSelectionChange && (
             <SelectionListener onSelectionChange={onSelectionChange} />
           )}

@@ -53,6 +53,12 @@ export function parents(nodeState, node) {
   );
 }
 
+export function tightChildren(nodeState, node) {
+  return Edges.tightChildren(nodeState, node).map((edge) =>
+    Edges.childNode(nodeState, edge)
+  );
+}
+
 export function parentX(nodeState, node) {
   return onlyThrows(parents(nodeState, node));
 }
@@ -61,18 +67,20 @@ export function hasParents(nodeState, node) {
   return Edges.parents(nodeState, node).length > 0;
 }
 
+export function hasDetachedParents(nodeState, node) {
+  return Edges.detachedParents(nodeState, node).length > 0;
+}
+
 export function hasChildren(nodeState, node) {
   return Edges.children(nodeState, node).length > 0;
 }
 
 export function hasTightChildren(nodeState, node) {
-  return children(nodeState, node).filter(Node.isTight).length > 0;
+  return Edges.tightChildren(nodeState, node).length > 0;
 }
 
 export function hasDetachedChildren(nodeState, node) {
-  return (
-    children(nodeState, node).filter((node) => !Node.isTight(node)).length > 0
-  );
+  return Edges.detachedChildren(nodeState, node).length > 0;
 }
 
 export function add(nodeState, node) {
@@ -89,14 +97,12 @@ export function remove(nodeState, node) {
 }
 
 export function tightParent(nodeState, node) {
-  return Node.isTight(node) ? only(parents(nodeState, node)) : null;
+  const edge = Edges.tightParent(nodeState, node);
+  return edge != null ? Edges.parentNode(nodeState, edge) : null;
 }
 
 export function tightRoot(nodeState, node) {
-  if (!Node.isTight(node)) {
-    return node;
-  }
-  const parent = only(parents(nodeState, node));
+  const parent = tightParent(nodeState, node);
   if (parent == null) {
     return node;
   }
@@ -131,14 +137,13 @@ function newNodeID(nodeState) {
 }
 
 // TODO: `layout` can stay here but the algo should go into a separate module
-export function layout(nodeState, node /* , excludeSet = new Set() */) {
-  const NODE_HEIGHT_OFFSET = 30;
+export function layout(nodeState, node, nodePositions) {
+  const { height } = getDimensions(nodePositions, node);
+  console.log(node.id, height);
 
-  children(nodeState, node).forEach((child) => {
-    if (Node.isTight(child) /* && !excludeSet.has(child) */) {
-      Node.move(child, Node.x(node), Node.y(node) + NODE_HEIGHT_OFFSET);
-      layout(nodeState, child);
-    }
+  tightChildren(nodeState, node).forEach((child) => {
+    Node.move(child, Node.x(node), Node.y(node) + height);
+    layout(nodeState, child, nodePositions);
   });
 }
 
@@ -157,13 +162,17 @@ export function layoutStandalone(node, nodePositions) {
 // TODO: `layout` can stay here but the algo should go into a separate module
 export function layoutDetached(parent, node, nodePositions) {
   const NODE_HORIZONTAL_OFFSET = 30;
+  const { x, y, width } = getDimensions(nodePositions, parent);
+  Node.move(node, x + width + NODE_HORIZONTAL_OFFSET, y);
+}
 
+function getDimensions(nodePositions, node) {
   const {
     __rf: {
       position: { x, y },
       width,
+      height,
     },
-  } = nodePositions.find(({ id }) => Node.hasID(parent, id));
-
-  Node.move(node, x + width + NODE_HORIZONTAL_OFFSET, y);
+  } = nodePositions.find(({ id }) => Node.hasID(node, id));
+  return { x, y, width, height };
 }

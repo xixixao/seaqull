@@ -27,6 +27,11 @@ export function move(node, x, y) {
   node.position.y = y;
 }
 
+export function moveBy(node, x, y) {
+  node.position.x += x;
+  node.position.y += y;
+}
+
 export function label(node, label) {
   return node.data.label;
 }

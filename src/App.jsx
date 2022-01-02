@@ -19,6 +19,7 @@ import * as NodeState from "./NodeState";
 import * as Nodes from "./Nodes";
 import * as Edges from "./Edges";
 import * as Node from "./Node";
+import * as Edge from "./Edge";
 
 import ReactFlow, {
   removeElements,
@@ -44,6 +45,8 @@ import * as GroupByNode from "./GroupByNode";
 import { Tooltip } from "./components/Tooltip";
 import { Column } from "./components/Column";
 import { invariant } from "./invariant";
+import store from "./react-flow/store";
+import ElementUpdater from "./react-flow/components/ElementUpdater";
 // import {
 //   DropdownMenu,
 //   DropdownMenuContent,
@@ -95,6 +98,8 @@ function useSetSelectedNodeState() {
   );
 }
 
+const NodeAddContext = createContext();
+
 const INIT_Y = 30;
 
 function Content() {
@@ -116,8 +121,8 @@ function Content() {
   );
   const nodes = idMap(elements.filter(({ id }) => !id.startsWith("e")));
   const edges = idMap(elements.filter(({ id }) => id.startsWith("e")));
-  console.log(Array.from(nodes.values()));
-  console.log(Array.from(edges.values()));
+  // console.log(Array.from(nodes.values()));
+  // console.log(Array.from(edges.values()));
   const selectedNodeIDs = (selectedElements ?? []).map((element) => element.id);
   const nodeState = { nodes, edges, selectedNodeIDs };
   const setNodeState = (fn) => {
@@ -154,7 +159,18 @@ function Content() {
           height: "100%",
         }}
       >
-        <NodesPane elements={elements} setNodeState={setNodeState} />
+        <ElementUpdater
+          elements={elements.map((element) =>
+            element.parentID != null
+              ? {
+                  ...element,
+                  source: element.parentID,
+                  target: element.childID,
+                }
+              : element
+          )}
+        />
+        <NodesPane />
         <div style={{ padding: 8, overflowX: "scroll", flexGrow: 1 }}>
           <Table nodeState={nodeState} setNodeState={setNodeState} />
         </div>
@@ -178,74 +194,112 @@ function mapValues(map) {
   return Array.from(map.values());
 }
 
-function NodesPane({ elements, setNodeState }) {
+function getNodePositions() {
+  return store.getState().nodes;
+}
+
+function NodesPane() {
   //   const onElementsRemove = (elementsToRemove) =>
   //     setElements((els) => removeElements(elementsToRemove, els));
   // const onConnect = (params) => setElements((els) => addEdge(params, els));
   // const updateNodePosDiff = useStoreActions(
   //   (actions) => actions.updateNodePosDiff
   // );
+  const [nodeState, setNodeState] = useElementsContext();
+  const nodePositions = useStoreState((store) => store.nodes);
+
+  const addedToNodeIDRef = useRef(null);
+  useEffect(() => {
+    if (
+      addedToNodeIDRef.current != null &&
+      nodePositions.find(({ id }) => id === addedToNodeIDRef.current)?.__rf
+        .height != null
+    ) {
+      // console.log(nodePositions);
+      setNodeState((nodeState) => {
+        const node = Nodes.nodeWithID(nodeState, addedToNodeIDRef.current);
+        const parent = Nodes.tightParent(nodeState, node);
+        Nodes.layout(nodeState, parent, nodePositions);
+      });
+      addedToNodeIDRef.current = null;
+    }
+  }, [nodePositions, nodeState]);
+
+  const onAdd = (addAction) => {
+    setNodeState((nodeState) => {
+      addedToNodeIDRef.current = addAction(nodeState);
+    });
+  };
+
   return (
-    <Div
-      css={{
-        height: "65%",
-        borderBottom: "1px solid $slate7",
-        // borderTop: "1px solid $slate7",
-        outline: "none",
-      }}
-      tabIndex="-1"
-      onKeyDown={(e) => {
-        if (e.key === "Backspace") {
-          setNodeState((nodeState) => {
-            if (Nodes.countSelected(nodeState) > 0) {
-              const selectedNodes = Nodes.selected(nodeState);
-              selectedNodes.forEach((node) => {
-                const tightParent = Nodes.tightParent(nodeState, node);
-                const children = Nodes.children(nodeState, node);
-                Nodes.remove(nodeState, node);
-                if (tightParent != null) {
-                  Edges.addChildren(nodeState, tightParent, children);
-                  Nodes.layout(nodeState, tightParent);
-                }
-              });
-              Nodes.select(nodeState, []);
-            }
-          });
-        }
-      }}
-    >
-      <ReactFlow
-        elements={elements.map((element) =>
-          element.parentID != null
-            ? {
-                id: element.id,
-                source: element.parentID,
-                target: element.childID,
-              }
-            : element
-        )}
-        nodeTypes={NODE_COMPONENTS}
-        edgeTypes={EDGE_COMPONENTS}
-        onNodeDrag={(event, node, draggableData) => {
-          setNodeState((nodeState) => {
-            const draggedNodeRoots = Nodes.dedupe(
-              Nodes.selected(nodeState).map((node) =>
-                Nodes.tightRoot(nodeState, node)
-              )
-            );
-            draggedNodeRoots.forEach((node) => {
-              node.position.x += draggableData.deltaX;
-              node.position.y += draggableData.deltaY;
-              Nodes.layout(nodeState, node);
-            });
-          });
-          return false;
+    <NodeAddContext.Provider value={onAdd}>
+      <Div
+        css={{
+          height: "65%",
+          borderBottom: "1px solid $slate7",
+          // borderTop: "1px solid $slate7",
+          outline: "none",
         }}
-        // onElementsRemove={onElementsRemove}
-        // onConnect={onConnect}
-        // onLoad={onLoad}
+        tabIndex="-1"
+        onKeyDown={(e) => {
+          if (e.key === "Backspace") {
+            setNodeState((nodeState) => {
+              if (Nodes.countSelected(nodeState) > 0) {
+                const selectedNodes = Nodes.selected(nodeState);
+                selectedNodes.forEach((node) => {
+                  const tightParent = Nodes.tightParent(nodeState, node);
+                  const children = Nodes.children(nodeState, node);
+                  Nodes.remove(nodeState, node);
+                  if (tightParent != null) {
+                    Edges.addTightChildren(nodeState, tightParent, children);
+                    Nodes.layout(nodeState, tightParent, nodePositions);
+                  }
+                });
+                Nodes.select(nodeState, []);
+              }
+            });
+          }
+        }}
       >
-        {/* <MiniMap
+        <ReactFlow
+          nodeTypes={NODE_COMPONENTS}
+          edgeTypes={EDGE_COMPONENTS}
+          onNodeDrag={(event, _node, { deltaX, deltaY }) => {
+            setNodeState((nodeState) => {
+              const node = only(Nodes.selected(nodeState));
+              const parentEdge = Edges.tightParent(nodeState, node);
+              const shouldDragDetachNode =
+                node != null && parentEdge != null && event.metaKey;
+              if (shouldDragDetachNode) {
+                const parent = Edges.parentNode(nodeState, parentEdge);
+                const children = Nodes.tightChildren(nodeState, node);
+                Edge.detach(parentEdge);
+                Edges.removeAll(
+                  nodeState,
+                  Edges.tightChildren(nodeState, node)
+                );
+                Edges.addTightChildren(nodeState, parent, children);
+                Node.moveBy(node, deltaX, deltaY);
+                Nodes.layout(nodeState, parent, nodePositions);
+                return;
+              }
+              const draggedNodeRoots = Nodes.dedupe(
+                Nodes.selected(nodeState).map((node) =>
+                  Nodes.tightRoot(nodeState, node)
+                )
+              );
+              draggedNodeRoots.forEach((node) => {
+                Node.moveBy(node, deltaX, deltaY);
+                Nodes.layout(nodeState, node, nodePositions);
+              });
+            });
+            return false;
+          }}
+          // onElementsRemove={onElementsRemove}
+          // onConnect={onConnect}
+          // onLoad={onLoad}
+        >
+          {/* <MiniMap
         nodeStrokeColor={(n) => {
           if (n.style?.background) return n.style.background;
           if (n.type === "input") return "#0041d0";
@@ -262,22 +316,23 @@ function NodesPane({ elements, setNodeState }) {
         nodeBorderRadius={2}
       /> */}
 
-        <div
-          style={{
-            position: "absolute",
-            padding: 4,
-            zIndex: 5,
-            transform: "translate(-50%, 0)",
-            top: 0,
-            left: "50%",
-          }}
-        >
-          <AddNodeButton type="from">FROM</AddNodeButton>
-        </div>
-        <PaneControls showInteractive={false} />
-        <Background color="#aaa" gap={16} />
-      </ReactFlow>
-    </Div>
+          <div
+            style={{
+              position: "absolute",
+              padding: 4,
+              zIndex: 5,
+              transform: "translate(-50%, 0)",
+              top: 0,
+              left: "50%",
+            }}
+          >
+            <AddNodeButton type="from">FROM</AddNodeButton>
+          </div>
+          <PaneControls showInteractive={false} />
+          <Background color="#aaa" gap={16} />
+        </ReactFlow>
+      </Div>
+    </NodeAddContext.Provider>
   );
 }
 
@@ -333,11 +388,6 @@ const FromNode = {
           // onConnect={(params) => console.log('handle onConnect', params)}
           // isConnectable={isConnectable}
         /> */}
-        <Handle
-          style={visibleIf(Nodes.hasParents(nodeState, node))}
-          type="target"
-          position="left"
-        />
       </NodeUI>
     );
   },
@@ -414,12 +464,6 @@ const SelectNode = {
               SelectNodes.setSelectedColumns(node, columns.split(/, */));
             });
           }}
-        />
-        {/* <Handle type="target" position="top" /> */}
-        <Handle
-          style={visibleIf(Nodes.hasDetachedChildren(nodeState, node))}
-          type="source"
-          position="right"
         />
       </NodeUI>
     );
@@ -622,6 +666,9 @@ const GroupNode = {
       getColumnNames(nodeState, sourceNode.id),
       selectedColumns ?? []
     );
+    if (otherColumns.length === 0) {
+      return null;
+    }
     return [`SELECT ${otherColumns} FROM (${fromQuery})`];
   },
   columnNames(nodeState, node) {
@@ -859,7 +906,19 @@ function NodeUI({ node, showTools, tools, children }) {
   );
   return (
     <div>
-      <Box isSelected={isSelected}>{children}</Box>
+      <Box isSelected={isSelected}>
+        {children}
+        <Handle
+          style={visibleIf(Nodes.hasDetachedParents(nodeState, node))}
+          type="target"
+          position="left"
+        />
+        <Handle
+          style={visibleIf(Nodes.hasDetachedChildren(nodeState, node))}
+          type="source"
+          position="right"
+        />
+      </Box>
       <Div
         css={{
           position: "absolute",
@@ -1082,14 +1141,13 @@ function Tools() {
 }
 
 function AttachNodeButton({ children, onAdd }) {
-  const nodePositions = useStoreState((store) => store.nodes);
-  const [, setNodeState] = useElementsContext();
+  const onAddGlobal = useContext(NodeAddContext);
   return (
     <ButtonWithIcon
       icon={<PlusIcon />}
-      onClick={() =>
-        setNodeState((nodeState) => onAdd(nodeState, nodePositions))
-      }
+      onClick={() => {
+        onAddGlobal(onAdd);
+      }}
     >
       {children}
     </ButtonWithIcon>
@@ -1097,12 +1155,13 @@ function AttachNodeButton({ children, onAdd }) {
 }
 
 function attachTightNode(type) {
-  return (nodeState) => {
+  return (nodeState, nodePositions) => {
     const data = getType({ type }).emptyNodeData();
     const newNode = Nodes.newNode(nodeState, { type, data });
-    const selectedNode = onlyThrows(Nodes.selected(nodeState));
+    // const selectedNode = onlyThrows(Nodes.selected(nodeState));
     addAndSelectNode(nodeState, newNode);
-    Nodes.layout(nodeState, selectedNode);
+    return Node.id(newNode);
+    // Nodes.layout(nodeState, selectedNode, nodePositions);
   };
 }
 
@@ -1117,15 +1176,11 @@ function attachJoinNode(nodeState, nodePositions) {
 
 function addAndSelectNode(nodeState, newNode) {
   const selectedNode = onlyThrows(Nodes.selected(nodeState));
-  const selectedNodeChildren = Nodes.children(nodeState, selectedNode).filter(
-    (node) => Node.isTight(node)
-  );
-  const selectedNodeChildEdges = Edges.children(nodeState, selectedNode).filter(
-    (edge) => Edges.isTight(nodeState, edge)
-  );
+  const selectedNodeChildren = Nodes.tightChildren(nodeState, selectedNode);
+  const selectedNodeChildEdges = Edges.tightChildren(nodeState, selectedNode);
   Edges.removeAll(nodeState, selectedNodeChildEdges);
-  Edges.addChildren(nodeState, newNode, selectedNodeChildren);
-  Edges.addChild(nodeState, selectedNode, newNode);
+  Edges.addTightChildren(nodeState, newNode, selectedNodeChildren);
+  Edges.addTightChild(nodeState, selectedNode, newNode);
   Nodes.add(nodeState, newNode);
   Nodes.select(nodeState, [newNode]);
 }
@@ -1392,7 +1447,7 @@ function execQuery(db, sql) {
   try {
     return db.exec(sql)[0];
   } catch (e) {
-    console.error(e);
+    console.error(sql, e);
     return null;
   }
 }

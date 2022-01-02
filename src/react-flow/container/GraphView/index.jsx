@@ -197,6 +197,7 @@ const GraphView = ({
       setConnectionMode(connectionMode);
     }
   }, [connectionMode]);
+
   return (
     <FlowRenderer
       onPaneClick={onPaneClick}

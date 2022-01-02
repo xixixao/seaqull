@@ -10,6 +10,10 @@ export function newEdge(parent, child) {
   };
 }
 
+export function newTightEdge(parent, child) {
+  return { ...newEdge(parent, child), type: "tight" };
+}
+
 export function id(edge) {
   return edge.id;
 }
@@ -20,4 +24,12 @@ export function parentID(edge) {
 
 export function childID(edge) {
   return edge.childID;
+}
+
+export function isTight(edge) {
+  return edge.type === "tight";
+}
+
+export function detach(edge) {
+  edge.type = null;
 }
