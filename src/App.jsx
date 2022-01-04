@@ -8,6 +8,7 @@ import React, {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -81,14 +82,14 @@ function App() {
   );
 }
 
-const ElementsContext = createContext();
+const AppStateContext = createContext();
 
-function useElementsContext() {
-  return useContext(ElementsContext);
+function useAppStateContext() {
+  return useContext(AppStateContext);
 }
 
 function useSetSelectedNodeState() {
-  const [, setAppState] = useElementsContext();
+  const [, setAppState] = useAppStateContext();
   return useCallback(
     (producer) => {
       setAppState((appState) => {
@@ -145,7 +146,7 @@ function Content() {
     );
 
   return (
-    <ElementsContext.Provider value={[appState, setAppState]}>
+    <AppStateContext.Provider value={[appState, setAppState]}>
       {/* <div style={{ padding: "0 4px 4px" }}>
         <Input label="namespace" value={namespace} onChange={setNamespace} />
         <HorizontalSpace />
@@ -169,10 +170,10 @@ function Content() {
         />
         <NodesPane />
         <div style={{ padding: 8, overflowX: "scroll", flexGrow: 1 }}>
-          <Table appState={appState} setAppState={setAppState} />
+          <Table />
         </div>
       </div>
-    </ElementsContext.Provider>
+    </AppStateContext.Provider>
   );
 }
 
@@ -202,7 +203,7 @@ function NodesPane() {
   // const updateNodePosDiff = useStoreActions(
   //   (actions) => actions.updateNodePosDiff
   // );
-  const [appState, setAppState] = useElementsContext();
+  const [appState, setAppState] = useAppStateContext();
   const nodePositions = useStoreState((store) => store.nodes);
 
   const addedToNodeIDRef = useRef(null);
@@ -218,7 +219,6 @@ function NodesPane() {
         addedToNodeIDRef.current = null;
         const parent = Nodes.tightParent(appState, node);
         Nodes.layout(appState, parent, nodePositions);
-        console.log(current(appState));
       }
     });
   }, [nodePositions, appState, setAppState]);
@@ -362,7 +362,7 @@ const FromNode = {
   Component(node) {
     const name = FromNodes.name(node);
     const setSelectedNodeState = useSetSelectedNodeState();
-    const [appState] = useElementsContext();
+    const [appState] = useAppStateContext();
     return (
       <NodeUI
         node={node}
@@ -460,7 +460,7 @@ const SelectNode = {
   name: "SelectNode",
   Component(node) {
     const setSelectedNodeState = useSetSelectedNodeState();
-    const [appState] = useElementsContext();
+    const [appState] = useAppStateContext();
     return (
       <NodeUI node={node} showTools={true} tools={<FromAndTools />}>
         SELECT{" "}
@@ -895,7 +895,7 @@ function NodeInput({
 
 function NodeUI({ node, showTools, tools, children }) {
   const isSelected = node.selected;
-  const [appState] = useElementsContext();
+  const [appState] = useAppStateContext();
 
   const isLast = !Nodes.hasTightChildren(appState, node);
   const toolsWithPosition = (
@@ -1011,7 +1011,7 @@ function ShowOnClick({ css, trigger, children }) {
 }
 
 // function Selectable({ node, children }) {
-//   const [, setAppState] = useElementsContext();
+//   const [, setAppState] = useAppStateContext();
 //   return (
 //     <span
 //       onClick={() => {
@@ -1026,7 +1026,7 @@ function ShowOnClick({ css, trigger, children }) {
 // }
 
 function DeleteNodeButton({ node }) {
-  const [, setAppState] = useElementsContext();
+  const [, setAppState] = useAppStateContext();
   return (
     <Button
       onClick={() => {
@@ -1193,7 +1193,7 @@ function addAndSelectNode(appState, newNode) {
 }
 
 function AddNodeButton({ children, type }) {
-  const [, setAppState] = useElementsContext();
+  const [, setAppState] = useAppStateContext();
   const nodePositions = useStoreState((store) => store.nodes);
   const addNodeHandler = (type) => () => {
     setAppState((appState) => {
@@ -1238,7 +1238,20 @@ const Box = styled("div", {
   // margin: "0 4px 2px 0",
 });
 
-function Table({ appState, setAppState }) {
+function Table() {
+  const [appState, setAppState] = useAppStateContext();
+  const graph = useMemo(
+    () => ({
+      nodes: appState.nodes,
+      edges: appState.edges,
+      selectedNodeIDs: appState.selectedNodeIDs,
+    }),
+    [appState.edges, appState.nodes, appState.selectedNodeIDs]
+  );
+  return <TableLoader appState={graph} setAppState={setAppState} />;
+}
+
+const TableLoader = memo(({ appState, setAppState }) => {
   const [tableState, setTableState] = useState();
   const [updated, setUpdated] = useState();
   const [isLoading, setIsLoading] = useState(false);
@@ -1285,7 +1298,7 @@ function Table({ appState, setAppState }) {
       setAppState={setAppState}
     />
   );
-}
+});
 
 const TH = styled("th");
 const TD = styled("td");
