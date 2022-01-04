@@ -15,7 +15,7 @@ import { initialState } from "./index";
 export default function reactFlowReducer(state = initialState, action) {
   switch (action.type) {
     case constants.SET_ELEMENTS: {
-      const propElements = action.payload;
+      const { elements: propElements, selectedNodeIDs } = action.payload;
       const nextElements = {
         nextNodes: [],
         nextEdges: [],
@@ -66,7 +66,16 @@ export default function reactFlowReducer(state = initialState, action) {
         },
         nextElements
       );
-      return { ...state, nodes: nextNodes, edges: nextEdges };
+      let selectedElements = state.selectedElements;
+      let i = 0;
+      for (const id of selectedNodeIDs) {
+        if (state.selectedElements[i].id !== id) {
+          selectedElements = Array.from(selectedNodeIDs).map((id) => ({ id }));
+          break;
+        }
+        i++;
+      }
+      return { ...state, selectedElements, nodes: nextNodes, edges: nextEdges };
     }
     case constants.UPDATE_NODE_DIMENSIONS: {
       const updatedNodes = state.nodes.map((node) => {

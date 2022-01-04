@@ -17,3 +17,7 @@ export function onlyThrows(array) {
   invariant(array.length === 1);
   return array[0];
 }
+
+export function isEqual(a, b) {
+  return a.every((x, i) => b[i] === x);
+}

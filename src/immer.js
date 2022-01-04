@@ -1,5 +1,5 @@
-import { produce, original, enableMapSet } from "immer";
+import { enableMapSet } from "immer";
 
 enableMapSet();
 
-export { produce, original };
+export * from "immer";

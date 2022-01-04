@@ -4,6 +4,7 @@ import * as NameNodes from "./NameNodes";
 import * as SelectNodes from "./SelectNodes";
 import React, {
   createContext,
+  memo,
   useCallback,
   useContext,
   useEffect,
@@ -11,7 +12,7 @@ import React, {
   useState,
 } from "react";
 import { useImmer } from "use-immer";
-import { produce, original } from "./immer";
+import { produce, current } from "./immer";
 import initSqlJs from "sql.js";
 import { styled } from "./style";
 
@@ -87,14 +88,14 @@ function useElementsContext() {
 }
 
 function useSetSelectedNodeState() {
-  const [, setNodeState] = useElementsContext();
+  const [, setAppState] = useElementsContext();
   return useCallback(
     (producer) => {
-      setNodeState((nodeState) => {
-        producer(onlyThrows(Nodes.selected(nodeState)));
+      setAppState((appState) => {
+        producer(onlyThrows(Nodes.selected(appState)));
       });
     },
-    [setNodeState]
+    [setAppState]
   );
 }
 
@@ -102,46 +103,49 @@ const NodeAddContext = createContext();
 
 const INIT_Y = 30;
 
+const INITIAL_ELEMENTS = [
+  {
+    id: "0",
+    type: "from",
+    data: { name: "users" },
+    position: { x: 40, y: INIT_Y },
+  },
+];
+const INITIAL_NODES = idMap(
+  INITIAL_ELEMENTS.map(({ position, ...rest }) => rest)
+);
+const INITIAL_POSITIONS = new Map(
+  INITIAL_ELEMENTS.map((element) => [element.id, element.position])
+);
+const INITIAL_EDGES = new Map();
+const INITIAL_SELECTED_NODE_IDS = new Set([]);
+
 function Content() {
   const [namespace, setNamespace] = useState("foo_team");
   const [notebookName, setNotebookName] = useState("Untitled");
 
-  const [elements, setElements] = useState([
-    {
-      id: "0",
-      type: "from",
-      data: { name: "users" },
-      position: { x: 40, y: INIT_Y },
-    },
-    // 1: { type: FromNode, id: 1, name: null },
-  ]);
-  const selectedElements = useStoreState((store) => store.selectedElements);
-  const setSelectedElements = useStoreActions(
-    (actions) => actions.setSelectedElements
-  );
-  const nodes = idMap(elements.filter(({ id }) => !id.startsWith("e")));
-  const edges = idMap(elements.filter(({ id }) => id.startsWith("e")));
-  // console.log(Array.from(nodes.values()));
-  // console.log(Array.from(edges.values()));
-  const selectedNodeIDs = (selectedElements ?? []).map((element) => element.id);
-  const nodeState = { nodes, edges, selectedNodeIDs };
-  const setNodeState = (fn) => {
-    const newState = produce(nodeState, fn);
-    if (nodes !== newState.nodes || edges !== newState.edges) {
-      setElements(mapValues(newState.nodes).concat(mapValues(newState.edges)));
-    }
-    if (selectedNodeIDs !== newState.selectedNodeIDs) {
-      setSelectedElements(newState.selectedNodeIDs.map((id) => ({ id })));
-    }
-  };
+  const [appState, setAppState] = useImmer({
+    nodes: INITIAL_NODES,
+    positions: INITIAL_POSITIONS,
+    selectedNodeIDs: INITIAL_SELECTED_NODE_IDS,
+    edges: INITIAL_EDGES,
+  });
 
-  useEffect(() => {
-    setSelectedElements({ id: "0" });
-  }, [setSelectedElements]);
-  // console.log(elements);
+  const elements = mapValues(appState.nodes)
+    .map((node) => ({
+      ...node,
+      position: appState.positions.get(node.id),
+    }))
+    .concat(
+      mapValues(appState.edges).map((edge) => ({
+        ...edge,
+        source: edge.parentID,
+        target: edge.childID,
+      }))
+    );
 
   return (
-    <ElementsContext.Provider value={[nodeState, setNodeState]}>
+    <ElementsContext.Provider value={[appState, setAppState]}>
       {/* <div style={{ padding: "0 4px 4px" }}>
         <Input label="namespace" value={namespace} onChange={setNamespace} />
         <HorizontalSpace />
@@ -160,19 +164,12 @@ function Content() {
         }}
       >
         <ElementUpdater
-          elements={elements.map((element) =>
-            element.parentID != null
-              ? {
-                  ...element,
-                  source: element.parentID,
-                  target: element.childID,
-                }
-              : element
-          )}
+          elements={elements}
+          selectedNodeIDs={appState.selectedNodeIDs}
         />
         <NodesPane />
         <div style={{ padding: 8, overflowX: "scroll", flexGrow: 1 }}>
-          <Table nodeState={nodeState} setNodeState={setNodeState} />
+          <Table appState={appState} setAppState={setAppState} />
         </div>
       </div>
     </ElementsContext.Provider>
@@ -205,29 +202,30 @@ function NodesPane() {
   // const updateNodePosDiff = useStoreActions(
   //   (actions) => actions.updateNodePosDiff
   // );
-  const [nodeState, setNodeState] = useElementsContext();
+  const [appState, setAppState] = useElementsContext();
   const nodePositions = useStoreState((store) => store.nodes);
 
   const addedToNodeIDRef = useRef(null);
   useEffect(() => {
-    if (
-      addedToNodeIDRef.current != null &&
-      nodePositions.find(({ id }) => id === addedToNodeIDRef.current)?.__rf
-        .height != null
-    ) {
-      // console.log(nodePositions);
-      setNodeState((nodeState) => {
-        const node = Nodes.nodeWithID(nodeState, addedToNodeIDRef.current);
-        const parent = Nodes.tightParent(nodeState, node);
-        Nodes.layout(nodeState, parent, nodePositions);
-      });
-      addedToNodeIDRef.current = null;
-    }
-  }, [nodePositions, nodeState]);
+    // console.log(nodePositions);
+    setAppState((appState) => {
+      if (
+        addedToNodeIDRef.current != null &&
+        nodePositions.find(({ id }) => id === addedToNodeIDRef.current)?.__rf
+          .height != null
+      ) {
+        const node = Nodes.nodeWithID(appState, addedToNodeIDRef.current);
+        addedToNodeIDRef.current = null;
+        const parent = Nodes.tightParent(appState, node);
+        Nodes.layout(appState, parent, nodePositions);
+        console.log(current(appState));
+      }
+    });
+  }, [nodePositions, appState, setAppState]);
 
   const onAdd = (addAction) => {
-    setNodeState((nodeState) => {
-      addedToNodeIDRef.current = addAction(nodeState);
+    setAppState((appState) => {
+      addedToNodeIDRef.current = addAction(appState);
     });
   };
 
@@ -243,19 +241,19 @@ function NodesPane() {
         tabIndex="-1"
         onKeyDown={(e) => {
           if (e.key === "Backspace") {
-            setNodeState((nodeState) => {
-              if (Nodes.countSelected(nodeState) > 0) {
-                const selectedNodes = Nodes.selected(nodeState);
+            setAppState((appState) => {
+              if (Nodes.countSelected(appState) > 0) {
+                const selectedNodes = Nodes.selected(appState);
                 selectedNodes.forEach((node) => {
-                  const tightParent = Nodes.tightParent(nodeState, node);
-                  const children = Nodes.children(nodeState, node);
-                  Nodes.remove(nodeState, node);
+                  const tightParent = Nodes.tightParent(appState, node);
+                  const children = Nodes.children(appState, node);
+                  Nodes.remove(appState, node);
                   if (tightParent != null) {
-                    Edges.addTightChildren(nodeState, tightParent, children);
-                    Nodes.layout(nodeState, tightParent, nodePositions);
+                    Edges.addTightChildren(appState, tightParent, children);
+                    Nodes.layout(appState, tightParent, nodePositions);
                   }
                 });
-                Nodes.select(nodeState, []);
+                Nodes.select(appState, []);
               }
             });
           }
@@ -265,35 +263,44 @@ function NodesPane() {
           nodeTypes={NODE_COMPONENTS}
           edgeTypes={EDGE_COMPONENTS}
           onNodeDrag={(event, _node, { deltaX, deltaY }) => {
-            setNodeState((nodeState) => {
-              const node = only(Nodes.selected(nodeState));
-              const parentEdge = Edges.tightParent(nodeState, node);
+            setAppState((appState) => {
+              const node = only(Nodes.selected(appState));
+              const parentEdge = Edges.tightParent(appState, node);
               const shouldDragDetachNode =
                 node != null && parentEdge != null && event.metaKey;
               if (shouldDragDetachNode) {
-                const parent = Edges.parentNode(nodeState, parentEdge);
-                const children = Nodes.tightChildren(nodeState, node);
+                const parent = Edges.parentNode(appState, parentEdge);
+                const children = Nodes.tightChildren(appState, node);
                 Edge.detach(parentEdge);
-                Edges.removeAll(
-                  nodeState,
-                  Edges.tightChildren(nodeState, node)
-                );
-                Edges.addTightChildren(nodeState, parent, children);
-                Node.moveBy(node, deltaX, deltaY);
-                Nodes.layout(nodeState, parent, nodePositions);
+                Edges.removeAll(appState, Edges.tightChildren(appState, node));
+                Edges.addTightChildren(appState, parent, children);
+                Node.moveBy(appState, node, deltaX, deltaY);
+                Nodes.layout(appState, parent, nodePositions);
                 return;
               }
               const draggedNodeRoots = Nodes.dedupe(
-                Nodes.selected(nodeState).map((node) =>
-                  Nodes.tightRoot(nodeState, node)
+                Nodes.selected(appState).map((node) =>
+                  Nodes.tightRoot(appState, node)
                 )
               );
               draggedNodeRoots.forEach((node) => {
-                Node.moveBy(node, deltaX, deltaY);
-                Nodes.layout(nodeState, node, nodePositions);
+                Node.moveBy(appState, node, deltaX, deltaY);
+                Nodes.layout(appState, node, nodePositions);
               });
             });
             return false;
+          }}
+          onSelectionChange={(nodes) => {
+            setAppState((appState) => {
+              if (
+                !Arrays.isEqual(
+                  (nodes ?? []).map(Node.id),
+                  Array.from(appState.selectedNodeIDs)
+                )
+              ) {
+                Nodes.select(appState, nodes ?? []);
+              }
+            });
           }}
           // onElementsRemove={onElementsRemove}
           // onConnect={onConnect}
@@ -336,14 +343,14 @@ function NodesPane() {
   );
 }
 
-function nodeLists(nodeState) {
-  return Object.values(nodeState.nodes)
+function nodeLists(appState) {
+  return Object.values(appState.nodes)
     .filter((node) => node.type === FromNode)
     .map((fromNode) => {
       let parent = fromNode;
       const list = [parent];
       while (parent.child != null) {
-        parent = nodeState.nodes[parent.child];
+        parent = appState.nodes[parent.child];
         list.push(parent);
       }
       return list;
@@ -355,7 +362,7 @@ const FromNode = {
   Component(node) {
     const name = FromNodes.name(node);
     const setSelectedNodeState = useSetSelectedNodeState();
-    const [nodeState] = useElementsContext();
+    const [appState] = useElementsContext();
     return (
       <NodeUI
         node={node}
@@ -392,17 +399,17 @@ const FromNode = {
     );
   },
   emptyNodeData: FromNodes.empty,
-  query(nodeState, node) {
+  query(appState, node) {
     const name = FromNodes.name(node);
     const existingNode = only(
-      Arrays.filter(Nodes.nodes(nodeState), (node) => Node.label(node) === name)
+      Arrays.filter(Nodes.nodes(appState), (node) => Node.label(node) === name)
     );
     if (existingNode != null) {
-      return getQuery(nodeState, existingNode);
+      return getQuery(appState, existingNode);
     }
     return (name ?? "").length > 0 ? `SELECT * from ${name}` : null;
   },
-  queryAdditionalValues(nodeState, node) {
+  queryAdditionalValues(appState, node) {
     return null;
   },
   columnNames() {
@@ -435,16 +442,16 @@ const NameNode = {
   emptyNodeData() {
     return NameNodes.empty();
   },
-  query(nodeState, node) {
-    return getQuery(nodeState, Nodes.parentX(nodeState, node));
+  query(appState, node) {
+    return getQuery(appState, Nodes.parentX(appState, node));
   },
-  queryAdditionalValues(nodeState, node) {
+  queryAdditionalValues(appState, node) {
     return null;
   },
-  columnNames(nodeState, node) {
-    return getColumnNames2(nodeState, Nodes.parentX(nodeState, node));
+  columnNames(appState, node) {
+    return getColumnNames2(appState, Nodes.parentX(appState, node));
   },
-  columnControl(nodeState, node, columnName, setNodeState) {
+  columnControl(appState, node, columnName, setAppState) {
     return null;
   },
 };
@@ -453,7 +460,7 @@ const SelectNode = {
   name: "SelectNode",
   Component(node) {
     const setSelectedNodeState = useSetSelectedNodeState();
-    const [nodeState] = useElementsContext();
+    const [appState] = useElementsContext();
     return (
       <NodeUI node={node} showTools={true} tools={<FromAndTools />}>
         SELECT{" "}
@@ -471,15 +478,15 @@ const SelectNode = {
   emptyNodeData() {
     return SelectNodes.empty();
   },
-  query(nodeState, node) {
-    const sourceNode = getSource(nodeState, node);
+  query(appState, node) {
+    const sourceNode = getSource(appState, node);
     const { selectedColumnNames: sourceSelectedColumnNames } = sourceNode.data;
     const { selectedColumnNames } = node.data;
     if (
       sourceNode.type === "group" &&
       (sourceSelectedColumnNames ?? []).length > 0
     ) {
-      const fromQuery = getQuery(nodeState, getSource(nodeState, sourceNode));
+      const fromQuery = getQuery(appState, getSource(appState, sourceNode));
       return `SELECT ${
         (selectedColumnNames ?? []).length > 0
           ? selectedColumnNames.join(", ")
@@ -488,16 +495,16 @@ const SelectNode = {
       GROUP BY ${sourceSelectedColumnNames.join(", ")}`;
     }
 
-    const fromQuery = getQuery(nodeState, sourceNode);
+    const fromQuery = getQuery(appState, sourceNode);
     return `SELECT ${
       (selectedColumnNames ?? []).length > 0
         ? selectedColumnNames.join(", ")
         : "*"
     } FROM (${fromQuery})`;
   },
-  queryAdditionalValues(nodeState, node) {
-    const sourceNode = getSource(nodeState, node);
-    const fromQuery = getQuery(nodeState, sourceNode);
+  queryAdditionalValues(appState, node) {
+    const sourceNode = getSource(appState, node);
+    const fromQuery = getQuery(appState, sourceNode);
     const { selectedColumnNames: sourceSelectedColumnNames } = sourceNode.data;
     const { selectedColumnNames } = node.data;
     if (
@@ -505,21 +512,21 @@ const SelectNode = {
       (sourceSelectedColumnNames ?? []).length > 0
     ) {
       const otherGroupByColumns = subtractArrays(
-        getColumnNames(nodeState, sourceNode.id),
+        getColumnNames(appState, sourceNode.id),
         selectedColumnNames ?? []
       );
       return [
         (selectedColumnNames ?? []).length > 0 && otherGroupByColumns.length > 0
           ? `SELECT ${otherGroupByColumns.join(", ")} FROM (${fromQuery})`
           : null,
-        ...GroupNode.queryAdditionalValues(nodeState, sourceNode),
+        ...GroupNode.queryAdditionalValues(appState, sourceNode),
       ];
     }
     if ((selectedColumnNames ?? []).length === 0) {
       return null;
     }
     const otherColumns = subtractArrays(
-      getColumnNames(nodeState, sourceNode.id),
+      getColumnNames(appState, sourceNode.id),
       selectedColumnNames ?? []
     );
     if (otherColumns.length === 0) {
@@ -527,14 +534,14 @@ const SelectNode = {
     }
     return [`SELECT ${otherColumns} FROM (${fromQuery})`];
   },
-  columnNames(nodeState, node) {
-    const sourceNode = getSource(nodeState, node);
+  columnNames(appState, node) {
+    const sourceNode = getSource(appState, node);
     return (node.data.selectedColumnNames ?? []).length > 0
       ? node.data.selectedColumnNames
-      : getColumnNames(nodeState, sourceNode.id);
+      : getColumnNames(appState, sourceNode.id);
   },
-  columnControl(nodeState, node, columnName, setNodeState) {
-    // const selectableColumnNames = getColumnNames(nodeState, node.source);
+  columnControl(appState, node, columnName, setAppState) {
+    // const selectableColumnNames = getColumnNames(appState, node.source);
     // TODO: Fix O(N^2) algo to be nlogn
     // if (!selectableColumnNames.find((column) => column === columnName)) {
     //   return null;
@@ -548,8 +555,8 @@ const SelectNode = {
           style={{ cursor: "pointer" }}
           type="checkbox"
           onChange={(event) => {
-            setNodeState((nodeState) => {
-              getSelectedNode(nodeState).data.selectedColumnNames =
+            setAppState((appState) => {
+              getSelectedNode(appState).data.selectedColumnNames =
                 !selectedColumnNamesSet.has(columnName)
                   ? selectedColumnNamesNotNull.concat([columnName])
                   : selectedColumnNamesNotNull.filter(
@@ -573,14 +580,14 @@ function visibleIf(bool) {
 
 const WhereNode = {
   name: "WhereNode",
-  Component({ node, nodeState, setNodeState }) {
+  Component({ node, appState, setAppState }) {
     // const { filters: _ } = node;
     return (
       <NodeUI
         node={node}
-        nodeState={nodeState}
+        appState={appState}
         showTools={true}
-        setNodeState={setNodeState}
+        setAppState={setAppState}
       >
         WHERE {"id > 4 AND dau = 0"}
       </NodeUI>
@@ -590,15 +597,15 @@ const WhereNode = {
   canHaveManySources() {
     return false;
   },
-  query(nodeState, { source }) {
-    const fromQuery = getQuery(nodeState, source);
+  query(appState, { source }) {
+    const fromQuery = getQuery(appState, source);
     return `SELECT * from (${fromQuery}) WHERE id > 4 AND dau = 0`;
   },
-  queryAdditionalValues(nodeState, { source }) {
+  queryAdditionalValues(appState, { source }) {
     return [];
   },
-  columnNames(nodeState, { source }) {
-    return getColumnNames(nodeState, source);
+  columnNames(appState, { source }) {
+    return getColumnNames(appState, source);
   },
   columnControl() {
     return null;
@@ -627,15 +634,15 @@ function someOrAllColumnList(columnNames) {
 const GroupNode = {
   Component: GroupNodeComponent,
   emptyNodeData: GroupByNode.empty,
-  // queryWhenSelected(nodeState, node) {
-  //   const sourceNode = getSource(nodeState, node);
-  //   const fromQuery = getQuery(nodeState, sourceNode);
+  // queryWhenSelected(appState, node) {
+  //   const sourceNode = getSource(appState, node);
+  //   const fromQuery = getQuery(appState, sourceNode);
   //   const selectedColumns = GroupByNode.selectedColumns(node);
   //   if (selectedColumns.length === 0) {
   //     return `SELECT * from (${fromQuery})`;
   //   }
   //   const selectedColumnSet = new Set(selectedColumns ?? []);
-  //   const otherColumns = getColumnNames(nodeState, sourceNode.id).filter(
+  //   const otherColumns = getColumnNames(appState, sourceNode.id).filter(
   //     (column) => !selectedColumnSet.has(column)
   //   );
   //   return `SELECT ${selectedColumns
@@ -643,9 +650,9 @@ const GroupNode = {
   //     .join(", ")} FROM (${fromQuery})
   //     ORDER BY ${selectedColumns.join(", ")}`;
   // },
-  query(nodeState, node) {
-    const sourceNode = getSource(nodeState, node);
-    const fromQuery = getQuery(nodeState, sourceNode);
+  query(appState, node) {
+    const sourceNode = getSource(appState, node);
+    const fromQuery = getQuery(appState, sourceNode);
     const selectedColumns = GroupByNode.selectedColumns(node);
     if (selectedColumns.length === 0) {
       return `SELECT * from (${fromQuery})`;
@@ -655,15 +662,15 @@ const GroupNode = {
       FROM (${fromQuery})
       GROUP BY ${GroupByNode.groupedColumns(node).join(", ")}`;
   },
-  queryAdditionalValues(nodeState, node) {
-    const sourceNode = getSource(nodeState, node);
-    const fromQuery = getQuery(nodeState, sourceNode);
+  queryAdditionalValues(appState, node) {
+    const sourceNode = getSource(appState, node);
+    const fromQuery = getQuery(appState, sourceNode);
     const selectedColumns = GroupByNode.groupedColumns(node);
     if ((selectedColumns ?? []).length === 0) {
       return null;
     }
     const otherColumns = subtractArrays(
-      getColumnNames(nodeState, sourceNode.id),
+      getColumnNames(appState, sourceNode.id),
       selectedColumns ?? []
     );
     if (otherColumns.length === 0) {
@@ -671,16 +678,16 @@ const GroupNode = {
     }
     return [`SELECT ${otherColumns} FROM (${fromQuery})`];
   },
-  columnNames(nodeState, node) {
-    const sourceNode = getSource(nodeState, node);
+  columnNames(appState, node) {
+    const sourceNode = getSource(appState, node);
     const selectedColumns = GroupByNode.groupedColumns(node);
     return (selectedColumns ?? []).length > 0
       ? selectedColumns
-      : getColumnNames(nodeState, sourceNode.id);
+      : getColumnNames(appState, sourceNode.id);
   },
-  columnControl(nodeState, node, columnName, setNodeState) {
-    const sourceNode = getSource(nodeState, node);
-    const selectableColumnNames = getColumnNames(nodeState, sourceNode.id);
+  columnControl(appState, node, columnName, setAppState) {
+    const sourceNode = getSource(appState, node);
+    const selectableColumnNames = getColumnNames(appState, sourceNode.id);
     // TODO: Fix O(N^2) algo to be nlogn
     if (!selectableColumnNames.find((column) => column === columnName)) {
       return null;
@@ -694,8 +701,8 @@ const GroupNode = {
           style={{ cursor: "pointer" }}
           type="checkbox"
           onChange={(event) => {
-            setNodeState((nodeState) => {
-              getSelectedNode(nodeState).data.selectedColumnNames =
+            setAppState((appState) => {
+              getSelectedNode(appState).data.selectedColumnNames =
                 !selectedColumnNamesSet.has(columnName)
                   ? selectedColumnNamesNotNull.concat([columnName])
                   : selectedColumnNamesNotNull.filter(
@@ -709,9 +716,9 @@ const GroupNode = {
         {columnName}
         <AggregationSelector
           onChange={(aggregation) => {
-            setNodeState((nodeState) => {
+            setAppState((appState) => {
               GroupByNode.addAggregation(
-                onlyThrows(Nodes.selected(nodeState)),
+                onlyThrows(Nodes.selected(appState)),
                 columnName,
                 aggregation
               );
@@ -758,7 +765,7 @@ function AggregationSelector({ onChange }) {
 
 const OrderNode = {
   name: "OrderNode",
-  Component({ node, nodeState, setNodeState }) {
+  Component({ node, appState, setAppState }) {
     return (
       <NodeInput
         label="ORDER BY"
@@ -768,11 +775,11 @@ const OrderNode = {
             : OrderNode.orderClause(node)
         }
         node={node}
-        nodeState={nodeState}
+        appState={appState}
         showTools={true}
-        setNodeState={setNodeState}
+        setAppState={setAppState}
         onChange={(orderClause) => {
-          setNodeState((nodeState) => {
+          setAppState((appState) => {
             let columnToOrder = {};
             orderClause
               .split(/, */)
@@ -781,7 +788,7 @@ const OrderNode = {
               .forEach(([column, order]) => {
                 columnToOrder[column] = order ?? "ASC";
               });
-            nodeState.nodes[node.id].columnToOrder = columnToOrder;
+            appState.nodes[node.id].columnToOrder = columnToOrder;
           });
         }}
       />
@@ -795,8 +802,8 @@ const OrderNode = {
       .map((column) => `${column} ${columnToOrder[column]}`)
       .join(", ");
   },
-  query(nodeState, node) {
-    const fromQuery = getQuery(nodeState, node.source);
+  query(appState, node) {
+    const fromQuery = getQuery(appState, node.source);
     if (Object.keys(node.columnToOrder ?? {}).length === 0) {
       return fromQuery;
     }
@@ -806,11 +813,11 @@ const OrderNode = {
   queryAdditionalValues() {
     return null;
   },
-  columnNames(nodeState, { source }) {
-    return getColumnNames(nodeState, source);
+  columnNames(appState, { source }) {
+    return getColumnNames(appState, source);
   },
-  columnControl(nodeState, node, columnName, setNodeState) {
-    // const selectableColumnNames = getColumnNames(nodeState, node.source);
+  columnControl(appState, node, columnName, setAppState) {
+    // const selectableColumnNames = getColumnNames(appState, node.source);
     // // TODO: Fix O(N^2) algo to be nlogn
     // if (!selectableColumnNames.find((column) => column === columnName)) {
     //   return null;
@@ -821,8 +828,8 @@ const OrderNode = {
       <>
         <Button
           onClick={() => {
-            setNodeState((nodeState) => {
-              nodeState.nodes[node.id].columnToOrder = produce(
+            setAppState((appState) => {
+              appState.nodes[node.id].columnToOrder = produce(
                 columnToOrderNotNull,
                 (map) => {
                   switch (state) {
@@ -860,21 +867,21 @@ const OrderNode = {
 function NodeInput({
   label,
   node,
-  nodeState,
+  appState,
   value,
   showTools,
-  setNodeState,
+  setAppState,
   children,
   onChange,
 }) {
-  const { selectedNodeID } = nodeState;
+  const { selectedNodeID } = appState;
   const isSelected = node.id === selectedNodeID;
   return (
     <NodeUI
       node={node}
-      nodeState={nodeState}
+      appState={appState}
       showTools={showTools}
-      setNodeState={setNodeState}
+      setAppState={setAppState}
     >
       {label}{" "}
       <Input
@@ -888,9 +895,9 @@ function NodeInput({
 
 function NodeUI({ node, showTools, tools, children }) {
   const isSelected = node.selected;
-  const [nodeState] = useElementsContext();
+  const [appState] = useElementsContext();
 
-  const isLast = !Nodes.hasTightChildren(nodeState, node);
+  const isLast = !Nodes.hasTightChildren(appState, node);
   const toolsWithPosition = (
     <div
       style={{
@@ -909,12 +916,12 @@ function NodeUI({ node, showTools, tools, children }) {
       <Box isSelected={isSelected}>
         {children}
         <Handle
-          style={visibleIf(Nodes.hasDetachedParents(nodeState, node))}
+          style={visibleIf(Nodes.hasDetachedParents(appState, node))}
           type="target"
           position="left"
         />
         <Handle
-          style={visibleIf(Nodes.hasDetachedChildren(nodeState, node))}
+          style={visibleIf(Nodes.hasDetachedChildren(appState, node))}
           type="source"
           position="right"
         />
@@ -1004,12 +1011,12 @@ function ShowOnClick({ css, trigger, children }) {
 }
 
 // function Selectable({ node, children }) {
-//   const [, setNodeState] = useElementsContext();
+//   const [, setAppState] = useElementsContext();
 //   return (
 //     <span
 //       onClick={() => {
-//         setNodeState((nodeState) => {
-//           nodeState.selectedNodeID = node.id;
+//         setAppState((appState) => {
+//           appState.selectedNodeID = node.id;
 //         });
 //       }}
 //     >
@@ -1019,13 +1026,13 @@ function ShowOnClick({ css, trigger, children }) {
 // }
 
 function DeleteNodeButton({ node }) {
-  const [, setNodeState] = useElementsContext();
+  const [, setAppState] = useElementsContext();
   return (
     <Button
       onClick={() => {
-        setNodeState((nodeState) => {
-          nodeState.selectedNodeID = getSource(nodeState, node).id;
-          nodeState.nodes = removeElements([node], nodeState.nodes);
+        setAppState((appState) => {
+          appState.selectedNodeID = getSource(appState, node).id;
+          appState.nodes = removeElements([node], appState.nodes);
         });
       }}
     >
@@ -1043,34 +1050,34 @@ function subtractArrays(a, b) {
   return a.filter((column) => !bSet.has(column));
 }
 
-function getNode(nodeState, id) {
-  return nodeState.nodes.get(id);
+function getNode(appState, id) {
+  return appState.nodes.get(id);
 }
 
 const TO_SOURCE = false;
 const TO_TARGET = true;
 
-function getSource(nodeState, node) {
-  return only(Nodes.parents(nodeState, node));
+function getSource(appState, node) {
+  return only(Nodes.parents(appState, node));
 }
 
-function getTarget(nodeState, node) {
-  return getTightChild(nodeState, node, TO_TARGET);
+function getTarget(appState, node) {
+  return getTightChild(appState, node, TO_TARGET);
 }
 
-function getTightChild(nodeState, node, direction) {
+function getTightChild(appState, node, direction) {
   return (
     direction === TO_SOURCE
-      ? getIncomers(node, nodeState.nodes)
-      : getOutgoers(node, nodeState.nodes)
+      ? getIncomers(node, appState.nodes)
+      : getOutgoers(node, appState.nodes)
   )[0];
 }
 
-function getTightDescendants(nodeState, node, direction) {
+function getTightDescendants(appState, node, direction) {
   const descendants = [];
   let parent = node;
   do {
-    const tightChild = getTightChild(nodeState, parent, direction);
+    const tightChild = getTightChild(appState, parent, direction);
     if (tightChild != null) {
       descendants.push(tightChild);
     }
@@ -1079,9 +1086,9 @@ function getTightDescendants(nodeState, node, direction) {
   return descendants;
 }
 
-function getAllTightDescendants(nodeState, node) {
-  return getTightDescendants(nodeState, node, TO_SOURCE).concat(
-    getTightDescendants(nodeState, node, TO_TARGET)
+function getAllTightDescendants(appState, node) {
+  return getTightDescendants(appState, node, TO_SOURCE).concat(
+    getTightDescendants(appState, node, TO_TARGET)
   );
 }
 
@@ -1091,21 +1098,21 @@ function getType(node) {
   return type;
 }
 
-function getQuery(nodeState, node) {
-  return getType(node).query(nodeState, node);
+function getQuery(appState, node) {
+  return getType(node).query(appState, node);
 }
 
-function getQueryAdditionalValues(nodeState, node) {
-  return getType(node).queryAdditionalValues(nodeState, node);
+function getQueryAdditionalValues(appState, node) {
+  return getType(node).queryAdditionalValues(appState, node);
 }
 
-function getColumnNames(nodeState, id) {
-  const node = getNode(nodeState, id);
-  return getType(node).columnNames(nodeState, node);
+function getColumnNames(appState, id) {
+  const node = getNode(appState, id);
+  return getType(node).columnNames(appState, node);
 }
 
-function getColumnNames2(nodeState, node) {
-  return getType(node).columnNames(nodeState, node);
+function getColumnNames2(appState, node) {
+  return getType(node).columnNames(appState, node);
 }
 
 function FromAndTools() {
@@ -1155,45 +1162,45 @@ function AttachNodeButton({ children, onAdd }) {
 }
 
 function attachTightNode(type) {
-  return (nodeState, nodePositions) => {
+  return (appState, nodePositions) => {
     const data = getType({ type }).emptyNodeData();
-    const newNode = Nodes.newNode(nodeState, { type, data });
-    // const selectedNode = onlyThrows(Nodes.selected(nodeState));
-    addAndSelectNode(nodeState, newNode);
+    const newNode = Nodes.newNode(appState, { type, data });
+    // const selectedNode = onlyThrows(Nodes.selected(appState));
+    addAndSelectNode(appState, newNode);
     return Node.id(newNode);
-    // Nodes.layout(nodeState, selectedNode, nodePositions);
+    // Nodes.layout(appState, selectedNode, nodePositions);
   };
 }
 
-function attachJoinNode(nodeState, nodePositions) {
-  const selectedNode = onlyThrows(Nodes.selected(nodeState));
-  Nodes.ensureLabel(nodeState, selectedNode);
+function attachJoinNode(appState, nodePositions) {
+  const selectedNode = onlyThrows(Nodes.selected(appState));
+  Nodes.ensureLabel(appState, selectedNode);
   const data = FromNode.emptyNodeData(Node.label(selectedNode));
-  const newNode = Nodes.newNode(nodeState, { type: "from", data });
-  addAndSelectNode(nodeState, newNode);
+  const newNode = Nodes.newNode(appState, { type: "from", data });
+  addAndSelectNode(appState, newNode);
   Nodes.layoutDetached(selectedNode, newNode, nodePositions);
 }
 
-function addAndSelectNode(nodeState, newNode) {
-  const selectedNode = onlyThrows(Nodes.selected(nodeState));
-  const selectedNodeChildren = Nodes.tightChildren(nodeState, selectedNode);
-  const selectedNodeChildEdges = Edges.tightChildren(nodeState, selectedNode);
-  Edges.removeAll(nodeState, selectedNodeChildEdges);
-  Edges.addTightChildren(nodeState, newNode, selectedNodeChildren);
-  Edges.addTightChild(nodeState, selectedNode, newNode);
-  Nodes.add(nodeState, newNode);
-  Nodes.select(nodeState, [newNode]);
+function addAndSelectNode(appState, newNode) {
+  const selectedNode = onlyThrows(Nodes.selected(appState));
+  const selectedNodeChildren = Nodes.tightChildren(appState, selectedNode);
+  const selectedNodeChildEdges = Edges.tightChildren(appState, selectedNode);
+  Edges.removeAll(appState, selectedNodeChildEdges);
+  Edges.addTightChildren(appState, newNode, selectedNodeChildren);
+  Edges.addTightChild(appState, selectedNode, newNode);
+  Nodes.add(appState, newNode);
+  Nodes.select(appState, [newNode]);
 }
 
 function AddNodeButton({ children, type }) {
-  const [, setNodeState] = useElementsContext();
+  const [, setAppState] = useElementsContext();
   const nodePositions = useStoreState((store) => store.nodes);
   const addNodeHandler = (type) => () => {
-    setNodeState((nodeState) => {
+    setAppState((appState) => {
       const data = getType({ type }).emptyNodeData();
-      const newNode = Nodes.newNode(nodeState, { type, data });
-      Nodes.add(nodeState, newNode);
-      Nodes.select(nodeState, [newNode]);
+      const newNode = Nodes.newNode(appState, { type, data });
+      Nodes.add(appState, newNode);
+      Nodes.select(appState, [newNode]);
       Nodes.layoutStandalone(newNode, nodePositions);
     });
   };
@@ -1231,19 +1238,19 @@ const Box = styled("div", {
   // margin: "0 4px 2px 0",
 });
 
-function Table({ nodeState, setNodeState }) {
+function Table({ appState, setAppState }) {
   const [tableState, setTableState] = useState();
   const [updated, setUpdated] = useState();
   const [isLoading, setIsLoading] = useState(false);
   useEffect(() => {
-    const selected = only(Nodes.selected(nodeState));
+    const selected = only(Nodes.selected(appState));
     if (selected == null) {
       return;
     }
-    // console.log(nodeState);
-    const query = getQuery(nodeState, selected);
+    // console.log(appState);
+    const query = getQuery(appState, selected);
     // console.log(query);
-    const queryAdditionalValues = getQueryAdditionalValues(nodeState, selected);
+    const queryAdditionalValues = getQueryAdditionalValues(appState, selected);
     if (query != null) {
       setIsLoading(true);
     }
@@ -1257,14 +1264,14 @@ function Table({ nodeState, setNodeState }) {
             additionalTables: (queryAdditionalValues ?? [])
               .filter((query) => query != null)
               .map((query) => execQuery(database, query)),
-            nodeState: nodeState,
+            appState: appState,
           });
         }
         const DELAY_OF_SHOWING_RESULTS = 10;
         setTimeout(() => setUpdated(false), DELAY_OF_SHOWING_RESULTS);
       }, 300)
     );
-  }, [nodeState]);
+  }, [appState]);
 
   if (isLoading && tableState?.table == null) {
     return <div style={{ padding: 12 }}>Loading...</div>;
@@ -1275,7 +1282,7 @@ function Table({ nodeState, setNodeState }) {
     <TableLoaded
       updated={updated}
       state={tableState}
-      setNodeState={setNodeState}
+      setAppState={setAppState}
     />
   );
 }
@@ -1285,16 +1292,16 @@ const TD = styled("td");
 
 function TableLoaded({
   updated,
-  state: { table, additionalTables, nodeState },
-  setNodeState,
+  state: { table, additionalTables, appState },
+  setAppState,
 }) {
-  // const { selectedNodeID } = nodeState;
+  // const { selectedNodeID } = appState;
   // const availableColumnNamesSet = getAvailableColumnNamesSet(
-  //   nodeState,
+  //   appState,
   //   selectedNodeID
   // );
-  // const columnNames = getAllColumnNames(nodeState, selectedNodeID);
-  const selectedNode = getSelectedNode(nodeState);
+  // const columnNames = getAllColumnNames(appState, selectedNodeID);
+  const selectedNode = getSelectedNode(appState);
   if (selectedNode == null) {
     return null;
   }
@@ -1324,10 +1331,10 @@ function TableLoaded({
                 {column !== ""
                   ? (() => {
                       const control = getType(selectedNode).columnControl(
-                        nodeState,
+                        appState,
                         selectedNode,
                         column,
-                        setNodeState
+                        setAppState
                       );
                       return control ?? column;
                     })()
@@ -1363,8 +1370,8 @@ function TableLoaded({
   );
 }
 
-function getSelectedNode(nodeState) {
-  return only(Nodes.selected(nodeState));
+function getSelectedNode(appState) {
+  return only(Nodes.selected(appState));
 }
 
 function Input({ displayValue, focused, label, value, onChange: setValue }) {

@@ -14,22 +14,26 @@ export function id(node) {
   return node.id;
 }
 
-export function x(node) {
-  return node.position.x;
+export function x(appState, node) {
+  return position(appState, node).x;
 }
 
-export function y(node) {
-  return node.position.y;
+export function y(appState, node) {
+  return position(appState, node).y;
 }
 
-export function move(node, x, y) {
-  node.position.x = x;
-  node.position.y = y;
+export function move(appState, node, x, y) {
+  position(appState, node).x = x;
+  position(appState, node).y = y;
 }
 
-export function moveBy(node, x, y) {
-  node.position.x += x;
-  node.position.y += y;
+function position(appState, node) {
+  return appState.positions.get(node.id);
+}
+
+export function moveBy(appState, node, x, y) {
+  position(appState, node).x += x;
+  position(appState, node).y += y;
 }
 
 export function label(node, label) {
