@@ -267,7 +267,7 @@ function NodesPane() {
               const node = only(Nodes.selected(appState));
               const parentEdge = Edges.tightParent(appState, node);
               const shouldDragDetachNode =
-                node != null && parentEdge != null && event.metaKey;
+                node != null && parentEdge != null && event.altKey;
               if (shouldDragDetachNode) {
                 const parent = Edges.parentNode(appState, parentEdge);
                 const children = Nodes.tightChildren(appState, node);
