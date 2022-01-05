@@ -510,29 +510,42 @@ function visibleIf(bool) {
 
 const WhereNode = {
   name: "WhereNode",
-  Component({ node, appState, setAppState }) {
-    // const { filters: _ } = node;
+  Component(node) {
+    const filters = WhereNodes.filters(node);
+    const setSelectedNodeState = useSetSelectedNodeState();
     return (
-      <NodeUI
-        node={node}
-        appState={appState}
-        showTools={true}
-        setAppState={setAppState}
-      >
-        WHERE {"id > 4 AND dau = 0"}
+      <NodeUI node={node} showTools={true} tools={<AddChildStepButtons />}>
+        WHERE{" "}
+        <Input
+          displayValue={!WhereNodes.hasFilter(node) ? "∅" : null}
+          value={filters}
+          onChange={(filters) => {
+            setSelectedNodeState((node) => {
+              WhereNodes.setFilters(node, filters);
+            });
+          }}
+        />
       </NodeUI>
     );
   },
   emptyNodeData: WhereNodes.empty,
-  query(appState, { source }) {
-    const fromQuery = getQuery(appState, source);
-    return `SELECT * from (${fromQuery}) WHERE id > 4 AND dau = 0`;
+  query(appState, node) {
+    const sourceNode = getSource(appState, node);
+    const fromQuery = getQuerySelectable(appState, sourceNode);
+    if (!WhereNodes.hasFilter(node)) {
+      return `SELECT * FROM (${fromQuery})`;
+    }
+    return `SELECT * FROM (${fromQuery}) WHERE ${WhereNodes.filters(node)}`;
   },
-  queryAdditionalValues(appState, { source }) {
-    return [];
+  queryAdditionalValues(appState, node) {
+    return null;
   },
-  columnNames(appState, { source }) {
-    return getColumnNames(appState, source);
+  querySelectable(appState, node) {
+    return WhereNode.query(appState, node);
+  },
+  columnNames(appState, node) {
+    const sourceNode = getSource(appState, node);
+    return getColumnNames(appState, sourceNode.id);
   },
   columnControl() {
     return null;
