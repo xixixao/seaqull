@@ -9,6 +9,10 @@ export function empty() {
   return { groupedColumns: new Set(), aggregations: [] };
 }
 
+export function hasGrouped(node) {
+  return node.data.groupedColumns.size > 0;
+}
+
 export function groupedColumns(node) {
   return node.data.groupedColumns;
 }
@@ -69,5 +73,5 @@ export function toggleGroupedColumn(node, columnName) {
 export function sql(node, selectExpressions, fromQuery) {
   return `SELECT ${selectExpressions.join(", ")}
   FROM (${fromQuery})
-  GROUP BY ${groupedColumns(node).join(", ")}`;
+  GROUP BY ${Array.from(groupedColumns(node)).join(", ")}`;
 }

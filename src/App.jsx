@@ -577,13 +577,12 @@ const GroupNode = {
   queryAdditionalValues(appState, node) {
     const sourceNode = getSource(appState, node);
     const fromQuery = getQuerySelectable(appState, sourceNode);
-    const groupedColumns = GroupByNode.groupedColumns(node);
-    if (groupedColumns.length === 0) {
+    if (!GroupByNode.hasGrouped(node)) {
       return null;
     }
     const otherColumns = subtractArrays(
       Array.from(getColumnNames(appState, sourceNode.id)),
-      groupedColumns
+      GroupByNode.groupedColumns(node)
     );
     if (otherColumns.length === 0) {
       return null;
@@ -591,8 +590,7 @@ const GroupNode = {
     return [`SELECT ${otherColumns} FROM (${fromQuery})`];
   },
   querySelectable(appState, node) {
-    const groupedColumns = GroupByNode.groupedColumns(node);
-    if (groupedColumns.length === 0) {
+    if (!GroupByNode.hasGrouped(node)) {
       return GroupNode.query(appState, node);
     }
     const sourceNode = getSource(appState, node);
@@ -605,7 +603,7 @@ const GroupNode = {
   },
   columnNames(appState, node) {
     const sourceNode = getSource(appState, node);
-    return GroupByNode.groupedColumns(node).length > 0
+    return GroupByNode.hasGrouped(node)
       ? GroupByNode.selectedColumns(node)
       : getColumnNames(appState, sourceNode.id);
   },
@@ -625,7 +623,7 @@ const GroupNode = {
         <HorizontalSpace />
         <HorizontalSpace />
         {columnName}
-        {!isPrimary && GroupByNode.groupedColumns(node).length > 0 ? (
+        {!isPrimary && GroupByNode.hasGrouped(node) ? (
           <AggregationSelector
             onChange={(aggregation) => {
               setSelectedNodeState((node) => {
