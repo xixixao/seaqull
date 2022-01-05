@@ -405,10 +405,16 @@ globalCss({
     borderCollapse: "collapse",
   },
   th: {
+    // borderWidth: "1px",
+    // borderStyle: "solid",
+    // borderColor: "inherit",
     border: "1px solid $slate7",
     padding: "0 2px",
   },
   td: {
+    // borderWidth: "1px",
+    // borderStyle: "solid",
+    // borderColor: "inherit",
     border: "1px solid $slate7",
     padding: "0 2px",
   },

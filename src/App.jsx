@@ -22,6 +22,7 @@ import { Row } from "./components/Row";
 import * as Edge from "./Edge";
 import * as Edges from "./Edges";
 import * as FromNodes from "./FromNodes";
+import * as WhereNodes from "./WhereNodes";
 import * as GroupByNode from "./GroupByNode";
 import { produce } from "./immer";
 import { invariant } from "./invariant";
@@ -36,7 +37,7 @@ import ReactFlow, {
 } from "./react-flow";
 import ElementUpdater from "./react-flow/components/ElementUpdater";
 import * as SelectNodes from "./SelectNodes";
-import { styled } from "./style";
+import { keyframes, styled } from "./style";
 
 // import {
 //   DropdownMenu,
@@ -159,7 +160,7 @@ function Content() {
         />
         <NodesPane />
         <div style={{ padding: 8, overflowX: "scroll", flexGrow: 1 }}>
-          <Table />
+          <ResultsTable />
         </div>
       </div>
     </AppStateContext.Provider>
@@ -337,11 +338,7 @@ const FromNode = {
       <NodeUI
         node={node}
         showTools={name?.length > 0}
-        tools={
-          <Row>
-            <Tools />
-          </Row>
-        }
+        tools={<AddChildStepButtons />}
       >
         FROM{" "}
         <Input
@@ -353,30 +350,18 @@ const FromNode = {
             });
           }}
         />
-        {/* <Handle
-          type="source"
-          position="right"
-          style={
-            {
-              // background: "white",
-              // border: `1px solid ${selected ? "#0041d0" : "#1a192b"}`,
-            }
-          }
-          // onConnect={(params) => console.log('handle onConnect', params)}
-          // isConnectable={isConnectable}
-        /> */}
       </NodeUI>
     );
   },
   emptyNodeData: FromNodes.empty,
   query(appState, node) {
     const name = FromNodes.name(node);
-    const existingNode = only(
-      Arrays.filter(Nodes.nodes(appState), (node) => Node.label(node) === name)
-    );
-    if (existingNode != null) {
-      return getQuery(appState, existingNode);
-    }
+    // const existingNode = only(
+    //   Arrays.filter(Nodes.nodes(appState), (node) => Node.label(node) === name)
+    // );
+    // if (existingNode != null) {
+    //   return getQuery(appState, existingNode);
+    // }
     return (name ?? "").length > 0 ? `SELECT * from ${name}` : null;
   },
   queryAdditionalValues(appState, node) {
@@ -395,7 +380,11 @@ const NameNode = {
   Component(node) {
     const setSelectedNodeState = useSetSelectedNodeState();
     return (
-      <NodeUI node={node} showTools={true} tools={<FromAndTools />}>
+      <NodeUI
+        node={node}
+        showTools={true}
+        tools={<AddFromOrChildStepButtons />}
+      >
         <Input
           value={NameNodes.name(node)}
           onChange={(name) => {
@@ -431,7 +420,11 @@ const SelectNode = {
   Component(node) {
     const setSelectedNodeState = useSetSelectedNodeState();
     return (
-      <NodeUI node={node} showTools={true} tools={<FromAndTools />}>
+      <NodeUI
+        node={node}
+        showTools={true}
+        tools={<AddFromOrChildStepButtons />}
+      >
         SELECT{" "}
         <Input
           value={someOrAllColumnList(SelectNodes.selectedColumns(node))}
@@ -449,27 +442,10 @@ const SelectNode = {
   },
   query(appState, node) {
     const sourceNode = getSource(appState, node);
-    const { selectedColumnNames: sourceSelectedColumnNames } = sourceNode.data;
-    const { selectedColumnNames } = node.data;
-    if (
-      sourceNode.type === "group" &&
-      (sourceSelectedColumnNames ?? []).length > 0
-    ) {
-      const fromQuery = getQuery(appState, getSource(appState, sourceNode));
-      return `SELECT ${
-        (selectedColumnNames ?? []).length > 0
-          ? selectedColumnNames.join(", ")
-          : sourceSelectedColumnNames.join(", ")
-      } FROM (${fromQuery})
-      GROUP BY ${sourceSelectedColumnNames.join(", ")}`;
-    }
-
     const fromQuery = getQuery(appState, sourceNode);
-    return `SELECT ${
-      (selectedColumnNames ?? []).length > 0
-        ? selectedColumnNames.join(", ")
-        : "*"
-    } FROM (${fromQuery})`;
+    return `SELECT ${someOrAllColumnList(
+      SelectNodes.selectedColumns(node)
+    )} FROM (${fromQuery})`;
   },
   queryAdditionalValues(appState, node) {
     const sourceNode = getSource(appState, node);
@@ -562,10 +538,7 @@ const WhereNode = {
       </NodeUI>
     );
   },
-  emptyNodeData() {},
-  canHaveManySources() {
-    return false;
-  },
+  emptyNodeData: WhereNodes.empty,
   query(appState, { source }) {
     const fromQuery = getQuery(appState, source);
     return `SELECT * from (${fromQuery}) WHERE id > 4 AND dau = 0`;
@@ -583,7 +556,7 @@ const WhereNode = {
 
 function GroupNodeComponent(node) {
   return (
-    <NodeUI node={node} showTools={true} tools={<FromAndTools />}>
+    <NodeUI node={node} showTools={true} tools={<AddFromOrChildStepButtons />}>
       <div>
         GROUP BY {someOrNoneColumnList(GroupByNode.groupedColumns(node))}
       </div>
@@ -649,20 +622,37 @@ const GroupNode = {
   },
   columnNames(appState, node) {
     const sourceNode = getSource(appState, node);
-    const selectedColumns = GroupByNode.groupedColumns(node);
+    const selectedColumns = GroupByNode.selectedColumns(node);
     return (selectedColumns ?? []).length > 0
       ? selectedColumns
       : getColumnNames(appState, sourceNode.id);
   },
-  columnControl(appState, node, columnName, setAppState) {
-    const sourceNode = getSource(appState, node);
-    const selectableColumnNames = getColumnNames(appState, sourceNode.id);
-    // TODO: Fix O(N^2) algo to be nlogn
-    if (!selectableColumnNames.find((column) => column === columnName)) {
-      return null;
-    }
+  columnControl(appState, node, columnName, setAppState, isPrimary) {
+    // const sourceNode = getSource(appState, node);
+    // const selectableColumnNames = getColumnNames(appState, sourceNode.id);
+    // // TODO: Fix O(N^2) algo to be nlogn
+    // if (!selectableColumnNames.find((column) => column === columnName)) {
+    //   return null;
+    // }
+    // if (isPrimary) {
+    //   return null;
+    // }
     const selectedColumnNamesNotNull = node.data.selectedColumnNames ?? [];
     const selectedColumnNamesSet = new Set(selectedColumnNamesNotNull);
+    const aggregationSelector =
+      !isPrimary && GroupByNode.groupedColumns(node).length > 0 ? (
+        <AggregationSelector
+          onChange={(aggregation) => {
+            setAppState((appState) => {
+              GroupByNode.addAggregation(
+                onlyThrows(Nodes.selected(appState)),
+                columnName,
+                aggregation
+              );
+            });
+          }}
+        />
+      ) : null;
     return (
       <Row align="center">
         <input
@@ -683,17 +673,7 @@ const GroupNode = {
         <HorizontalSpace />
         <HorizontalSpace />
         {columnName}
-        <AggregationSelector
-          onChange={(aggregation) => {
-            setAppState((appState) => {
-              GroupByNode.addAggregation(
-                onlyThrows(Nodes.selected(appState)),
-                columnName,
-                aggregation
-              );
-            });
-          }}
-        />
+        {aggregationSelector}
       </Row>
     );
   },
@@ -702,7 +682,13 @@ const GroupNode = {
 function AggregationSelector({ onChange }) {
   return (
     <ShowOnClick
-      css={{ position: "absolute", top: "100%", background: "$slate7" }}
+      css={{
+        position: "absolute",
+        top: "100%",
+        background: "$slate7",
+        padding: "$4",
+        borderRadius: "$4",
+      }}
       trigger={
         <IconButton>
           <DropdownMenuIcon />
@@ -877,7 +863,7 @@ function NodeUI({ node, showTools, tools, children }) {
         // width: 340,
       }}
     >
-      {tools}
+      <Row>{tools}</Row>
     </div>
   );
   return (
@@ -940,7 +926,7 @@ function NodeUI({ node, showTools, tools, children }) {
             <AddConnectedFromNodeButon />
           </div>
           <div style={{ position: "absolute", top: "110%", width: 300 }}>
-            <Tools />
+            <AddChildStepButtons />
           </div>
         </>
       ) : null} */}
@@ -971,9 +957,9 @@ function ShowOnClick({ css, trigger, children }) {
     <div style={{ position: "relative" }}>
       <div onClick={() => setIsShowing(true)}>{trigger}</div>
       {isShowing ? (
-        <Box css={css} onMouseLeave={() => setIsShowing(false)}>
+        <Div css={css} onMouseLeave={() => setIsShowing(false)}>
           {children}
-        </Box>
+        </Div>
       ) : null}
     </div>
   );
@@ -1034,17 +1020,17 @@ function getColumnNames2(appState, node) {
   return getType(node).columnNames(appState, node);
 }
 
-function FromAndTools() {
+function AddFromOrChildStepButtons() {
   return (
     <Row>
-      <Tools />
+      <AddChildStepButtons />
       <HorizontalSpace />
       <AttachNodeButton onAdd={attachJoinNode}>JOIN</AttachNodeButton>
     </Row>
   );
 }
 
-function Tools() {
+function AddChildStepButtons() {
   return (
     <>
       <AttachNodeButton onAdd={attachTightNode("where")}>
@@ -1130,10 +1116,6 @@ function AddNodeButton({ children, type }) {
   );
 }
 
-// function canNodeHaveManySources(node) {
-//   return getType(node).canHaveManySources();
-// }
-
 const Box = styled("div", {
   cursor: "move",
   // display: "inline-block",
@@ -1157,7 +1139,8 @@ const Box = styled("div", {
   // margin: "0 4px 2px 0",
 });
 
-function Table() {
+// Memoize to ignore position changes
+function ResultsTable() {
   const [appState, setAppState] = useAppStateContext();
   const graph = useMemo(
     () => ({
@@ -1167,15 +1150,16 @@ function Table() {
     }),
     [appState.edges, appState.nodes, appState.selectedNodeIDs]
   );
-  return <TableLoader appState={graph} setAppState={setAppState} />;
+  return <ResultsTableLoader appState={graph} setAppState={setAppState} />;
 }
 
-const TableLoader = memo(({ appState, setAppState }) => {
+const ResultsTableLoader = memo(({ appState, setAppState }) => {
   const [tableState, setTableState] = useState();
+  const [lastShownNode, setLastShownNode] = useState(null);
   const [updated, setUpdated] = useState();
   const [isLoading, setIsLoading] = useState(false);
+  const selected = only(Nodes.selected(appState));
   useEffect(() => {
-    const selected = only(Nodes.selected(appState));
     if (selected == null) {
       return;
     }
@@ -1189,7 +1173,6 @@ const TableLoader = memo(({ appState, setAppState }) => {
     database.then((database) =>
       setTimeout(() => {
         setIsLoading(false);
-        setUpdated(true);
         if (query != null) {
           setTableState({
             table: execQuery(database, query),
@@ -1198,12 +1181,16 @@ const TableLoader = memo(({ appState, setAppState }) => {
               .map((query) => execQuery(database, query)),
             appState: appState,
           });
+          setUpdated(
+            lastShownNode != null && !Node.is(selected, lastShownNode)
+          );
+          setLastShownNode(selected);
         }
-        const DELAY_OF_SHOWING_RESULTS = 10;
+        const DELAY_OF_SHOWING_RESULTS = 1000;
         setTimeout(() => setUpdated(false), DELAY_OF_SHOWING_RESULTS);
       }, 300)
     );
-  }, [appState]);
+  }, [appState, selected]);
 
   if (isLoading && tableState?.table == null) {
     return <div style={{ padding: 12 }}>Loading...</div>;
@@ -1211,19 +1198,27 @@ const TableLoader = memo(({ appState, setAppState }) => {
     return null;
   }
   return (
-    <TableLoaded
-      updated={updated}
-      state={tableState}
-      setAppState={setAppState}
-    />
+    <Div
+      css={{
+        display: "inline-flex",
+        border: "1px solid transparent",
+        animation: updated ? `${borderBlink} 1s ease-out` : null,
+      }}
+    >
+      <ResultsTableLoaded state={tableState} setAppState={setAppState} />
+    </Div>
   );
+});
+
+const borderBlink = keyframes({
+  from: { borderColor: "$lime9" },
+  to: { borderColor: "transparent" },
 });
 
 const TH = styled("th");
 const TD = styled("td");
 
-function TableLoaded({
-  updated,
+const ResultsTableLoaded = memo(function TableLoaded({
   state: { table, additionalTables, appState },
   setAppState,
 }) {
@@ -1246,17 +1241,18 @@ function TableLoaded({
   const rowCount = Math.max(...values.map((rows) => rows.length));
   const primaryColumnCount = table.columns.length;
   return (
-    <>
-      <table className={updated ? "updated" : null}>
-        <thead>
-          <tr>
-            {columns.map((column, i) => (
+    <table>
+      <thead>
+        <tr>
+          {columns.map((column, i) => {
+            const isPrimary = i < primaryColumnCount;
+            return (
               <TH
                 key={i}
                 css={{
                   textAlign: "start",
                   whiteSpace: "nowrap",
-                  color: i >= primaryColumnCount ? "$slate11" : null,
+                  color: isPrimary ? null : "$slate11",
                   // color: availableColumnNamesSet.has(column) ? "black" : "#ddd",
                 }}
               >
@@ -1266,41 +1262,39 @@ function TableLoaded({
                         appState,
                         selectedNode,
                         column,
-                        setAppState
+                        setAppState,
+                        isPrimary
                       );
                       return control ?? column;
                     })()
                   : null}
               </TH>
-            ))}
+            );
+          })}
+        </tr>
+      </thead>
+      <tbody>
+        {[...Array(rowCount)].map((_, j) => (
+          <tr key={j}>
+            {values.map((rows, tableIndex) =>
+              rows[0].map((_, i) => (
+                <TD
+                  css={{
+                    whiteSpace: "nowrap",
+                    color: tableIndex > 0 ? "$slate11" : null,
+                  }}
+                  key={i}
+                >
+                  {(rows[j] ?? [])[i] ?? ""}
+                </TD>
+              ))
+            )}
           </tr>
-        </thead>
-        <tbody>
-          {[...Array(rowCount)].map((_, j) => (
-            <tr key={j}>
-              {values.map((rows, tableIndex) =>
-                rows[0].map((_, i) => (
-                  <TD
-                    css={{
-                      whiteSpace: "nowrap",
-                      color: tableIndex > 0 ? "$slate11" : null,
-                    }}
-                    key={i}
-                  >
-                    {(rows[j] ?? [])[i] ?? ""}
-                  </TD>
-                ))
-              )}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      {/* Group
-      {columns.map((column) => column)}
-      <Button>+∇ </Button> */}
-    </>
+        ))}
+      </tbody>
+    </table>
   );
-}
+});
 
 function getSelectedNode(appState) {
   return only(Nodes.selected(appState));
@@ -1378,7 +1372,7 @@ function Label(props) {
 }
 
 function HorizontalSpace() {
-  return <div style={{ flex: "0 0 2px" }}></div>;
+  return <Div css={{ minWidth: "2px" }}></Div>;
 }
 
 function execQuery(db, sql) {
