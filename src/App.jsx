@@ -1,7 +1,4 @@
-import * as Arrays from "./Arrays";
-import * as FromNodes from "./FromNodes";
-import * as NameNodes from "./NameNodes";
-import * as SelectNodes from "./SelectNodes";
+import { DropdownMenuIcon, PlusIcon } from "@modulz/radix-icons";
 import React, {
   createContext,
   memo,
@@ -12,43 +9,39 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { useImmer } from "use-immer";
-import { produce, current } from "./immer";
 import initSqlJs from "sql.js";
+import { useImmer } from "use-immer";
+import * as Arrays from "./Arrays";
+import { only, onlyThrows } from "./Arrays";
+import { Button } from "./components/Button";
+import { ButtonWithIcon } from "./components/ButtonWithIcon";
+import { Column } from "./components/Column";
+import { IconButton } from "./components/IconButton";
+import { PaneControls } from "./components/PaneControls";
+import { Row } from "./components/Row";
+import * as Edge from "./Edge";
+import * as Edges from "./Edges";
+import * as FromNodes from "./FromNodes";
+import * as GroupByNode from "./GroupByNode";
+import { produce } from "./immer";
+import { invariant } from "./invariant";
+import * as NameNodes from "./NameNodes";
+import * as Node from "./Node";
+import * as Nodes from "./Nodes";
+import ReactFlow, {
+  Background,
+  getIncomers,
+  getOutgoers,
+  Handle,
+  ReactFlowProvider,
+  removeElements,
+  useStoreState,
+} from "./react-flow";
+import ElementUpdater from "./react-flow/components/ElementUpdater";
+import store from "./react-flow/store";
+import * as SelectNodes from "./SelectNodes";
 import { styled } from "./style";
 
-import * as NodeState from "./NodeState";
-import * as Nodes from "./Nodes";
-import * as Edges from "./Edges";
-import * as Node from "./Node";
-import * as Edge from "./Edge";
-
-import ReactFlow, {
-  removeElements,
-  addEdge,
-  Background,
-  useStoreActions,
-  getOutgoers,
-  getIncomers,
-  ReactFlowProvider,
-  useStoreState,
-  Handle,
-  updateEdge,
-} from "./react-flow";
-import { Button } from "./components/Button";
-import { Row } from "./components/Row";
-import { PaneControls } from "./components/PaneControls";
-import { ButtonWithIcon } from "./components/ButtonWithIcon";
-import { DropdownMenuIcon, PlusIcon } from "@modulz/radix-icons";
-import { IconButton } from "./components/IconButton";
-import { only, onlyThrows } from "./Arrays";
-import { createDraft, finishDraft } from "immer";
-import * as GroupByNode from "./GroupByNode";
-import { Tooltip } from "./components/Tooltip";
-import { Column } from "./components/Column";
-import { invariant } from "./invariant";
-import store from "./react-flow/store";
-import ElementUpdater from "./react-flow/components/ElementUpdater";
 // import {
 //   DropdownMenu,
 //   DropdownMenuContent,
@@ -122,8 +115,8 @@ const INITIAL_EDGES = new Map();
 const INITIAL_SELECTED_NODE_IDS = new Set([]);
 
 function Content() {
-  const [namespace, setNamespace] = useState("foo_team");
-  const [notebookName, setNotebookName] = useState("Untitled");
+  // const [namespace, setNamespace] = useState("foo_team");
+  // const [notebookName, setNotebookName] = useState("Untitled");
 
   const [appState, setAppState] = useImmer({
     nodes: INITIAL_NODES,
@@ -190,10 +183,6 @@ function idMap(array) {
 
 function mapValues(map) {
   return Array.from(map.values());
-}
-
-function getNodePositions() {
-  return store.getState().nodes;
 }
 
 function NodesPane() {
@@ -343,26 +332,11 @@ function NodesPane() {
   );
 }
 
-function nodeLists(appState) {
-  return Object.values(appState.nodes)
-    .filter((node) => node.type === FromNode)
-    .map((fromNode) => {
-      let parent = fromNode;
-      const list = [parent];
-      while (parent.child != null) {
-        parent = appState.nodes[parent.child];
-        list.push(parent);
-      }
-      return list;
-    });
-}
-
 const FromNode = {
   name: "FromNode",
   Component(node) {
     const name = FromNodes.name(node);
     const setSelectedNodeState = useSetSelectedNodeState();
-    const [appState] = useAppStateContext();
     return (
       <NodeUI
         node={node}
@@ -460,7 +434,6 @@ const SelectNode = {
   name: "SelectNode",
   Component(node) {
     const setSelectedNodeState = useSetSelectedNodeState();
-    const [appState] = useAppStateContext();
     return (
       <NodeUI node={node} showTools={true} tools={<FromAndTools />}>
         SELECT{" "}
@@ -1025,22 +998,6 @@ function ShowOnClick({ css, trigger, children }) {
 //   );
 // }
 
-function DeleteNodeButton({ node }) {
-  const [, setAppState] = useAppStateContext();
-  return (
-    <Button
-      onClick={() => {
-        setAppState((appState) => {
-          appState.selectedNodeID = getSource(appState, node).id;
-          appState.nodes = removeElements([node], appState.nodes);
-        });
-      }}
-    >
-      ×
-    </Button>
-  );
-}
-
 function TightEdge() {
   return <></>;
 }
@@ -1054,42 +1011,8 @@ function getNode(appState, id) {
   return appState.nodes.get(id);
 }
 
-const TO_SOURCE = false;
-const TO_TARGET = true;
-
 function getSource(appState, node) {
   return only(Nodes.parents(appState, node));
-}
-
-function getTarget(appState, node) {
-  return getTightChild(appState, node, TO_TARGET);
-}
-
-function getTightChild(appState, node, direction) {
-  return (
-    direction === TO_SOURCE
-      ? getIncomers(node, appState.nodes)
-      : getOutgoers(node, appState.nodes)
-  )[0];
-}
-
-function getTightDescendants(appState, node, direction) {
-  const descendants = [];
-  let parent = node;
-  do {
-    const tightChild = getTightChild(appState, parent, direction);
-    if (tightChild != null) {
-      descendants.push(tightChild);
-    }
-    parent = tightChild;
-  } while (parent != null);
-  return descendants;
-}
-
-function getAllTightDescendants(appState, node) {
-  return getTightDescendants(appState, node, TO_SOURCE).concat(
-    getTightDescendants(appState, node, TO_TARGET)
-  );
 }
 
 function getType(node) {
@@ -1531,7 +1454,7 @@ const DATABASE_SETUP_SQL = (() => {
 
 function objectMap(object, fn) {
   const newObject = {};
-  Object.keys(object).map((key) => {
+  Object.keys(object).forEach((key) => {
     newObject[key] = fn(object[key], key);
   });
   return newObject;

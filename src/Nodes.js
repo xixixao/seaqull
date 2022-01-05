@@ -3,7 +3,7 @@ import * as Edge from "./Edge";
 import * as Edges from "./Edges";
 import * as Iterable from "./Iterable";
 import * as Arrays from "./Arrays";
-import { only, onlyThrows } from "./Arrays";
+import { onlyThrows } from "./Arrays";
 import { invariant } from "./invariant";
 
 export function select(appState, nodes) {
@@ -84,15 +84,20 @@ export function hasDetachedChildren(appState, node) {
 
 export function add(appState, node) {
   nodes(appState).set(Node.id(node), node);
-  appState.positions.set(Node.id(node), { x: 0, y: 0 });
+  positions(appState).set(Node.id(node), { x: 0, y: 0 });
 }
 
-export function replace(appState, old, node) {
-  nodes(appState).set(Node.id(old), node);
+function positions(appState) {
+  return appState.positions;
 }
+
+// export function replace(appState, old, node) {
+//   nodes(appState).set(Node.id(old), node);
+// }
 
 export function remove(appState, node) {
   nodes(appState).delete(Node.id(node));
+  positions(appState).delete(Node.id(node));
   Edges.removeAll(appState, Edges.of(appState, node));
 }
 
