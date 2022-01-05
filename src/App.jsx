@@ -356,64 +356,61 @@ const FromNode = {
   emptyNodeData: FromNodes.empty,
   query(appState, node) {
     const name = FromNodes.name(node);
-    // const existingNode = only(
-    //   Arrays.filter(Nodes.nodes(appState), (node) => Node.label(node) === name)
-    // );
-    // if (existingNode != null) {
-    //   return getQuery(appState, existingNode);
-    // }
     return (name ?? "").length > 0 ? `SELECT * from ${name}` : null;
   },
   queryAdditionalValues(appState, node) {
     return null;
   },
+  querySelectable(appState, node) {
+    return FromNode.query(appState, node);
+  },
   columnNames() {
-    return COLUMNS.map(([column]) => column);
+    return new Set(COLUMNS.map(([column]) => column));
   },
   columnControl() {
     return null;
   },
 };
 
-const NameNode = {
-  name: "NameNode",
-  Component(node) {
-    const setSelectedNodeState = useSetSelectedNodeState();
-    return (
-      <NodeUI
-        node={node}
-        showTools={true}
-        tools={<AddFromOrChildStepButtons />}
-      >
-        <Input
-          value={NameNodes.name(node)}
-          onChange={(name) => {
-            setSelectedNodeState((node) => {
-              NameNodes.setName(node, name);
-            });
-          }}
-        />
-        {/* <Handle type="target" position="top" /> */}
-        {/* <Handle type="source" position="right" /> */}
-      </NodeUI>
-    );
-  },
-  emptyNodeData() {
-    return NameNodes.empty();
-  },
-  query(appState, node) {
-    return getQuery(appState, Nodes.parentX(appState, node));
-  },
-  queryAdditionalValues(appState, node) {
-    return null;
-  },
-  columnNames(appState, node) {
-    return getColumnNames2(appState, Nodes.parentX(appState, node));
-  },
-  columnControl(appState, node, columnName, setAppState) {
-    return null;
-  },
-};
+// const NameNode = {
+//   name: "NameNode",
+//   Component(node) {
+//     const setSelectedNodeState = useSetSelectedNodeState();
+//     return (
+//       <NodeUI
+//         node={node}
+//         showTools={true}
+//         tools={<AddFromOrChildStepButtons />}
+//       >
+//         <Input
+//           value={NameNodes.name(node)}
+//           onChange={(name) => {
+//             setSelectedNodeState((node) => {
+//               NameNodes.setName(node, name);
+//             });
+//           }}
+//         />
+//         {/* <Handle type="target" position="top" /> */}
+//         {/* <Handle type="source" position="right" /> */}
+//       </NodeUI>
+//     );
+//   },
+//   emptyNodeData() {
+//     return NameNodes.empty();
+//   },
+//   query(appState, node) {
+//     return getQuery(appState, Nodes.parentX(appState, node));
+//   },
+//   queryAdditionalValues(appState, node) {
+//     return null;
+//   },
+//   columnNames(appState, node) {
+//     return getColumnNames2(appState, Nodes.parentX(appState, node));
+//   },
+//   columnControl(appState, node, columnName, setAppState) {
+//     return null;
+//   },
+// };
 
 const SelectNode = {
   name: "SelectNode",
@@ -427,10 +424,13 @@ const SelectNode = {
       >
         SELECT{" "}
         <Input
-          value={someOrAllColumnList(SelectNodes.selectedColumns(node))}
-          onChange={(columns) => {
+          value={someOrAllColumnList(SelectNodes.selectedExpressions(node))}
+          onChange={(expressions) => {
             setSelectedNodeState((node) => {
-              SelectNodes.setSelectedColumns(node, columns.split(/, */));
+              SelectNodes.setSelectedExpressions(
+                node,
+                expressions.split(/, */)
+              );
             });
           }}
         />
@@ -442,71 +442,56 @@ const SelectNode = {
   },
   query(appState, node) {
     const sourceNode = getSource(appState, node);
-    const fromQuery = getQuery(appState, sourceNode);
+    const fromQuery = getQuerySelectable(appState, sourceNode);
     return `SELECT ${someOrAllColumnList(
-      SelectNodes.selectedColumns(node)
+      SelectNodes.selectedExpressions(node)
     )} FROM (${fromQuery})`;
   },
   queryAdditionalValues(appState, node) {
     const sourceNode = getSource(appState, node);
-    const fromQuery = getQuery(appState, sourceNode);
-    const { selectedColumnNames: sourceSelectedColumnNames } = sourceNode.data;
-    const { selectedColumnNames } = node.data;
-    if (
-      sourceNode.type === GroupNode &&
-      (sourceSelectedColumnNames ?? []).length > 0
-    ) {
-      const otherGroupByColumns = subtractArrays(
-        getColumnNames(appState, sourceNode.id),
-        selectedColumnNames ?? []
-      );
-      return [
-        (selectedColumnNames ?? []).length > 0 && otherGroupByColumns.length > 0
-          ? `SELECT ${otherGroupByColumns.join(", ")} FROM (${fromQuery})`
-          : null,
-        ...GroupNode.queryAdditionalValues(appState, sourceNode),
-      ];
-    }
-    if ((selectedColumnNames ?? []).length === 0) {
+    const fromQuery = getQuerySelectable(appState, sourceNode);
+    const selectedExpressions = SelectNodes.selectedExpressions(node);
+    if (selectedExpressions.length === 0) {
       return null;
     }
     const otherColumns = subtractArrays(
-      getColumnNames(appState, sourceNode.id),
-      selectedColumnNames ?? []
+      Array.from(getColumnNames(appState, sourceNode.id)),
+      selectedExpressions
     );
     if (otherColumns.length === 0) {
       return null;
     }
     return [`SELECT ${otherColumns} FROM (${fromQuery})`];
   },
+  querySelectable(appState, node) {
+    const sourceNode = getSource(appState, node);
+    const fromQuery = getQuerySelectable(appState, sourceNode);
+    return `SELECT ${someOrAllColumnList(
+      SelectNodes.selectedExpressionsAliased(node)
+    )} FROM (${fromQuery})`;
+  },
   columnNames(appState, node) {
     const sourceNode = getSource(appState, node);
-    return (node.data.selectedColumnNames ?? []).length > 0
-      ? node.data.selectedColumnNames
+    const selectedExpressions = SelectNodes.selectedExpressions(node);
+    return selectedExpressions.length > 0
+      ? SelectNodes.selectedColumns(node)
       : getColumnNames(appState, sourceNode.id);
   },
-  columnControl(appState, node, columnName, setAppState) {
+  columnControl(appState, node, columnName, setSelectedNodeState) {
     // const selectableColumnNames = getColumnNames(appState, node.source);
     // TODO: Fix O(N^2) algo to be nlogn
     // if (!selectableColumnNames.find((column) => column === columnName)) {
     //   return null;
     // }
-    const selectedColumnNamesNotNull = node.data.selectedColumnNames ?? [];
-    const selectedColumnNamesSet = new Set(selectedColumnNamesNotNull);
     return (
       <Row align="center">
         <input
-          checked={selectedColumnNamesSet.has(columnName)}
+          checked={SelectNodes.hasSelectedColumn(node, columnName)}
           style={{ cursor: "pointer" }}
           type="checkbox"
-          onChange={(event) => {
-            setAppState((appState) => {
-              getSelectedNode(appState).data.selectedColumnNames =
-                !selectedColumnNamesSet.has(columnName)
-                  ? selectedColumnNamesNotNull.concat([columnName])
-                  : selectedColumnNamesNotNull.filter(
-                      (key) => key !== columnName
-                    );
+          onChange={() => {
+            setSelectedNodeState((node) => {
+              SelectNodes.toggleSelectedColumn(node, columnName);
             });
           }}
         />
@@ -560,7 +545,10 @@ function GroupNodeComponent(node) {
       <div>
         GROUP BY {someOrNoneColumnList(GroupByNode.groupedColumns(node))}
       </div>
-      <div>SELECT {someOrAllColumnList(GroupByNode.selectedColumns(node))}</div>
+      <div>
+        SELECT{" "}
+        {someOrAllColumnList(GroupByNode.selectedColumnExpressions(node))}
+      </div>
     </NodeUI>
   );
 }
@@ -576,104 +564,76 @@ function someOrAllColumnList(columnNames) {
 const GroupNode = {
   Component: GroupNodeComponent,
   emptyNodeData: GroupByNode.empty,
-  // queryWhenSelected(appState, node) {
-  //   const sourceNode = getSource(appState, node);
-  //   const fromQuery = getQuery(appState, sourceNode);
-  //   const selectedColumns = GroupByNode.selectedColumns(node);
-  //   if (selectedColumns.length === 0) {
-  //     return `SELECT * from (${fromQuery})`;
-  //   }
-  //   const selectedColumnSet = new Set(selectedColumns ?? []);
-  //   const otherColumns = getColumnNames(appState, sourceNode.id).filter(
-  //     (column) => !selectedColumnSet.has(column)
-  //   );
-  //   return `SELECT ${selectedColumns
-  //     .concat(otherColumns)
-  //     .join(", ")} FROM (${fromQuery})
-  //     ORDER BY ${selectedColumns.join(", ")}`;
-  // },
   query(appState, node) {
     const sourceNode = getSource(appState, node);
-    const fromQuery = getQuery(appState, sourceNode);
-    const selectedColumns = GroupByNode.selectedColumns(node);
-    if (selectedColumns.length === 0) {
+    const fromQuery = getQuerySelectable(appState, sourceNode);
+    const selectedExpressions = GroupByNode.selectedColumnExpressions(node);
+    if (selectedExpressions.length === 0) {
       return `SELECT * from (${fromQuery})`;
     }
 
-    return `SELECT ${selectedColumns.join(", ")}
-      FROM (${fromQuery})
-      GROUP BY ${GroupByNode.groupedColumns(node).join(", ")}`;
+    return GroupByNode.sql(node, selectedExpressions, fromQuery);
   },
   queryAdditionalValues(appState, node) {
     const sourceNode = getSource(appState, node);
-    const fromQuery = getQuery(appState, sourceNode);
-    const selectedColumns = GroupByNode.groupedColumns(node);
-    if ((selectedColumns ?? []).length === 0) {
+    const fromQuery = getQuerySelectable(appState, sourceNode);
+    const groupedColumns = GroupByNode.groupedColumns(node);
+    if (groupedColumns.length === 0) {
       return null;
     }
     const otherColumns = subtractArrays(
-      getColumnNames(appState, sourceNode.id),
-      selectedColumns ?? []
+      Array.from(getColumnNames(appState, sourceNode.id)),
+      groupedColumns
     );
     if (otherColumns.length === 0) {
       return null;
     }
     return [`SELECT ${otherColumns} FROM (${fromQuery})`];
   },
+  querySelectable(appState, node) {
+    const groupedColumns = GroupByNode.groupedColumns(node);
+    if (groupedColumns.length === 0) {
+      return GroupNode.query(appState, node);
+    }
+    const sourceNode = getSource(appState, node);
+    const fromQuery = getQuerySelectable(appState, sourceNode);
+    return GroupByNode.sql(
+      node,
+      GroupByNode.selectedColumnExpressionsAliased(node),
+      fromQuery
+    );
+  },
   columnNames(appState, node) {
     const sourceNode = getSource(appState, node);
-    const selectedColumns = GroupByNode.selectedColumns(node);
-    return (selectedColumns ?? []).length > 0
-      ? selectedColumns
+    return GroupByNode.groupedColumns(node).length > 0
+      ? GroupByNode.selectedColumns(node)
       : getColumnNames(appState, sourceNode.id);
   },
-  columnControl(appState, node, columnName, setAppState, isPrimary) {
-    // const sourceNode = getSource(appState, node);
-    // const selectableColumnNames = getColumnNames(appState, sourceNode.id);
-    // // TODO: Fix O(N^2) algo to be nlogn
-    // if (!selectableColumnNames.find((column) => column === columnName)) {
-    //   return null;
-    // }
-    // if (isPrimary) {
-    //   return null;
-    // }
-    const selectedColumnNamesNotNull = node.data.selectedColumnNames ?? [];
-    const selectedColumnNamesSet = new Set(selectedColumnNamesNotNull);
-    const aggregationSelector =
-      !isPrimary && GroupByNode.groupedColumns(node).length > 0 ? (
-        <AggregationSelector
-          onChange={(aggregation) => {
-            setAppState((appState) => {
-              GroupByNode.addAggregation(
-                onlyThrows(Nodes.selected(appState)),
-                columnName,
-                aggregation
-              );
-            });
-          }}
-        />
-      ) : null;
+  columnControl(appState, node, columnName, setSelectedNodeState, isPrimary) {
     return (
       <Row align="center">
         <input
-          checked={selectedColumnNamesSet.has(columnName)}
+          checked={GroupByNode.hasGroupedColumn(node, columnName)}
           style={{ cursor: "pointer" }}
           type="checkbox"
           onChange={(event) => {
-            setAppState((appState) => {
-              getSelectedNode(appState).data.selectedColumnNames =
-                !selectedColumnNamesSet.has(columnName)
-                  ? selectedColumnNamesNotNull.concat([columnName])
-                  : selectedColumnNamesNotNull.filter(
-                      (key) => key !== columnName
-                    );
+            setSelectedNodeState((node) => {
+              GroupByNode.toggleGroupedColumn(node, columnName);
             });
           }}
         />
         <HorizontalSpace />
         <HorizontalSpace />
         {columnName}
-        {aggregationSelector}
+        {!isPrimary && GroupByNode.groupedColumns(node).length > 0 ? (
+          <AggregationSelector
+            onChange={(aggregation) => {
+              setSelectedNodeState((node) => {
+                GroupByNode.addAggregation(node, columnName, aggregation);
+              });
+            }}
+          />
+        ) : null}
       </Row>
     );
   },
@@ -1011,6 +971,10 @@ function getQueryAdditionalValues(appState, node) {
   return getType(node).queryAdditionalValues(appState, node);
 }
 
+function getQuerySelectable(appState, node) {
+  return getType(node).querySelectable(appState, node);
+}
+
 function getColumnNames(appState, id) {
   const node = getNode(appState, id);
   return getType(node).columnNames(appState, node);
@@ -1141,7 +1105,8 @@ const Box = styled("div", {
 
 // Memoize to ignore position changes
 function ResultsTable() {
-  const [appState, setAppState] = useAppStateContext();
+  const [appState] = useAppStateContext();
+  const setSelectedNodeState = useSetSelectedNodeState();
   const graph = useMemo(
     () => ({
       nodes: appState.nodes,
@@ -1150,10 +1115,15 @@ function ResultsTable() {
     }),
     [appState.edges, appState.nodes, appState.selectedNodeIDs]
   );
-  return <ResultsTableLoader appState={graph} setAppState={setAppState} />;
+  return (
+    <ResultsTableLoader
+      appState={graph}
+      setSelectedNodeState={setSelectedNodeState}
+    />
+  );
 }
 
-const ResultsTableLoader = memo(({ appState, setAppState }) => {
+const ResultsTableLoader = memo(({ appState, setSelectedNodeState }) => {
   const [tableState, setTableState] = useState();
   const [lastShownNode, setLastShownNode] = useState(null);
   const [updated, setUpdated] = useState();
@@ -1205,7 +1175,10 @@ const ResultsTableLoader = memo(({ appState, setAppState }) => {
         animation: updated ? `${borderBlink} 1s ease-out` : null,
       }}
     >
-      <ResultsTableLoaded state={tableState} setAppState={setAppState} />
+      <ResultsTableLoaded
+        state={tableState}
+        setSelectedNodeState={setSelectedNodeState}
+      />
     </Div>
   );
 });
@@ -1220,7 +1193,7 @@ const TD = styled("td");
 
 const ResultsTableLoaded = memo(function TableLoaded({
   state: { table, additionalTables, appState },
-  setAppState,
+  setSelectedNodeState,
 }) {
   // const { selectedNodeID } = appState;
   // const availableColumnNamesSet = getAvailableColumnNamesSet(
@@ -1262,7 +1235,7 @@ const ResultsTableLoaded = memo(function TableLoaded({
                         appState,
                         selectedNode,
                         column,
-                        setAppState,
+                        setSelectedNodeState,
                         isPrimary
                       );
                       return control ?? column;
@@ -1387,7 +1360,7 @@ function execQuery(db, sql) {
 
 const NODE_TYPES = {
   from: FromNode,
-  name: NameNode,
+  // name: NameNode,
   select: SelectNode,
   where: WhereNode,
   group: GroupNode,

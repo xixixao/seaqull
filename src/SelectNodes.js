@@ -1,11 +1,52 @@
 export function empty() {
-  return { selectedColumnNames: [] };
+  return { selected: [] };
+}
+
+export function selectedExpressions(node) {
+  return node.data.selected;
+}
+
+export function selectedExpressionsAliased(node) {
+  return selectedExpressions(node).map((expression) =>
+    !isColumnName(expression) && !hasAlias(expression)
+      ? `${expression} as ${alias(expression)}`
+      : expression
+  );
 }
 
 export function selectedColumns(node) {
-  return node.data.selectedColumnNames;
+  return new Set(
+    selectedExpressions(node).map((expression) =>
+      !isColumnName(expression) && !hasAlias(expression)
+        ? alias(expression)
+        : expression
+    )
+  );
 }
 
-export function setSelectedColumns(node, columns) {
-  node.data.selectedColumnNames = columns;
+function isColumnName(expression) {
+  return /^\w+$/.test(expression);
+}
+
+function hasAlias(expression) {
+  return /as\s+\w+$/i.test(expression);
+}
+
+function alias(expression) {
+  return expression.replace(/(\W|\s)+/g, "_");
+}
+
+export function hasSelectedColumn(node, column) {
+  return new Set(selectedExpressions(node)).has(column);
+}
+
+export function setSelectedExpressions(node, expressions) {
+  node.data.selected = expressions;
+}
+
+export function toggleSelectedColumn(node, columnName) {
+  const selected = selectedExpressions(node);
+  node.data.selected = !hasSelectedColumn(node, columnName)
+    ? selected.concat([columnName])
+    : selected.filter((key) => key !== columnName);
 }
