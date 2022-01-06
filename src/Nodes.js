@@ -114,6 +114,10 @@ export function tightRoot(appState, node) {
   return tightRoot(appState, parent);
 }
 
+export function haveSameTightRoot(appState, a, b) {
+  return Node.is(tightRoot(appState, a), tightRoot(appState, b));
+}
+
 export function idSet(nodes) {
   return new Set(nodes.map(Node.id));
 }
@@ -157,7 +161,7 @@ export function layout(appState, node, nodePositions) {
 }
 
 // TODO: `layout` can stay here but the algo should go into a separate module
-export function layoutStandalone(node, nodePositions) {
+export function layoutStandalone(appState, node, nodePositions) {
   const INIT_Y = 30;
   const NODE_HORIZONTAL_OFFSET = 30;
 
@@ -165,14 +169,25 @@ export function layoutStandalone(node, nodePositions) {
     ...nodePositions.map(({ __rf }) => __rf.position.x + __rf.width)
   );
 
-  Node.move(node, maxX + NODE_HORIZONTAL_OFFSET, INIT_Y);
+  Node.move(appState, node, maxX + NODE_HORIZONTAL_OFFSET, INIT_Y);
 }
 
 // TODO: `layout` can stay here but the algo should go into a separate module
-export function layoutDetached(parent, node, nodePositions) {
+export function layoutDetached(appState, parents, node, nodePositions) {
   const NODE_HORIZONTAL_OFFSET = 30;
-  const { x, y, width } = getDimensions(nodePositions, parent);
-  Node.move(node, x + width + NODE_HORIZONTAL_OFFSET, y);
+
+  const maxX = Math.max(
+    ...parents
+      .map((parent) => getDimensions(nodePositions, parent))
+      .map(({ x, width }) => x + width)
+  );
+  const maxY = Math.max(
+    ...parents
+      .map((parent) => getDimensions(nodePositions, parent))
+      .map(({ y, height }) => y + height)
+  );
+
+  Node.move(appState, node, maxX + NODE_HORIZONTAL_OFFSET, maxY);
 }
 
 function getDimensions(nodePositions, node) {

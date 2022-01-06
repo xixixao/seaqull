@@ -408,14 +408,14 @@ globalCss({
     // borderWidth: "1px",
     // borderStyle: "solid",
     // borderColor: "inherit",
-    border: "1px solid $slate7",
-    padding: "0 2px",
+    borderBottom: "1px solid $slate7",
+    padding: "0 4px",
   },
   td: {
     // borderWidth: "1px",
     // borderStyle: "solid",
     // borderColor: "inherit",
-    border: "1px solid $slate7",
+    // border: "1px solid $slate7",
     padding: "0 2px",
   },
 })();

@@ -5,6 +5,7 @@ import React, {
   useCallback,
   useContext,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -12,7 +13,7 @@ import React, {
 import initSqlJs from "sql.js";
 import { useImmer } from "use-immer";
 import * as Arrays from "./Arrays";
-import { only, onlyThrows } from "./Arrays";
+import { only, onlyThrows, first } from "./Arrays";
 import { Button } from "./components/Button";
 import { ButtonWithIcon } from "./components/ButtonWithIcon";
 import { Column } from "./components/Column";
@@ -23,10 +24,11 @@ import * as Edge from "./Edge";
 import * as Edges from "./Edges";
 import * as FromNodes from "./FromNodes";
 import * as WhereNodes from "./WhereNodes";
-import * as GroupByNode from "./GroupByNode";
+import * as GroupNodes from "./GroupNodes";
 import { produce } from "./immer";
 import { invariant } from "./invariant";
-import * as NameNodes from "./NameNodes";
+// import * as NameNodes from "./NameNodes";
+import * as JoinNodes from "./JoinNodes";
 import * as Node from "./Node";
 import * as Nodes from "./Nodes";
 import ReactFlow, {
@@ -90,7 +92,7 @@ function useSetSelectedNodeState() {
   );
 }
 
-const NodeAddContext = createContext();
+const LayoutRequestContext = createContext();
 
 const INIT_Y = 30;
 
@@ -101,6 +103,18 @@ const INITIAL_ELEMENTS = [
     data: { name: "users" },
     position: { x: 40, y: INIT_Y },
   },
+  {
+    id: "1",
+    type: "from",
+    data: { name: "users" },
+    position: { x: 220, y: INIT_Y },
+  },
+  {
+    id: "2",
+    type: "join",
+    data: JoinNodes.empty(),
+    position: { x: 440, y: INIT_Y + 30 },
+  },
 ];
 const INITIAL_NODES = idMap(
   INITIAL_ELEMENTS.map(({ position, ...rest }) => rest)
@@ -108,7 +122,10 @@ const INITIAL_NODES = idMap(
 const INITIAL_POSITIONS = new Map(
   INITIAL_ELEMENTS.map((element) => [element.id, element.position])
 );
-const INITIAL_EDGES = new Map();
+const INITIAL_EDGES = idMap([
+  Edge.newEdge(INITIAL_ELEMENTS[0], INITIAL_ELEMENTS[2]),
+  Edge.newEdge(INITIAL_ELEMENTS[1], INITIAL_ELEMENTS[2]),
+]);
 const INITIAL_SELECTED_NODE_IDS = new Set([]);
 
 const INITIAL_APP_STATE = {
@@ -194,31 +211,29 @@ function NodesPane() {
   const [appState, setAppState] = useAppStateContext();
   const nodePositions = useStoreState((store) => store.nodes);
 
-  const addedToNodeIDRef = useRef(null);
-  useEffect(() => {
+  const layoutRequestRef = useRef(null);
+  useLayoutEffect(() => {
     // console.log(nodePositions);
     setAppState((appState) => {
-      if (
-        addedToNodeIDRef.current != null &&
-        nodePositions.find(({ id }) => id === addedToNodeIDRef.current)?.__rf
-          .height != null
-      ) {
-        const node = Nodes.nodeWithID(appState, addedToNodeIDRef.current);
-        addedToNodeIDRef.current = null;
-        const parent = Nodes.tightParent(appState, node);
-        Nodes.layout(appState, parent, nodePositions);
+      if (layoutRequestRef.current != null) {
+        const [nodeID, layoutCallback] = layoutRequestRef.current;
+        if (
+          nodePositions.find(({ id }) => id === nodeID)?.__rf.height != null
+        ) {
+          const node = Nodes.nodeWithID(appState, nodeID);
+          layoutCallback(appState, node, nodePositions);
+          layoutRequestRef.current = null;
+        }
       }
     });
   }, [nodePositions, appState, setAppState]);
 
-  const onAdd = (addAction) => {
-    setAppState((appState) => {
-      addedToNodeIDRef.current = addAction(appState);
-    });
-  };
+  const onRequestLayout = useCallback((request) => {
+    layoutRequestRef.current = request;
+  }, []);
 
   return (
-    <NodeAddContext.Provider value={onAdd}>
+    <LayoutRequestContext.Provider value={onRequestLayout}>
       <Div
         css={{
           height: "65%",
@@ -253,18 +268,22 @@ function NodesPane() {
           onNodeDrag={(event, _node, { deltaX, deltaY }) => {
             setAppState((appState) => {
               const node = only(Nodes.selected(appState));
-              const parentEdge = Edges.tightParent(appState, node);
-              const shouldDragDetachNode =
-                node != null && parentEdge != null && event.altKey;
-              if (shouldDragDetachNode) {
-                const parent = Edges.parentNode(appState, parentEdge);
-                const children = Nodes.tightChildren(appState, node);
-                Edge.detach(parentEdge);
-                Edges.removeAll(appState, Edges.tightChildren(appState, node));
-                Edges.addTightChildren(appState, parent, children);
-                Node.moveBy(appState, node, deltaX, deltaY);
-                Nodes.layout(appState, parent, nodePositions);
-                return;
+              if (node != null) {
+                const parentEdge = Edges.tightParent(appState, node);
+                const shouldDragDetachNode = parentEdge != null && event.altKey;
+                if (shouldDragDetachNode) {
+                  const parent = Edges.parentNode(appState, parentEdge);
+                  const children = Nodes.tightChildren(appState, node);
+                  Edge.detach(parentEdge);
+                  Edges.removeAll(
+                    appState,
+                    Edges.tightChildren(appState, node)
+                  );
+                  Edges.addTightChildren(appState, parent, children);
+                  Node.moveBy(appState, node, deltaX, deltaY);
+                  Nodes.layout(appState, parent, nodePositions);
+                  return;
+                }
               }
               const draggedNodeRoots = Nodes.dedupe(
                 Nodes.selected(appState).map((node) =>
@@ -278,15 +297,18 @@ function NodesPane() {
             });
             return false;
           }}
-          onSelectionChange={(nodes) => {
+          onSelectionChange={(elements) => {
+            const nodes = (elements ?? []).filter(
+              (element) => element.source == null
+            );
             setAppState((appState) => {
               if (
                 !Arrays.isEqual(
-                  (nodes ?? []).map(Node.id),
+                  nodes.map(Node.id),
                   Array.from(appState.selectedNodeIDs)
                 )
               ) {
-                Nodes.select(appState, nodes ?? []);
+                Nodes.select(appState, nodes);
               }
             });
           }}
@@ -321,13 +343,13 @@ function NodesPane() {
               left: "50%",
             }}
           >
-            <AddNodeButton type="from">FROM</AddNodeButton>
+            <AddFromNodeButton />
           </div>
           <PaneControls showInteractive={false} />
           <Background color="#aaa" gap={16} />
         </ReactFlow>
       </Div>
-    </NodeAddContext.Provider>
+    </LayoutRequestContext.Provider>
   );
 }
 
@@ -337,11 +359,7 @@ const FromNode = {
     const name = FromNodes.name(node);
     const setSelectedNodeState = useSetSelectedNodeState();
     return (
-      <NodeUI
-        node={node}
-        showTools={name?.length > 0}
-        tools={<AddChildStepButtons />}
-      >
+      <NodeUI node={node} showTools={name?.length > 0}>
         FROM{" "}
         <Input
           focused={name == null}
@@ -370,6 +388,66 @@ const FromNode = {
     return new Set(COLUMNS.map(([column]) => column));
   },
   columnControl() {
+    return null;
+  },
+};
+
+const JoinNode = {
+  name: "JoinNode",
+  Component(node) {
+    const filters = JoinNodes.filters(node);
+    const setSelectedNodeState = useSetSelectedNodeState();
+    return (
+      <NodeUI node={node}>
+        {/* todo type of join */}
+        JOIN ON{" "}
+        <Input
+          displayValue={!JoinNodes.hasFilter(node) ? "∅" : null}
+          value={filters}
+          onChange={(filters) => {
+            setSelectedNodeState((node) => {
+              JoinNodes.setFilters(node, filters);
+            });
+          }}
+        />
+      </NodeUI>
+    );
+  },
+  emptyNodeData: JoinNodes.empty,
+  query(appState, node) {
+    if (!JoinNodes.hasFilter(node)) {
+      const sourceNode = first(Nodes.parents(appState, node));
+      return getQuerySelectable(appState, sourceNode);
+    }
+    const parents = Nodes.parents(appState, node);
+    return `SELECT a.*, b.* FROM (${getQuerySelectable(
+      appState,
+      parents[0]
+    )}) AS a
+    JOIN (${getQuerySelectable(
+      appState,
+      parents[1]
+    )}) AS b ON ${JoinNodes.filters(node)}`;
+    // Nodes.parents(appState, node)
+    // return (name ?? "").length > 0 ? `SELECT * from ${name}` : null;
+  },
+  queryAdditionalValues(appState, node) {
+    if (!JoinNodes.hasFilter(node)) {
+      const sourceNode = Nodes.parents(appState, node)[1];
+      return [getQuerySelectable(appState, sourceNode)];
+    }
+    return null;
+  },
+  querySelectable(appState, node) {
+    return JoinNode.query(appState, node);
+  },
+  columnNames() {
+    return new Set(COLUMNS.map(([column]) => column));
+  },
+  columnControl(appState, node, columnName, setSelectedNodeState, isPrimary) {
+    if (!JoinNodes.hasFilter(node)) {
+      return (isPrimary ? "a" : "b") + "." + columnName;
+    }
     return null;
   },
 };
@@ -419,11 +497,7 @@ const SelectNode = {
   Component(node) {
     const setSelectedNodeState = useSetSelectedNodeState();
     return (
-      <NodeUI
-        node={node}
-        showTools={true}
-        tools={<AddFromOrChildStepButtons />}
-      >
+      <NodeUI node={node}>
         SELECT{" "}
         <Input
           value={someOrAllColumnList(SelectNodes.selectedExpressions(node))}
@@ -516,7 +590,7 @@ const WhereNode = {
     const filters = WhereNodes.filters(node);
     const setSelectedNodeState = useSetSelectedNodeState();
     return (
-      <NodeUI node={node} showTools={true} tools={<AddChildStepButtons />}>
+      <NodeUI node={node}>
         WHERE{" "}
         <Input
           displayValue={!WhereNodes.hasFilter(node) ? "∅" : null}
@@ -556,14 +630,13 @@ const WhereNode = {
 
 function GroupNodeComponent(node) {
   return (
-    <NodeUI node={node} showTools={true} tools={<AddFromOrChildStepButtons />}>
+    <NodeUI node={node}>
       <div>
         GROUP BY{" "}
-        {someOrNoneColumnList(Array.from(GroupByNode.groupedColumns(node)))}
+        {someOrNoneColumnList(Array.from(GroupNodes.groupedColumns(node)))}
       </div>
       <div>
-        SELECT{" "}
-        {someOrAllColumnList(GroupByNode.selectedColumnExpressions(node))}
+        SELECT {someOrAllColumnList(GroupNodes.selectedColumnExpressions(node))}
       </div>
     </NodeUI>
   );
@@ -579,26 +652,26 @@ function someOrAllColumnList(columnNames) {
 
 const GroupNode = {
   Component: GroupNodeComponent,
-  emptyNodeData: GroupByNode.empty,
+  emptyNodeData: GroupNodes.empty,
   query(appState, node) {
     const sourceNode = getSource(appState, node);
     const fromQuery = getQuerySelectable(appState, sourceNode);
-    const selectedExpressions = GroupByNode.selectedColumnExpressions(node);
+    const selectedExpressions = GroupNodes.selectedColumnExpressions(node);
     if (selectedExpressions.length === 0) {
       return `SELECT * from (${fromQuery})`;
     }
 
-    return GroupByNode.sql(node, selectedExpressions, fromQuery);
+    return GroupNodes.sql(node, selectedExpressions, fromQuery);
   },
   queryAdditionalValues(appState, node) {
     const sourceNode = getSource(appState, node);
     const fromQuery = getQuerySelectable(appState, sourceNode);
-    if (!GroupByNode.hasGrouped(node)) {
+    if (!GroupNodes.hasGrouped(node)) {
       return null;
     }
     const otherColumns = subtractArrays(
       Array.from(getColumnNames(appState, sourceNode.id)),
-      GroupByNode.groupedColumns(node)
+      GroupNodes.groupedColumns(node)
     );
     if (otherColumns.length === 0) {
       return null;
@@ -606,44 +679,44 @@ const GroupNode = {
     return [`SELECT ${otherColumns} FROM (${fromQuery})`];
   },
   querySelectable(appState, node) {
-    if (!GroupByNode.hasGrouped(node)) {
+    if (!GroupNodes.hasGrouped(node)) {
       return GroupNode.query(appState, node);
     }
     const sourceNode = getSource(appState, node);
     const fromQuery = getQuerySelectable(appState, sourceNode);
-    return GroupByNode.sql(
+    return GroupNodes.sql(
       node,
-      GroupByNode.selectedColumnExpressionsAliased(node),
+      GroupNodes.selectedColumnExpressionsAliased(node),
       fromQuery
     );
   },
   columnNames(appState, node) {
     const sourceNode = getSource(appState, node);
-    return GroupByNode.hasGrouped(node)
-      ? GroupByNode.selectedColumns(node)
+    return GroupNodes.hasGrouped(node)
+      ? GroupNodes.selectedColumns(node)
       : getColumnNames(appState, sourceNode.id);
   },
   columnControl(appState, node, columnName, setSelectedNodeState, isPrimary) {
     return (
       <Row align="center">
         <input
-          checked={GroupByNode.hasGroupedColumn(node, columnName)}
+          checked={GroupNodes.hasGroupedColumn(node, columnName)}
           style={{ cursor: "pointer" }}
           type="checkbox"
           onChange={(event) => {
             setSelectedNodeState((node) => {
-              GroupByNode.toggleGroupedColumn(node, columnName);
+              GroupNodes.toggleGroupedColumn(node, columnName);
             });
           }}
         />
         <HorizontalSpace />
         <HorizontalSpace />
         {columnName}
-        {!isPrimary && GroupByNode.hasGrouped(node) ? (
+        {!isPrimary && GroupNodes.hasGrouped(node) ? (
           <AggregationSelector
             onChange={(aggregation) => {
               setSelectedNodeState((node) => {
-                GroupByNode.addAggregation(node, columnName, aggregation);
+                GroupNodes.addAggregation(node, columnName, aggregation);
               });
             }}
           />
@@ -670,7 +743,7 @@ function AggregationSelector({ onChange }) {
       }
     >
       <Column>
-        {Object.keys(GroupByNode.AGGREGATIONS).map((aggregation) => (
+        {Object.keys(GroupNodes.AGGREGATIONS).map((aggregation) => (
           <Button
             css={{ marginTop: "$4" }}
             key={aggregation}
@@ -822,24 +895,9 @@ function NodeInput({
   );
 }
 
-function NodeUI({ node, showTools, tools, children }) {
+function NodeUI({ node, showTools, children }) {
   const isSelected = node.selected;
   const [appState] = useAppStateContext();
-
-  const isLast = !Nodes.hasTightChildren(appState, node);
-  const toolsWithPosition = (
-    <div
-      style={{
-        position: "absolute",
-        top: "calc(100% + 4px)",
-        left: 0,
-        // transform: "translate(0, -50%)",
-        // width: 340,
-      }}
-    >
-      <Row>{tools}</Row>
-    </div>
-  );
   return (
     <div>
       <Box isSelected={isSelected}>
@@ -865,25 +923,7 @@ function NodeUI({ node, showTools, tools, children }) {
       >
         {Node.label(node)}
       </Div>
-      {!showTools || !isSelected ? null : isLast ? (
-        toolsWithPosition
-      ) : (
-        <FloatOnHover
-          style={{
-            position: "absolute",
-            top: "50%",
-            left: 0,
-            transform: "translate(-100%, -50%)",
-          }}
-          trigger={
-            <IconButton>
-              <PlusIcon />
-            </IconButton>
-          }
-        >
-          {toolsWithPosition}
-        </FloatOnHover>
-      )}
+      <NodeUIAddButtons node={node} showTools={showTools} />
       {/* <HorizontalSpace /> */}
       {/* <DeleteNodeButton node={node} /> */}
       {/* {isSelected && showTools ? (
@@ -905,6 +945,69 @@ function NodeUI({ node, showTools, tools, children }) {
         </>
       ) : null} */}
     </div>
+  );
+}
+
+function NodeUIAddButtons({ node, showTools }) {
+  const [appState] = useAppStateContext();
+  if (Nodes.countSelected(appState) > 2) {
+    return null;
+  }
+
+  const twoSelected = Nodes.countSelected(appState) === 2;
+  const joinable =
+    twoSelected &&
+    !Nodes.haveSameTightRoot(appState, ...Nodes.selected(appState));
+  if (twoSelected && !joinable) {
+    return null;
+  }
+
+  const isSelected = node.selected;
+  const isLast = !Nodes.hasTightChildren(appState, node);
+
+  const addChildrenButtonsPositioned = (
+    <div
+      style={{
+        position: "absolute",
+        top: "calc(100% + 4px)",
+        left: 0,
+        // transform: "translate(0, -50%)",
+        // width: 340,
+      }}
+    >
+      <Row>
+        {joinable ? (
+          <AddJoinNodeBtton />
+        ) : (
+          <>
+            {/*
+              TODO: Support
+             <AddJoinNodeBtton />
+            <HorizontalSpace /> */}
+            <AddTightChildStepButtons />
+          </>
+        )}
+      </Row>
+    </div>
+  );
+  return !(showTools ?? true) || !isSelected ? null : isLast ? (
+    addChildrenButtonsPositioned
+  ) : (
+    <FloatOnHover
+      style={{
+        position: "absolute",
+        top: "50%",
+        left: 0,
+        transform: "translate(-100%, -50%)",
+      }}
+      trigger={
+        <IconButton>
+          <PlusIcon />
+        </IconButton>
+      }
+    >
+      {addChildrenButtonsPositioned}
+    </FloatOnHover>
   );
 }
 
@@ -998,17 +1101,7 @@ function getColumnNames2(appState, node) {
   return getType(node).columnNames(appState, node);
 }
 
-function AddFromOrChildStepButtons() {
-  return (
-    <Row>
-      <AddChildStepButtons />
-      <HorizontalSpace />
-      <AttachNodeButton onAdd={attachJoinNode}>JOIN</AttachNodeButton>
-    </Row>
-  );
-}
-
-function AddChildStepButtons() {
+function AddTightChildStepButtons() {
   return (
     <>
       <AttachNodeButton onAdd={attachTightNode("where")}>
@@ -1030,13 +1123,24 @@ function AddChildStepButtons() {
   );
 }
 
+function AddJoinNodeBtton() {
+  return <AttachNodeButton onAdd={addJoinNode}>JOIN</AttachNodeButton>;
+}
+
+function AddFromNodeButton() {
+  return <AttachNodeButton onAdd={addFromNode}>FROM</AttachNodeButton>;
+}
+
 function AttachNodeButton({ children, onAdd }) {
-  const onAddGlobal = useContext(NodeAddContext);
+  const [, setAppState] = useAppStateContext();
+  const onRequestLayout = useContext(LayoutRequestContext);
   return (
     <ButtonWithIcon
       icon={<PlusIcon />}
       onClick={() => {
-        onAddGlobal(onAdd);
+        setAppState((appState) => {
+          onRequestLayout(onAdd(appState));
+        });
       }}
     >
       {children}
@@ -1045,26 +1149,53 @@ function AttachNodeButton({ children, onAdd }) {
 }
 
 function attachTightNode(type) {
-  return (appState, nodePositions) => {
+  return (appState) => {
     const data = getType({ type }).emptyNodeData();
     const newNode = Nodes.newNode(appState, { type, data });
     // const selectedNode = onlyThrows(Nodes.selected(appState));
-    addAndSelectNode(appState, newNode);
-    return Node.id(newNode);
+    attachAndSelectNode(appState, newNode);
+    return [Node.id(newNode), layoutTightChild];
     // Nodes.layout(appState, selectedNode, nodePositions);
   };
 }
 
-function attachJoinNode(appState, nodePositions) {
-  const selectedNode = onlyThrows(Nodes.selected(appState));
-  Nodes.ensureLabel(appState, selectedNode);
-  const data = FromNode.emptyNodeData(Node.label(selectedNode));
-  const newNode = Nodes.newNode(appState, { type: "from", data });
-  addAndSelectNode(appState, newNode);
-  Nodes.layoutDetached(selectedNode, newNode, nodePositions);
+function layoutTightChild(appState, node, nodePositions) {
+  const parent = Nodes.tightParent(appState, node);
+  Nodes.layout(appState, parent, nodePositions);
 }
 
-function addAndSelectNode(appState, newNode) {
+function addFromNode(appState) {
+  const data = FromNode.emptyNodeData();
+  const newNode = Nodes.newNode(appState, { type: "from", data });
+  Nodes.add(appState, newNode);
+  Nodes.select(appState, [newNode]);
+  return [Node.id(newNode), Nodes.layoutStandalone];
+}
+
+function addJoinNode(appState) {
+  // TODO: Support adding when 2 are not selected
+  const selected = Nodes.selected(appState);
+  // Nodes.ensureLabel(appState, selectedNode);
+  const data = JoinNode.emptyNodeData();
+  const newNode = Nodes.newNode(appState, { type: "join", data });
+  selected.forEach((node) => {
+    Edges.addChild(appState, node, newNode);
+  });
+  Nodes.add(appState, newNode);
+  Nodes.select(appState, [newNode]);
+  return [Node.id(newNode), layoutChild];
+}
+
+function layoutChild(appState, node, nodePositions) {
+  Nodes.layoutDetached(
+    appState,
+    Nodes.parents(appState, node),
+    node,
+    nodePositions
+  );
+}
+
+function attachAndSelectNode(appState, newNode) {
   const selectedNode = onlyThrows(Nodes.selected(appState));
   const selectedNodeChildren = Nodes.tightChildren(appState, selectedNode);
   const selectedNodeChildEdges = Edges.tightChildren(appState, selectedNode);
@@ -1073,25 +1204,6 @@ function addAndSelectNode(appState, newNode) {
   Edges.addTightChild(appState, selectedNode, newNode);
   Nodes.add(appState, newNode);
   Nodes.select(appState, [newNode]);
-}
-
-function AddNodeButton({ children, type }) {
-  const [, setAppState] = useAppStateContext();
-  const nodePositions = useStoreState((store) => store.nodes);
-  const addNodeHandler = (type) => () => {
-    setAppState((appState) => {
-      const data = getType({ type }).emptyNodeData();
-      const newNode = Nodes.newNode(appState, { type, data });
-      Nodes.add(appState, newNode);
-      Nodes.select(appState, [newNode]);
-      Nodes.layoutStandalone(newNode, nodePositions);
-    });
-  };
-  return (
-    <ButtonWithIcon icon={<PlusIcon />} onClick={addNodeHandler(type)}>
-      {children}
-    </ButtonWithIcon>
-  );
 }
 
 const Box = styled("div", {
@@ -1218,6 +1330,16 @@ const ResultsTableLoaded = memo(function TableLoaded({
   const selectedNode = getSelectedNode(appState);
   if (selectedNode == null) {
     return null;
+  }
+  const tables = [table].concat(additionalTables);
+  const brokenTable = tables.find((table) => table instanceof ResultError);
+  if (brokenTable != null) {
+    return (
+      <Column css={{ background: "$red3", padding: "$12", borderRadius: "$4" }}>
+        <div>{brokenTable.sql}</div>
+        <div>{brokenTable.error.toString()}</div>
+      </Column>
+    );
   }
   const columns = table.columns.concat(
     ...additionalTables.map((table) => [""].concat(table.columns))
@@ -1362,19 +1484,26 @@ function HorizontalSpace() {
   return <Div css={{ minWidth: "2px" }}></Div>;
 }
 
+class ResultError {
+  constructor(sql, error) {
+    this.sql = sql;
+    this.error = error;
+  }
+}
+
 function execQuery(db, sql) {
   // console.log(sql);
   try {
     return db.exec(sql)[0];
   } catch (e) {
-    console.error(sql, e);
-    return null;
+    return new ResultError(sql, e);
   }
 }
 
 const NODE_TYPES = {
   from: FromNode,
   // name: NameNode,
+  join: JoinNode,
   select: SelectNode,
   where: WhereNode,
   group: GroupNode,

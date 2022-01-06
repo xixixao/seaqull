@@ -9,6 +9,14 @@ export function filter(iterable, cond) {
   return Array.from(Iterable.filter(iterable, cond));
 }
 
+export function first(array) {
+  return array[0];
+}
+
+export function last(array) {
+  return array[array.length - 1];
+}
+
 export function only(array) {
   return array.length === 1 ? array[0] : null;
 }

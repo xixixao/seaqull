@@ -69,7 +69,7 @@ export default function reactFlowReducer(state = initialState, action) {
       let selectedElements = state.selectedElements;
       let i = 0;
       for (const id of selectedNodeIDs) {
-        if (state.selectedElements[i].id !== id) {
+        if ((state.selectedElements ?? [])[i]?.id !== id) {
           selectedElements = Array.from(selectedNodeIDs).map((id) => ({ id }));
           break;
         }
@@ -261,7 +261,7 @@ export default function reactFlowReducer(state = initialState, action) {
       let nextElements = selectedElementsArr;
       if (multiSelectionActive) {
         nextElements = selectedElements
-          ? [...selectedElements, ...selectedElementsArr]
+          ? [...selectedElementsArr, ...selectedElements]
           : selectedElementsArr;
       }
       const selectedElementsUpdated = !isEqual(

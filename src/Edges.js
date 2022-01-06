@@ -4,92 +4,92 @@ import * as Nodes from "./Nodes";
 import * as Arrays from "./Arrays";
 import { only } from "./Arrays";
 
-export function children(nodeState, node) {
-  return Arrays.filter(edges(nodeState), (edge) =>
+export function children(appState, node) {
+  return Arrays.filter(edges(appState), (edge) =>
     Node.hasID(node, Edge.parentID(edge))
   );
 }
 
-export function parents(nodeState, node) {
-  return Arrays.filter(edges(nodeState), (edge) =>
+export function parents(appState, node) {
+  return Arrays.filter(edges(appState), (edge) =>
     Node.hasID(node, Edge.childID(edge))
   );
 }
 
-export function parentNode(nodeState, edge) {
-  return Nodes.nodeWithID(nodeState, Edge.parentID(edge));
+export function parentNode(appState, edge) {
+  return Nodes.nodeWithID(appState, Edge.parentID(edge));
 }
 
-export function childNode(nodeState, edge) {
-  return Nodes.nodeWithID(nodeState, Edge.childID(edge));
+export function childNode(appState, edge) {
+  return Nodes.nodeWithID(appState, Edge.childID(edge));
 }
 
-export function tightParent(nodeState, node) {
-  const parent = only(parents(nodeState, node));
+export function tightParent(appState, node) {
+  const parent = only(parents(appState, node));
   return parent != null && Edge.isTight(parent) ? parent : null;
 }
 
-export function tightChildren(nodeState, node) {
-  return children(nodeState, node).filter(Edge.isTight);
+export function tightChildren(appState, node) {
+  return children(appState, node).filter(Edge.isTight);
 }
 
-export function detachedChildren(nodeState, node) {
-  return children(nodeState, node).filter((edge) => !Edge.isTight(edge));
+export function detachedChildren(appState, node) {
+  return children(appState, node).filter((edge) => !Edge.isTight(edge));
 }
 
-export function detachedParents(nodeState, node) {
-  return parents(nodeState, node).filter((edge) => !Edge.isTight(edge));
+export function detachedParents(appState, node) {
+  return parents(appState, node).filter((edge) => !Edge.isTight(edge));
 }
 
-export function of(nodeState, node) {
+export function of(appState, node) {
   return Arrays.filter(
-    edges(nodeState),
+    edges(appState),
     (edge) =>
       Node.hasID(node, Edge.childID(edge)) ||
       Node.hasID(node, Edge.parentID(edge))
   );
 }
 
-export function edges(nodeState) {
-  return nodeState.edges;
+export function edges(appState) {
+  return appState.edges;
 }
 
-export function removeAll(nodeState, edges) {
+export function removeAll(appState, edges) {
   edges.forEach((edge) => {
-    remove(nodeState, edge);
+    remove(appState, edge);
   });
 }
 
-export function remove(nodeState, edge) {
-  return edges(nodeState).delete(Edge.id(edge));
+export function remove(appState, edge) {
+  return edges(appState).delete(Edge.id(edge));
 }
 
-export function addChildren(nodeState, parent, children) {
+export function addChildren(appState, parent, children) {
   children.forEach((child) => {
-    addChild(nodeState, parent, child);
+    addChild(appState, parent, child);
   });
 }
 
-export function addChild(nodeState, parent, child) {
-  add(nodeState, Edge.newEdge(parent, child));
+export function addChild(appState, parent, child) {
+  add(appState, Edge.newEdge(parent, child));
 }
 
-export function addTightChildren(nodeState, parent, children) {
+export function addTightChildren(appState, parent, children) {
   children.forEach((child) => {
-    addTightChild(nodeState, parent, child);
+    addTightChild(appState, parent, child);
   });
 }
 
-export function addTightChild(nodeState, parent, child) {
-  add(nodeState, Edge.newTightEdge(parent, child));
+export function addTightChild(appState, parent, child) {
+  add(appState, Edge.newTightEdge(parent, child));
 }
 
-// export function addAll(nodeState, added) {
+// export function addAll(appState, added) {
 //   added.forEach((edge) => {
-//     add(nodeState, edge);
+//     add(appState, edge);
 //   });
 // }
 
-export function add(nodeState, edge) {
-  edges(nodeState).set(Edge.id(edge), edge);
+export function add(appState, edge) {
+  edges(appState).set(Edge.id(edge), edge);
 }
