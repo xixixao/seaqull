@@ -111,16 +111,18 @@ const INITIAL_POSITIONS = new Map(
 const INITIAL_EDGES = new Map();
 const INITIAL_SELECTED_NODE_IDS = new Set([]);
 
+const INITIAL_APP_STATE = {
+  nodes: INITIAL_NODES,
+  positions: INITIAL_POSITIONS,
+  selectedNodeIDs: INITIAL_SELECTED_NODE_IDS,
+  edges: INITIAL_EDGES,
+};
+
 function Content() {
   // const [namespace, setNamespace] = useState("foo_team");
   // const [notebookName, setNotebookName] = useState("Untitled");
 
-  const [appState, setAppState] = useImmer({
-    nodes: INITIAL_NODES,
-    positions: INITIAL_POSITIONS,
-    selectedNodeIDs: INITIAL_SELECTED_NODE_IDS,
-    edges: INITIAL_EDGES,
-  });
+  const [appState, setAppState] = useImmer(INITIAL_APP_STATE);
 
   const elements = mapValues(appState.nodes)
     .map((node) => ({
