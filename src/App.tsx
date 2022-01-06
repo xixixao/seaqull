@@ -1,6 +1,5 @@
 import { DropdownMenuIcon, PlusIcon } from "@modulz/radix-icons";
-import React, {
-  createContext,
+import {
   memo,
   useCallback,
   useContext,
@@ -22,13 +21,12 @@ import { Row } from "./components/Row";
 import * as Edge from "./Edge";
 import * as Edges from "./Edges";
 import * as FromNodes from "./FromNodes";
-import * as WhereNodes from "./WhereNodes";
 import * as GroupByNode from "./GroupByNode";
 import { produce } from "./immer";
 import { invariant } from "./invariant";
-import * as NameNodes from "./NameNodes";
 import * as Node from "./Node";
 import * as Nodes from "./Nodes";
+import { createStrictContext } from "./react";
 import ReactFlow, {
   Background,
   Handle,
@@ -38,12 +36,16 @@ import ReactFlow, {
 import ElementUpdater from "./react-flow/components/ElementUpdater";
 import * as SelectNodes from "./SelectNodes";
 import { keyframes, styled } from "./style";
+import { AppState, AnyNode } from "./types";
+import * as WhereNodes from "./WhereNodes";
 
 // import {
 //   DropdownMenu,
 //   DropdownMenuContent,
 //   DropdownMenuTrigger,
 // } from "./components/DropdownMenu";
+
+type N<T> = T | undefined | null;
 
 const database = initSqlJs({
   // Required to load the wasm binary asynchronously. Of course, you can host it wherever you want
@@ -72,11 +74,15 @@ function App() {
   );
 }
 
-const AppStateContext = createContext();
+type SetAppState = (updater: (state: AppState) => void) => void;
 
-function useAppStateContext() {
+const AppStateContext = createStrictContext<[AppState, SetAppState]>();
+
+function useAppStateContext(): [AppState, SetAppState] {
   return useContext(AppStateContext);
 }
+
+type SetSelectedNodeState = (updater: (node: AnyNode) => void) => void;
 
 function useSetSelectedNodeState() {
   const [, setAppState] = useAppStateContext();
@@ -90,7 +96,7 @@ function useSetSelectedNodeState() {
   );
 }
 
-const NodeAddContext = createContext();
+const NodeAddContext = createStrictContext();
 
 const INIT_Y = 30;
 
@@ -111,22 +117,27 @@ const INITIAL_POSITIONS = new Map(
 const INITIAL_EDGES = new Map();
 const INITIAL_SELECTED_NODE_IDS = new Set([]);
 
+const INITIAL_APP_STATE: AppState = {
+  nodes: INITIAL_NODES,
+  positions: INITIAL_POSITIONS,
+  selectedNodeIDs: INITIAL_SELECTED_NODE_IDS,
+  edges: INITIAL_EDGES,
+};
+
 function Content() {
   // const [namespace, setNamespace] = useState("foo_team");
   // const [notebookName, setNotebookName] = useState("Untitled");
 
-  const [appState, setAppState] = useImmer({
-    nodes: INITIAL_NODES,
-    positions: INITIAL_POSITIONS,
-    selectedNodeIDs: INITIAL_SELECTED_NODE_IDS,
-    edges: INITIAL_EDGES,
-  });
+  const [appState, setAppState] = useImmer(INITIAL_APP_STATE);
 
   const elements = mapValues(appState.nodes)
-    .map((node) => ({
-      ...node,
-      position: appState.positions.get(node.id),
-    }))
+    .map(
+      (node) =>
+        ({
+          ...node,
+          position: appState.positions.get(node.id),
+        } as Object)
+    )
     .concat(
       mapValues(appState.edges).map((edge) => ({
         ...edge,
@@ -174,11 +185,11 @@ function Content() {
 
 const Div = styled("div");
 
-function idMap(array) {
+function idMap(array: Array<{ id: string }>) {
   return new Map(array.map((element) => [element.id, element]));
 }
 
-function mapValues(map) {
+function mapValues<K, V>(map: Map<K, V>): Array<V> {
   return Array.from(map.values());
 }
 
@@ -190,7 +201,7 @@ function NodesPane() {
   //   (actions) => actions.updateNodePosDiff
   // );
   const [appState, setAppState] = useAppStateContext();
-  const nodePositions = useStoreState((store) => store.nodes);
+  const nodePositions = useStoreState((store) => (store as any).nodes);
 
   const addedToNodeIDRef = useRef(null);
   useEffect(() => {
@@ -224,7 +235,7 @@ function NodesPane() {
           // borderTop: "1px solid $slate7",
           outline: "none",
         }}
-        tabIndex="-1"
+        tabIndex={-1}
         onKeyDown={(e) => {
           if (e.key === "Backspace") {
             setAppState((appState) => {
@@ -245,54 +256,59 @@ function NodesPane() {
           }
         }}
       >
-        <ReactFlow
-          nodeTypes={NODE_COMPONENTS}
-          edgeTypes={EDGE_COMPONENTS}
-          onNodeDrag={(event, _node, { deltaX, deltaY }) => {
-            setAppState((appState) => {
-              const node = only(Nodes.selected(appState));
-              const parentEdge = Edges.tightParent(appState, node);
-              const shouldDragDetachNode =
-                node != null && parentEdge != null && event.altKey;
-              if (shouldDragDetachNode) {
-                const parent = Edges.parentNode(appState, parentEdge);
-                const children = Nodes.tightChildren(appState, node);
-                Edge.detach(parentEdge);
-                Edges.removeAll(appState, Edges.tightChildren(appState, node));
-                Edges.addTightChildren(appState, parent, children);
-                Node.moveBy(appState, node, deltaX, deltaY);
-                Nodes.layout(appState, parent, nodePositions);
-                return;
-              }
-              const draggedNodeRoots = Nodes.dedupe(
-                Nodes.selected(appState).map((node) =>
-                  Nodes.tightRoot(appState, node)
-                )
-              );
-              draggedNodeRoots.forEach((node) => {
-                Node.moveBy(appState, node, deltaX, deltaY);
-                Nodes.layout(appState, node, nodePositions);
+        {
+          // @ts-ignore
+          <ReactFlow
+            nodeTypes={NODE_COMPONENTS}
+            edgeTypes={EDGE_COMPONENTS}
+            onNodeDrag={(event, _node, { deltaX, deltaY }) => {
+              setAppState((appState) => {
+                const node = only(Nodes.selected(appState));
+                const parentEdge = Edges.tightParent(appState, node);
+                const shouldDragDetachNode =
+                  node != null && parentEdge != null && event.altKey;
+                if (shouldDragDetachNode) {
+                  const parent = Edges.parentNode(appState, parentEdge);
+                  const children = Nodes.tightChildren(appState, node);
+                  Edge.detach(parentEdge);
+                  Edges.removeAll(
+                    appState,
+                    Edges.tightChildren(appState, node)
+                  );
+                  Edges.addTightChildren(appState, parent, children);
+                  Node.moveBy(appState, node, deltaX, deltaY);
+                  Nodes.layout(appState, parent, nodePositions);
+                  return;
+                }
+                const draggedNodeRoots = Nodes.dedupe(
+                  Nodes.selected(appState).map((node) =>
+                    Nodes.tightRoot(appState, node)
+                  )
+                );
+                draggedNodeRoots.forEach((node) => {
+                  Node.moveBy(appState, node, deltaX, deltaY);
+                  Nodes.layout(appState, node, nodePositions);
+                });
               });
-            });
-            return false;
-          }}
-          onSelectionChange={(nodes) => {
-            setAppState((appState) => {
-              if (
-                !Arrays.isEqual(
-                  (nodes ?? []).map(Node.id),
-                  Array.from(appState.selectedNodeIDs)
-                )
-              ) {
-                Nodes.select(appState, nodes ?? []);
-              }
-            });
-          }}
-          // onElementsRemove={onElementsRemove}
-          // onConnect={onConnect}
-          // onLoad={onLoad}
-        >
-          {/* <MiniMap
+              return false;
+            }}
+            onSelectionChange={(nodes) => {
+              setAppState((appState) => {
+                if (
+                  !Arrays.isEqual(
+                    (nodes ?? []).map(Node.id),
+                    Array.from(appState.selectedNodeIDs)
+                  )
+                ) {
+                  Nodes.select(appState, nodes ?? []);
+                }
+              });
+            }}
+            // onElementsRemove={onElementsRemove}
+            // onConnect={onConnect}
+            // onLoad={onLoad}
+          >
+            {/* <MiniMap
         nodeStrokeColor={(n) => {
           if (n.style?.background) return n.style.background;
           if (n.type === "input") return "#0041d0";
@@ -309,21 +325,28 @@ function NodesPane() {
         nodeBorderRadius={2}
       /> */}
 
-          <div
-            style={{
-              position: "absolute",
-              padding: 4,
-              zIndex: 5,
-              transform: "translate(-50%, 0)",
-              top: 0,
-              left: "50%",
-            }}
-          >
-            <AddNodeButton type="from">FROM</AddNodeButton>
-          </div>
-          <PaneControls showInteractive={false} />
-          <Background color="#aaa" gap={16} />
-        </ReactFlow>
+            <div
+              style={{
+                position: "absolute",
+                padding: 4,
+                zIndex: 5,
+                transform: "translate(-50%, 0)",
+                top: 0,
+                left: "50%",
+              }}
+            >
+              <AddNodeButton type="from">FROM</AddNodeButton>
+            </div>
+            {
+              // @ts-ignore
+              <PaneControls showInteractive={false} />
+            }
+            {
+              // @ts-ignore
+              <Background color="#aaa" gap={16} />
+            }
+          </ReactFlow>
+        }
       </Div>
     </NodeAddContext.Provider>
   );
@@ -692,33 +715,35 @@ function AggregationSelector({ onChange }) {
 const OrderNode = {
   name: "OrderNode",
   Component({ node, appState, setAppState }) {
-    return (
-      <NodeInput
-        label="ORDER BY"
-        value={
-          Object.keys(node.columnToOrder ?? {}).length === 0
-            ? "∅"
-            : OrderNode.orderClause(node)
-        }
-        node={node}
-        appState={appState}
-        showTools={true}
-        setAppState={setAppState}
-        onChange={(orderClause) => {
-          setAppState((appState) => {
-            let columnToOrder = {};
-            orderClause
-              .split(/, */)
-              .map((columnOrder) => columnOrder.split(/ +/))
-              .filter(([column]) => column !== "∅")
-              .forEach(([column, order]) => {
-                columnToOrder[column] = order ?? "ASC";
-              });
-            appState.nodes[node.id].columnToOrder = columnToOrder;
-          });
-        }}
-      />
-    );
+    // return (
+    //   <NodeInput
+    //     label="ORDER BY"
+    //     value={
+    //       Object.keys(node.columnToOrder ?? {}).length === 0
+    //         ? "∅"
+    //         : OrderNode.orderClause(node)
+    //     }
+    //     node={node}
+    //     appState={appState}
+    //     showTools={true}
+    //     setAppState={setAppState}
+    //     onChange={(orderClause) => {
+    //       setAppState((appState) => {
+    //         let columnToOrder = {};
+    //         orderClause
+    //           .split(/, */)
+    //           .map((columnOrder) => columnOrder.split(/ +/))
+    //           .filter(([column]) => column !== "∅")
+    //           .forEach(([column, order]) => {
+    //             columnToOrder[column] = order ?? "ASC";
+    //           });
+    //         appState.nodes[node.id].columnToOrder = columnToOrder;
+    //       });
+    //     }}
+    //   >
+    //     foo
+    //   </NodeInput>
+    // );
   },
   emptyNodeData() {},
   // TODO: Should leave the order entirely to the user
@@ -790,34 +815,29 @@ const OrderNode = {
   },
 };
 
-function NodeInput({
-  label,
-  node,
-  appState,
-  value,
-  showTools,
-  setAppState,
-  children,
-  onChange,
-}) {
-  const { selectedNodeID } = appState;
-  const isSelected = node.id === selectedNodeID;
-  return (
-    <NodeUI
-      node={node}
-      appState={appState}
-      showTools={showTools}
-      setAppState={setAppState}
-    >
-      {label}{" "}
-      <Input
-        displayValue={isSelected ? value : value.slice(0, 10) + "..."}
-        value={value}
-        onChange={onChange}
-      />
-    </NodeUI>
-  );
-}
+// function NodeInput({
+//   label,
+//   node,
+//   appState,
+//   value,
+//   showTools,
+//   setAppState,
+//   children,
+//   onChange,
+// }) {
+//   const { selectedNodeID } = appState;
+//   const isSelected = node.id === selectedNodeID;
+//   return (
+//     <NodeUI node={node} showTools={showTools}>
+//       {label}{" "}
+//       <Input
+//         displayValue={isSelected ? value : value.slice(0, 10) + "..."}
+//         value={value}
+//         onChange={onChange}
+//       />
+//     </NodeUI>
+//   );
+// }
 
 function NodeUI({ node, showTools, tools, children }) {
   const isSelected = node.selected;
@@ -842,11 +862,13 @@ function NodeUI({ node, showTools, tools, children }) {
       <Box isSelected={isSelected}>
         {children}
         <Handle
+          // @ts-ignore
           style={visibleIf(Nodes.hasDetachedParents(appState, node))}
           type="target"
           position="left"
         />
         <Handle
+          // @ts-ignore
           style={visibleIf(Nodes.hasDetachedChildren(appState, node))}
           type="source"
           position="right"
@@ -991,9 +1013,9 @@ function getColumnNames(appState, id) {
   return getType(node).columnNames(appState, node);
 }
 
-function getColumnNames2(appState, node) {
-  return getType(node).columnNames(appState, node);
-}
+// function getColumnNames2(appState, node) {
+//   return getType(node).columnNames(appState, node);
+// }
 
 function AddFromOrChildStepButtons() {
   return (
@@ -1028,7 +1050,7 @@ function AddChildStepButtons() {
 }
 
 function AttachNodeButton({ children, onAdd }) {
-  const onAddGlobal = useContext(NodeAddContext);
+  const onAddGlobal: (adder: () => void) => void = useContext(NodeAddContext);
   return (
     <ButtonWithIcon
       icon={<PlusIcon />}
@@ -1074,7 +1096,7 @@ function addAndSelectNode(appState, newNode) {
 
 function AddNodeButton({ children, type }) {
   const [, setAppState] = useAppStateContext();
-  const nodePositions = useStoreState((store) => store.nodes);
+  const nodePositions = useStoreState((store) => (store as any).nodes);
   const addNodeHandler = (type) => () => {
     setAppState((appState) => {
       const data = getType({ type }).emptyNodeData();
@@ -1134,65 +1156,82 @@ function ResultsTable() {
   );
 }
 
-const ResultsTableLoader = memo(({ appState, setSelectedNodeState }) => {
-  const [tableState, setTableState] = useState();
-  const [lastShownNode, setLastShownNode] = useState(null);
-  const [updated, setUpdated] = useState();
-  const [isLoading, setIsLoading] = useState(false);
-  const selected = only(Nodes.selected(appState));
-  useEffect(() => {
-    if (selected == null) {
-      return;
-    }
-    // console.log(appState);
-    const query = getQuery(appState, selected);
-    // console.log(query);
-    const queryAdditionalValues = getQueryAdditionalValues(appState, selected);
-    if (query != null) {
-      setIsLoading(true);
-    }
-    database.then((database) =>
-      setTimeout(() => {
-        setIsLoading(false);
-        if (query != null) {
-          setTableState({
-            table: execQuery(database, query),
-            additionalTables: (queryAdditionalValues ?? [])
-              .filter((query) => query != null)
-              .map((query) => execQuery(database, query)),
-            appState: appState,
-          });
-          setUpdated(
-            lastShownNode != null && !Node.is(selected, lastShownNode)
-          );
-          setLastShownNode(selected);
-        }
-        const DELAY_OF_SHOWING_RESULTS = 1000;
-        setTimeout(() => setUpdated(false), DELAY_OF_SHOWING_RESULTS);
-      }, 300)
-    );
-  }, [appState, selected]);
+type ResultsTableState = {
+  table: any;
+  additionalTables: any;
+  appState: Omit<AppState, "positions">;
+};
 
-  if (isLoading && tableState?.table == null) {
-    return <div style={{ padding: 12 }}>Loading...</div>;
-  } else if (tableState?.table == null) {
-    return null;
+const ResultsTableLoader = memo(
+  ({
+    appState,
+    setSelectedNodeState,
+  }: {
+    appState: Omit<AppState, "positions">;
+    setSelectedNodeState: SetSelectedNodeState;
+  }) => {
+    const [tableState, setTableState] = useState<N<ResultsTableState>>();
+    const [lastShownNode, setLastShownNode] = useState(null);
+    const [updated, setUpdated] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+    const selected = only(Nodes.selected(appState));
+    useEffect(() => {
+      if (selected == null) {
+        return;
+      }
+      // console.log(appState);
+      const query = getQuery(appState, selected);
+      // console.log(query);
+      const queryAdditionalValues = getQueryAdditionalValues(
+        appState,
+        selected
+      );
+      if (query != null) {
+        setIsLoading(true);
+      }
+      database.then((database) =>
+        setTimeout(() => {
+          setIsLoading(false);
+          if (query != null) {
+            setTableState({
+              table: execQuery(database, query),
+              additionalTables: (queryAdditionalValues ?? [])
+                .filter((query) => query != null)
+                .map((query) => execQuery(database, query)),
+              appState: appState,
+            });
+            setUpdated(
+              lastShownNode != null && !Node.is(selected, lastShownNode)
+            );
+            setLastShownNode(selected);
+          }
+          const DELAY_OF_SHOWING_RESULTS = 1000;
+          setTimeout(() => setUpdated(false), DELAY_OF_SHOWING_RESULTS);
+        }, 300)
+      );
+    }, [appState, selected]);
+
+    if (isLoading && tableState?.table == null) {
+      return <div style={{ padding: 12 }}>Loading...</div>;
+    } else if (tableState?.table == null) {
+      return null;
+    }
+    return (
+      <Div
+        css={{
+          display: "inline-flex",
+          border: "1px solid transparent",
+          animation: updated ? `${borderBlink} 1s ease-out` : null,
+        }}
+      >
+        <ResultsTableLoaded
+          state={tableState}
+          setSelectedNodeState={setSelectedNodeState}
+        />
+      </Div>
+    );
   }
-  return (
-    <Div
-      css={{
-        display: "inline-flex",
-        border: "1px solid transparent",
-        animation: updated ? `${borderBlink} 1s ease-out` : null,
-      }}
-    >
-      <ResultsTableLoaded
-        state={tableState}
-        setSelectedNodeState={setSelectedNodeState}
-      />
-    </Div>
-  );
-});
+);
 
 const borderBlink = keyframes({
   from: { borderColor: "$lime9" },
@@ -1205,6 +1244,9 @@ const TD = styled("td");
 const ResultsTableLoaded = memo(function TableLoaded({
   state: { table, additionalTables, appState },
   setSelectedNodeState,
+}: {
+  state: ResultsTableState;
+  setSelectedNodeState: SetSelectedNodeState;
 }) {
   // const { selectedNodeID } = appState;
   // const availableColumnNamesSet = getAvailableColumnNamesSet(
@@ -1284,28 +1326,34 @@ function getSelectedNode(appState) {
   return only(Nodes.selected(appState));
 }
 
-function Input({ displayValue, focused, label, value, onChange: setValue }) {
-  const [edited, setEdited] = useState(focused ?? false ? "" : null);
-  const [defaultValue] = useState(value);
-  const inputRef = useRef();
+function Input(props: {
+  displayValue?: string;
+  focused?: boolean;
+  label?: string;
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  const [edited, setEdited] = useState(props.focused ?? false ? "" : null);
+  const [defaultValue] = useState(props.value);
+  const inputRef = useRef<HTMLInputElement>();
   const isEditing = edited != null;
   useEffect(() => {
-    if (isEditing && !inputRef.current.focused) {
+    if (isEditing && inputRef.current !== document.activeElement) {
       inputRef.current.focus();
       inputRef.current.select();
     }
   }, [isEditing]);
   const handleReset = useCallback(() => {
-    if (edited === "" && value == null) {
+    if (edited === "" && props.value == null) {
       if (defaultValue != null) {
-        setValue(defaultValue);
+        props.onChange(defaultValue);
       } else {
         return;
       }
     }
     setEdited(null);
-    setValue(edited);
-  }, [defaultValue, edited, value, setValue]);
+    props.onChange(edited);
+  }, [defaultValue, edited, props.value, props.onChange]);
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (edited != null && !inputRef.current.contains(event.target)) {
@@ -1324,7 +1372,7 @@ function Input({ displayValue, focused, label, value, onChange: setValue }) {
         event.stopPropagation();
       }}
     >
-      {label != null ? <Label>{label}</Label> : null}
+      {props.label != null ? <Label>{props.label}</Label> : null}
       {edited != null ? (
         <input
           ref={inputRef}
@@ -1342,9 +1390,9 @@ function Input({ displayValue, focused, label, value, onChange: setValue }) {
       ) : (
         <div
           style={{ cursor: "pointer" }}
-          onClick={() => setEdited(value ?? "")}
+          onClick={() => setEdited(props.value ?? "")}
         >
-          {displayValue ?? value}
+          {props.displayValue ?? props.value}
         </div>
       )}
     </div>
@@ -1413,7 +1461,7 @@ const DATABASE_SETUP_SQL = (() => {
     .map(([column]) => column)
     .join(",")}) VALUES ${rows
     .map((row) =>
-      row.map((value) => (isNaN(value) ? `"${value}"` : value)).join(",")
+      row.map((value) => (isNaN(value as any) ? `"${value}"` : value)).join(",")
     )
     .map((rowSql) => `(${rowSql})`)
     .join(",")};`;

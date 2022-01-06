@@ -5,32 +5,33 @@ import * as Iterable from "./Iterable";
 import * as Arrays from "./Arrays";
 import { onlyThrows } from "./Arrays";
 import { invariant } from "./invariant";
+import { AnyNode, AppState, GraphState } from "./types";
 
-export function select(appState, nodes) {
+export function select(appState: GraphState, nodes: AnyNode[]) {
   appState.selectedNodeIDs = new Set(nodes.map((node) => Node.id(node)));
 }
 
-export function countSelected(appState) {
+export function countSelected(appState: GraphState) {
   return appState.selectedNodeIDs.size;
 }
 
-export function selected(appState) {
+export function selected(appState: GraphState) {
   return nodesWithID(appState, appState.selectedNodeIDs);
 }
 
-export function nodesWithID(appState, ids) {
+export function nodesWithID(appState: GraphState, ids) {
   return Arrays.map(ids, (id) => nodeWithID(appState, id));
 }
 
-export function nodeWithID(appState, id) {
+export function nodeWithID(appState: GraphState, id) {
   return nodes(appState).get(id);
 }
 
-export function nodes(appState) {
+export function nodes(appState: GraphState) {
   return appState.nodes;
 }
 
-export function newNode(appState, nodeData) {
+export function newNode(appState: GraphState, nodeData) {
   return {
     id: newNodeID(appState),
     data: {},
@@ -38,56 +39,56 @@ export function newNode(appState, nodeData) {
   };
 }
 
-export function children(appState, node) {
+export function children(appState: GraphState, node) {
   return nodesWithID(
     appState,
     Edges.children(appState, node).map((edge) => Edge.childID(edge))
   );
 }
 
-export function parents(appState, node) {
+export function parents(appState: GraphState, node) {
   return nodesWithID(
     appState,
     Edges.parents(appState, node).map((edge) => Edge.parentID(edge))
   );
 }
 
-export function tightChildren(appState, node) {
+export function tightChildren(appState: GraphState, node: AnyNode) {
   return Edges.tightChildren(appState, node).map((edge) =>
     Edges.childNode(appState, edge)
   );
 }
 
-export function parentX(appState, node) {
+export function parentX(appState: GraphState, node: AnyNode) {
   return onlyThrows(parents(appState, node));
 }
 
-export function hasParents(appState, node) {
+export function hasParents(appState: GraphState, node: AnyNode) {
   return Edges.parents(appState, node).length > 0;
 }
 
-export function hasDetachedParents(appState, node) {
+export function hasDetachedParents(appState: GraphState, node: AnyNode) {
   return Edges.detachedParents(appState, node).length > 0;
 }
 
-export function hasChildren(appState, node) {
+export function hasChildren(appState: GraphState, node: AnyNode) {
   return Edges.children(appState, node).length > 0;
 }
 
-export function hasTightChildren(appState, node) {
+export function hasTightChildren(appState: GraphState, node: AnyNode) {
   return Edges.tightChildren(appState, node).length > 0;
 }
 
-export function hasDetachedChildren(appState, node) {
+export function hasDetachedChildren(appState: GraphState, node: AnyNode) {
   return Edges.detachedChildren(appState, node).length > 0;
 }
 
-export function add(appState, node) {
+export function add(appState: AppState, node: AnyNode) {
   nodes(appState).set(Node.id(node), node);
   positions(appState).set(Node.id(node), { x: 0, y: 0 });
 }
 
-function positions(appState) {
+function positions(appState: AppState) {
   return appState.positions;
 }
 
@@ -95,18 +96,18 @@ function positions(appState) {
 //   nodes(appState).set(Node.id(old), node);
 // }
 
-export function remove(appState, node) {
+export function remove(appState: AppState, node: AnyNode) {
   nodes(appState).delete(Node.id(node));
   positions(appState).delete(Node.id(node));
   Edges.removeAll(appState, Edges.of(appState, node));
 }
 
-export function tightParent(appState, node) {
+export function tightParent(appState: AppState, node: AnyNode) {
   const edge = Edges.tightParent(appState, node);
   return edge != null ? Edges.parentNode(appState, edge) : null;
 }
 
-export function tightRoot(appState, node) {
+export function tightRoot(appState: AppState, node: AnyNode) {
   const parent = tightParent(appState, node);
   if (parent == null) {
     return node;
