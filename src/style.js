@@ -416,6 +416,6 @@ globalCss({
     // borderStyle: "solid",
     // borderColor: "inherit",
     // border: "1px solid $slate7",
-    padding: "0 2px",
+    padding: "0 4px",
   },
 })();

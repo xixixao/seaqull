@@ -36,6 +36,10 @@ function alias(expression) {
   return expression.replace(/(\W|\s)+/g, "_");
 }
 
+export function hasSelected(node, column) {
+  return selectedExpressions(node).length > 0;
+}
+
 export function hasSelectedColumn(node, column) {
   return new Set(selectedExpressions(node)).has(column);
 }

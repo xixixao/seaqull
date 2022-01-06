@@ -13,3 +13,8 @@ export function filters(node) {
 export function setFilters(node, filters) {
   node.data.filters = filters;
 }
+
+export function addFilter(node, filter) {
+  node.data.filters =
+    filters(node) === "" ? filter : `${filters(node)} AND ${filter}`;
+}

@@ -13,7 +13,7 @@ import React, {
 import initSqlJs from "sql.js";
 import { useImmer } from "use-immer";
 import * as Arrays from "./Arrays";
-import { only, onlyThrows, first } from "./Arrays";
+import { only, onlyThrows, first, second } from "./Arrays";
 import { Button } from "./components/Button";
 import { ButtonWithIcon } from "./components/ButtonWithIcon";
 import { Column } from "./components/Column";
@@ -441,16 +441,73 @@ const JoinNode = {
   querySelectable(appState, node) {
     return JoinNode.query(appState, node);
   },
-  columnNames() {
-    return new Set(COLUMNS.map(([column]) => column));
+  columnNames(appState, node) {
+    return [].concat(
+      ...Nodes.parents(appState, node).map((parent) =>
+        getColumnNames(appState, parent)
+      )
+    );
   },
   columnControl(appState, node, columnName, setSelectedNodeState, isPrimary) {
     if (!JoinNodes.hasFilter(node)) {
-      return (isPrimary ? "a" : "b") + "." + columnName;
+      const prefixedColumnName = (isPrimary ? "a" : "b") + "." + columnName;
+      return (
+        <Row>
+          {prefixedColumnName}
+          <JoinOnSelector
+            columns={Arrays.map(
+              getColumnNames(
+                appState,
+                (isPrimary ? second : first)(Nodes.parents(appState, node))
+              ),
+              (column) => (!isPrimary ? "a" : "b") + "." + column
+            )}
+            onChange={(otherColumn) => {
+              setSelectedNodeState((node) => {
+                JoinNodes.addFilter(
+                  node,
+                  `${prefixedColumnName} = ${otherColumn}`
+                );
+              });
+            }}
+          />
+        </Row>
+      );
     }
     return null;
   },
 };
+
+function JoinOnSelector({ columns, onChange }) {
+  return (
+    <ShowOnClick
+      css={{
+        position: "absolute",
+        top: "100%",
+        background: "$slate7",
+        padding: "$4",
+        borderRadius: "$4",
+      }}
+      trigger={
+        <IconButton>
+          <DropdownMenuIcon />
+        </IconButton>
+      }
+    >
+      <Column>
+        {columns.map((column) => (
+          <Button
+            css={{ marginTop: "$4" }}
+            key={column}
+            onClick={() => onChange(column)}
+          >
+            {column}
+          </Button>
+        ))}
+      </Column>
+    </ShowOnClick>
+  );
+}
 
 // const NameNode = {
 //   name: "NameNode",
@@ -531,7 +588,7 @@ const SelectNode = {
       return null;
     }
     const otherColumns = subtractArrays(
-      Array.from(getColumnNames(appState, sourceNode.id)),
+      Array.from(getColumnNames(appState, sourceNode)),
       selectedExpressions
     );
     if (otherColumns.length === 0) {
@@ -551,34 +608,39 @@ const SelectNode = {
     const selectedExpressions = SelectNodes.selectedExpressions(node);
     return selectedExpressions.length > 0
       ? SelectNodes.selectedColumns(node)
-      : getColumnNames(appState, sourceNode.id);
+      : getColumnNames(appState, sourceNode);
   },
   columnControl(appState, node, columnName, setSelectedNodeState) {
-    // const selectableColumnNames = getColumnNames(appState, node.source);
-    // TODO: Fix O(N^2) algo to be nlogn
-    // if (!selectableColumnNames.find((column) => column === columnName)) {
-    //   return null;
-    // }
     return (
-      <Row align="center">
-        <input
-          checked={SelectNodes.hasSelectedColumn(node, columnName)}
-          style={{ cursor: "pointer" }}
-          type="checkbox"
-          onChange={() => {
-            setSelectedNodeState((node) => {
-              SelectNodes.toggleSelectedColumn(node, columnName);
-            });
-          }}
-        />
-        <HorizontalSpace />
-        <HorizontalSpace />
-        {columnName}
-        <HorizontalSpace />
-      </Row>
+      <SelectableColumn
+        node={node}
+        columnName={columnName}
+        setSelectedNodeState={setSelectedNodeState}
+      />
     );
   },
 };
+
+function SelectableColumn({ node, columnName, setSelectedNodeState }) {
+  return (
+    <Row align="center">
+      <input
+        checked={SelectNodes.hasSelectedColumn(node, columnName)}
+        style={{ cursor: "pointer" }}
+        type="checkbox"
+        onChange={() => {
+          setSelectedNodeState((node) => {
+            SelectNodes.toggleSelectedColumn(node, columnName);
+          });
+        }}
+      />
+      <HorizontalSpace />
+      <HorizontalSpace />
+      {columnName}
+      <HorizontalSpace />
+    </Row>
+  );
+}
 
 function visibleIf(bool) {
   return { visibility: bool ? "visible" : "hidden" };
@@ -621,7 +683,7 @@ const WhereNode = {
   },
   columnNames(appState, node) {
     const sourceNode = getSource(appState, node);
-    return getColumnNames(appState, sourceNode.id);
+    return getColumnNames(appState, sourceNode);
   },
   columnControl() {
     return null;
@@ -670,7 +732,7 @@ const GroupNode = {
       return null;
     }
     const otherColumns = subtractArrays(
-      Array.from(getColumnNames(appState, sourceNode.id)),
+      Array.from(getColumnNames(appState, sourceNode)),
       GroupNodes.groupedColumns(node)
     );
     if (otherColumns.length === 0) {
@@ -694,7 +756,7 @@ const GroupNode = {
     const sourceNode = getSource(appState, node);
     return GroupNodes.hasGrouped(node)
       ? GroupNodes.selectedColumns(node)
-      : getColumnNames(appState, sourceNode.id);
+      : getColumnNames(appState, sourceNode);
   },
   columnControl(appState, node, columnName, setSelectedNodeState, isPrimary) {
     return (
@@ -815,8 +877,8 @@ const OrderNode = {
   queryAdditionalValues() {
     return null;
   },
-  columnNames(appState, { source }) {
-    return getColumnNames(appState, source);
+  columnNames(appState, node) {
+    return getColumnNames(appState, getSource(appState, node));
   },
   columnControl(appState, node, columnName, setAppState) {
     // const selectableColumnNames = getColumnNames(appState, node.source);
@@ -1092,12 +1154,7 @@ function getQuerySelectable(appState, node) {
   return getType(node).querySelectable(appState, node);
 }
 
-function getColumnNames(appState, id) {
-  const node = getNode(appState, id);
-  return getType(node).columnNames(appState, node);
-}
-
-function getColumnNames2(appState, node) {
+function getColumnNames(appState, node) {
   return getType(node).columnNames(appState, node);
 }
 
