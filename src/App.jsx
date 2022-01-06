@@ -558,7 +558,8 @@ function GroupNodeComponent(node) {
   return (
     <NodeUI node={node} showTools={true} tools={<AddFromOrChildStepButtons />}>
       <div>
-        GROUP BY {someOrNoneColumnList(GroupByNode.groupedColumns(node))}
+        GROUP BY{" "}
+        {someOrNoneColumnList(Array.from(GroupByNode.groupedColumns(node)))}
       </div>
       <div>
         SELECT{" "}
