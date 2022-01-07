@@ -1633,7 +1633,7 @@ class ResultError {
 function execQuery(db, sql) {
   // console.log(sql);
   try {
-    return db.exec(sql)[0];
+    return db.exec(sql + " LIMIT 100")[0];
   } catch (e) {
     return new ResultError(sql, e);
   }
