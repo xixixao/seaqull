@@ -408,8 +408,14 @@ globalCss({
     // borderWidth: "1px",
     // borderStyle: "solid",
     // borderColor: "inherit",
-    borderBottom: "1px solid $slate7",
-    padding: "0 4px",
+    // borderBottom: "1px solid $slate7",
+    position: "sticky",
+    top: "-2px",
+    background: "$panel",
+    whiteSpace: "nowrap",
+    textAlign: "start",
+    padding: "$8 $4 0 $4",
+    boxShadow: "inset 0 -1px 0 $colors$slate7",
   },
   td: {
     // borderWidth: "1px",
@@ -417,5 +423,6 @@ globalCss({
     // borderColor: "inherit",
     // border: "1px solid $slate7",
     padding: "0 4px",
+    whiteSpace: "nowrap",
   },
 })();

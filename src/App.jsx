@@ -170,10 +170,10 @@ function Content() {
         <NodesPane />
         <div
           style={{
-            padding: 8,
             overflowX: "scroll",
             flexGrow: 1,
             maxHeight: "50%",
+            padding: "0 8px",
           }}
         >
           <ResultsTable />
