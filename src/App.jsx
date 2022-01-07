@@ -778,9 +778,11 @@ function GroupNodeComponent(node) {
         GROUP BY{" "}
         {someOrNoneColumnList(Array.from(GroupNodes.groupedColumns(node)))}
       </div>
-      <div>
+      <Div
+        css={{ color: !GroupNodes.hasGrouped(node) ? "$slate11" : undefined }}
+      >
         SELECT {someOrAllColumnList(GroupNodes.selectedColumnExpressions(node))}
-      </div>
+      </Div>
     </NodeUI>
   );
 }
@@ -799,12 +801,15 @@ const GroupNode = {
   query(appState, node) {
     const sourceNode = getSource(appState, node);
     const fromQuery = getQuerySelectable(appState, sourceNode);
-    const selectedExpressions = GroupNodes.selectedColumnExpressions(node);
-    if (selectedExpressions.length === 0) {
+    if (!GroupNodes.hasGrouped(node)) {
       return `SELECT * from (${fromQuery})`;
     }
 
-    return GroupNodes.sql(node, selectedExpressions, fromQuery);
+    return GroupNodes.sql(
+      node,
+      GroupNodes.selectedColumnExpressions(node),
+      fromQuery
+    );
   },
   queryAdditionalValues(appState, node) {
     const sourceNode = getSource(appState, node);
