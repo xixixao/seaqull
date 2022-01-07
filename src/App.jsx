@@ -415,31 +415,74 @@ const JoinNode = {
   },
   emptyNodeData: JoinNodes.empty,
   query(appState, node) {
-    if (!JoinNodes.hasFilter(node)) {
-      const sourceNode = first(Nodes.parents(appState, node));
-      return getQuerySelectable(appState, sourceNode);
-    }
     const parents = Nodes.parents(appState, node);
-    return `SELECT a.*, b.* FROM (${getQuerySelectable(
-      appState,
-      parents[0]
-    )}) AS a
-    JOIN (${getQuerySelectable(
-      appState,
-      parents[1]
-    )}) AS b ON ${JoinNodes.filters(node)}`;
+
+    const joinedColumns = JoinNodes.joinedColumns(node);
+    const aOtherColumns = subtractArrays(
+      Array.from(getColumnNames(appState, first(parents))),
+      joinedColumns.map(first)
+    );
+    const bOtherColumns = subtractArrays(
+      Array.from(getColumnNames(appState, second(parents))),
+      joinedColumns.map(second)
+    );
+
+    return `SELECT ${
+      joinedColumns.length > 0
+        ? joinedColumns
+            .map(first)
+            .map((column) => "a." + column)
+            .concat(
+              aOtherColumns.map((column) => "a." + column),
+              bOtherColumns.map((column) => "b." + column)
+            )
+            .join(",")
+        : "a.*, b.*"
+    } FROM (${getQuerySelectable(appState, parents[0])}) AS a
+    JOIN (${getQuerySelectable(appState, parents[1])}) AS b ${
+      JoinNodes.hasFilter(node) ? `ON ${JoinNodes.filters(node)}` : ""
+    }`;
     // Nodes.parents(appState, node)
     // return (name ?? "").length > 0 ? `SELECT * from ${name}` : null;
   },
   queryAdditionalValues(appState, node) {
-    if (!JoinNodes.hasFilter(node)) {
-      const sourceNode = Nodes.parents(appState, node)[1];
-      return [getQuerySelectable(appState, sourceNode)];
-    }
     return null;
   },
   querySelectable(appState, node) {
-    return JoinNode.query(appState, node);
+    const parents = Nodes.parents(appState, node);
+    const joinedColumns = JoinNodes.joinedColumns(node);
+    const aOtherColumns = new Set(
+      subtractArrays(
+        Array.from(getColumnNames(appState, first(parents))),
+        joinedColumns.map(first)
+      )
+    );
+    const bOtherColumns = new Set(
+      subtractArrays(
+        Array.from(getColumnNames(appState, second(parents))),
+        joinedColumns.map(second)
+      )
+    );
+
+    return `SELECT ${joinedColumns
+      .map(first)
+      .map((column) => "a." + column)
+      .concat(
+        Arrays.map(
+          aOtherColumns,
+          (column) =>
+            "a." + column + (bOtherColumns.has(column) ? ` as ${column}_a` : "")
+        ),
+        Arrays.map(
+          bOtherColumns,
+          (column) =>
+            "b." + column + (aOtherColumns.has(column) ? ` as ${column}_b` : "")
+        )
+      )
+      .join(",")} FROM (${getQuerySelectable(appState, parents[0])}) AS a
+    JOIN (${getQuerySelectable(appState, parents[1])}) AS b ${
+      JoinNodes.hasFilter(node) ? `ON ${JoinNodes.filters(node)}` : ""
+    }`;
   },
   columnNames(appState, node) {
     return [].concat(
@@ -448,19 +491,51 @@ const JoinNode = {
       )
     );
   },
-  columnControl(appState, node, columnName, setSelectedNodeState, isPrimary) {
-    if (!JoinNodes.hasFilter(node)) {
-      const prefixedColumnName = (isPrimary ? "a" : "b") + "." + columnName;
-      return (
-        <Row>
-          {prefixedColumnName}
+  // TODO: Obviously refactor this
+  columnControl(
+    appState,
+    node,
+    columnName,
+    setSelectedNodeState,
+    isPrimary,
+    columnIndex
+  ) {
+    const joinedColumns = JoinNodes.joinedColumns(node);
+    const parents = Nodes.parents(appState, node);
+
+    const aOtherColumns = subtractArrays(
+      Array.from(getColumnNames(appState, first(parents))),
+      joinedColumns.map(first)
+    );
+    const isJoined = columnIndex < joinedColumns.length;
+    const isA = columnIndex < joinedColumns.length + aOtherColumns.length;
+    const prefixedColumnName =
+      (isJoined ? "" : (isA ? "a" : "b") + ".") + columnName;
+    return (
+      <Row align="center">
+        {isJoined ? (
+          <>
+            <ColumnCheckbox
+              checked={true}
+              onChange={() => {
+                setSelectedNodeState((node) => {
+                  JoinNodes.removeFilter(node, columnName);
+                });
+              }}
+            />
+            <HorizontalSpace />
+            <HorizontalSpace />
+          </>
+        ) : null}
+        {prefixedColumnName}
+        {!isJoined ? (
           <JoinOnSelector
             columns={Arrays.map(
               getColumnNames(
                 appState,
-                (isPrimary ? second : first)(Nodes.parents(appState, node))
+                (isA ? second : first)(Nodes.parents(appState, node))
               ),
-              (column) => (!isPrimary ? "a" : "b") + "." + column
+              (column) => (!isA ? "a" : "b") + "." + column
             )}
             onChange={(otherColumn) => {
               setSelectedNodeState((node) => {
@@ -471,10 +546,9 @@ const JoinNode = {
               });
             }}
           />
-        </Row>
-      );
-    }
-    return null;
+        ) : null}
+      </Row>
+    );
   },
 };
 
@@ -562,7 +636,7 @@ const SelectNode = {
             setSelectedNodeState((node) => {
               SelectNodes.setSelectedExpressions(
                 node,
-                expressions.split(/, */)
+                "*" === expressions ? [] : expressions.split(/, */)
               );
             });
           }}
@@ -624,21 +698,31 @@ const SelectNode = {
 function SelectableColumn({ node, columnName, setSelectedNodeState }) {
   return (
     <Row align="center">
-      <input
+      <ColumnCheckbox
         checked={SelectNodes.hasSelectedColumn(node, columnName)}
-        style={{ cursor: "pointer" }}
-        type="checkbox"
         onChange={() => {
           setSelectedNodeState((node) => {
             SelectNodes.toggleSelectedColumn(node, columnName);
           });
         }}
       />
+
       <HorizontalSpace />
       <HorizontalSpace />
       {columnName}
       <HorizontalSpace />
     </Row>
+  );
+}
+
+function ColumnCheckbox({ checked, onChange }) {
+  return (
+    <input
+      checked={checked}
+      style={{ cursor: "pointer" }}
+      type="checkbox"
+      onChange={onChange}
+    />
   );
 }
 
@@ -1429,7 +1513,8 @@ const ResultsTableLoaded = memo(function TableLoaded({
                         selectedNode,
                         column,
                         setSelectedNodeState,
-                        isPrimary
+                        isPrimary,
+                        i
                       );
                       return control ?? column;
                     })()

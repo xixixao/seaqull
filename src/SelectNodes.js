@@ -19,6 +19,8 @@ export function selectedColumns(node) {
     selectedExpressions(node).map((expression) =>
       !isColumnName(expression) && !hasAlias(expression)
         ? alias(expression)
+        : hasAlias(expression)
+        ? getAlias(expression)
         : expression
     )
   );
@@ -34,6 +36,10 @@ function hasAlias(expression) {
 
 function alias(expression) {
   return expression.replace(/(\W|\s)+/g, "_");
+}
+
+function getAlias(expression) {
+  return expression.replace(/^.*as\s+(\w+)$/g, "$1");
 }
 
 export function hasSelected(node, column) {
