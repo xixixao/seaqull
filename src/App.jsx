@@ -10,7 +10,6 @@ import React, {
   useRef,
   useState,
 } from "react";
-import initSqlJs from "sql.js";
 import { useImmer } from "use-immer";
 import * as Arrays from "./Arrays";
 import { only, onlyThrows, first, second } from "./Arrays";
@@ -40,22 +39,13 @@ import ReactFlow, {
 import ElementUpdater from "./react-flow/components/ElementUpdater";
 import * as SelectNodes from "./SelectNodes";
 import { keyframes, styled } from "./style";
+import { database, tableColumns } from "./database";
 
 // import {
 //   DropdownMenu,
 //   DropdownMenuContent,
 //   DropdownMenuTrigger,
 // } from "./components/DropdownMenu";
-
-const database = initSqlJs({
-  // Required to load the wasm binary asynchronously. Of course, you can host it wherever you want
-  // You can omit locateFile completely when running in node
-  locateFile: (file) => `./${file}`,
-}).then((SQL) => {
-  const db = new SQL.Database();
-  db.run(DATABASE_SETUP_SQL);
-  return db;
-});
 
 // The logical ordering would be
 // FROM (foo JOIN boo ON bla)
@@ -100,13 +90,13 @@ const INITIAL_ELEMENTS = [
   {
     id: "0",
     type: "from",
-    data: { name: "users" },
+    data: { name: "film" },
     position: { x: 40, y: INIT_Y },
   },
   {
     id: "1",
     type: "from",
-    data: { name: "users" },
+    data: { name: "film" },
     position: { x: 220, y: INIT_Y },
   },
   {
@@ -178,7 +168,14 @@ function Content() {
           selectedNodeIDs={appState.selectedNodeIDs}
         />
         <NodesPane />
-        <div style={{ padding: 8, overflowX: "scroll", flexGrow: 1 }}>
+        <div
+          style={{
+            padding: 8,
+            overflowX: "scroll",
+            flexGrow: 1,
+            maxHeight: "50%",
+          }}
+        >
           <ResultsTable />
         </div>
       </div>
@@ -384,8 +381,8 @@ const FromNode = {
   querySelectable(appState, node) {
     return FromNode.query(appState, node);
   },
-  columnNames() {
-    return new Set(COLUMNS.map(([column]) => column));
+  columnNames(appState, node) {
+    return new Set(tableColumns(FromNodes.name(node)));
   },
   columnControl() {
     return null;
@@ -1655,50 +1652,6 @@ const NODE_COMPONENTS = objectMap(NODE_TYPES, (type) => type.Component);
 const EDGE_COMPONENTS = {
   tight: TightEdge,
 };
-
-// todo move inside setup
-const COLUMNS = [
-  ["ds", "TEXT"],
-  ["id", "INTEGER"],
-  ["name", "TEXT"],
-  ["dau", "INTEGER"],
-  ["wau", "INTEGER"],
-  ["country", "TEXT"],
-  ["metadata", "TEXT"],
-];
-const DATABASE_SETUP_SQL = (() => {
-  const tableName = "users";
-  const columns = COLUMNS;
-  // prettier-ignore
-  const rows = [
-["2042-02-03", 9, 'John', 1, 0, 'UK', "{foo: 'bar', bee: 'ba', do: 'da'}"],
-["2042-02-03", 4, 'Bob', 0, 0, 'CZ', "{foo: 'bar', bee: 'ba', do: 'da'}"],
-["2042-02-03", 12, 'Ross', 0, 0, 'FR', "{foo: 'bar', bee: 'ba', do: 'da'}"],
-["2042-02-01", 1, 'Marline', 1, 1, 'US', "{foo: 'bar', bee: 'ba', do: 'da'}"],
-["2042-02-01", 14, 'Jackie', 0, 1, 'BU', "{foo: 'bar', bee: 'ba', do: 'da'}"],
-["2042-02-04", 11, 'Major', 0, 0, 'IS', "{foo: 'bar', bee: 'ba', do: 'da'}"],
-["2042-02-04", 2, 'Smith', 0, 0, 'LI', "{foo: 'bar', bee: 'ba', do: 'da'}"],
-["2042-02-03", 16, 'Capic', 1, 0, 'LA', "{foo: 'bar', bee: 'ba', do: 'da'}"],
-  ];
-  const createSql = `CREATE TABLE ${tableName} (${columns
-    .map((pair) => pair.join(" "))
-    .join(",")});`;
-  const insertSql = `INSERT INTO ${tableName} (${columns
-    .map(([column]) => column)
-    .join(",")}) VALUES ${rows
-    .map((row) =>
-      row.map((value) => (isNaN(value) ? `"${value}"` : value)).join(",")
-    )
-    .map((rowSql) => `(${rowSql})`)
-    .join(",")};`;
-  return createSql + insertSql;
-})();
-
-// const TABLES = [
-//   { value: "chocolate", label: "Chocolate" },
-//   { value: "strawberry", label: "Strawberry" },
-//   { value: "vanilla", label: "Vanilla" },
-// ];
 
 function objectMap(object, fn) {
   const newObject = {};
