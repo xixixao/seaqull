@@ -214,9 +214,9 @@ export default function reactFlowReducer(state = initialState, action) {
       };
     }
     case constants.UNSET_USER_SELECTION: {
-      const selectedNodes = state.selectedElements?.filter(
-        (node) => isNode(node) && node.__rf
-      );
+      // const selectedNodes = state.selectedElements?.filter(
+      //   (node) => isNode(node) && node.__rf
+      // );
       const stateUpdate = {
         ...state,
         selectionActive: false,
@@ -225,14 +225,15 @@ export default function reactFlowReducer(state = initialState, action) {
           draw: false,
         },
       };
-      if (!selectedNodes || selectedNodes.length === 0) {
-        stateUpdate.selectedElements = null;
-        stateUpdate.nodesSelectionActive = false;
-      } else {
-        const selectedNodesBbox = getRectOfNodes(selectedNodes);
-        stateUpdate.selectedNodesBbox = selectedNodesBbox;
-        stateUpdate.nodesSelectionActive = true;
-      }
+      stateUpdate.nodesSelectionActive = false;
+      // if ((selectedNodes ?? []).length < 2) {
+      //   // stateUpdate.selectedElements = null;
+      // stateUpdate.nodesSelectionActive = false;
+      // } else {
+      //   const selectedNodesBbox = getRectOfNodes(selectedNodes);
+      //   stateUpdate.selectedNodesBbox = selectedNodesBbox;
+      //   stateUpdate.nodesSelectionActive = true;
+      // }
       return stateUpdate;
     }
     case constants.SET_SELECTED_ELEMENTS: {

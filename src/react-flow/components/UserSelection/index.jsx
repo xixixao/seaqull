@@ -66,7 +66,9 @@ export default memo(({ selectionKeyPressed }) => {
     }
     updateUserSelection(mousePos);
   };
-  const onMouseUp = () => unsetUserSelection();
+  const onMouseUp = () => {
+    unsetUserSelection();
+  };
   const onMouseLeave = () => {
     unsetUserSelection();
     unsetNodesSelection();
