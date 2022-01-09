@@ -1,5 +1,8 @@
-export function empty() {
-  return { filters: "" };
+import * as Sets from "./Sets";
+import * as Arrays from "./Arrays";
+
+export function empty(filters = "") {
+  return { filters };
 }
 
 export function hasFilter(node) {
@@ -30,6 +33,75 @@ export function removeFilter(node, column) {
       return a !== column;
     })
   );
+}
+
+export function selectedColumnExpressionsAliased(node, parentsColumnNames) {
+  const joined = joinedColumns(node);
+  const otherParentColumns = parentsColumnNames.map(
+    (columnNames, parentIndex) =>
+      Sets.subtract(
+        columnNames,
+        new Set(joined.map((pair) => pair[parentIndex]))
+      )
+  );
+
+  return joined
+    .map(Arrays.first)
+    .map((column) => prefixed(0, column))
+    .concat(
+      ...otherParentColumns.map((columnNames, parentIndex) =>
+        Arrays.map(
+          columnNames,
+          (column) =>
+            `${prefixed(parentIndex, column)}${
+              otherParentColumns[otherParent(parentIndex)].has(column)
+                ? ` as ${alias(parentIndex, column)}`
+                : ""
+            }`
+        )
+      )
+    );
+}
+
+export function selectedColumnNames(node, parentsColumnNames) {
+  const joined = joinedColumns(node);
+  const otherParentColumns = parentsColumnNames.map(
+    (columnNames, parentIndex) =>
+      Sets.subtract(
+        columnNames,
+        new Set(joined.map((pair) => pair[parentIndex]))
+      )
+  );
+
+  return new Set(
+    joined
+      .map(Arrays.first)
+      .concat(
+        ...otherParentColumns.map((columnNames, parentIndex) =>
+          Arrays.map(columnNames, (column) =>
+            otherParentColumns[otherParent(parentIndex)].has(column)
+              ? alias(parentIndex, column)
+              : column
+          )
+        )
+      )
+  );
+}
+
+export function prefixed(index, columnName) {
+  return `${tableAlias(index)}.${columnName}`;
+}
+
+export function alias(index, columnName) {
+  return `${columnName}_${tableAlias(index)}`;
+}
+
+export function tableAlias(index) {
+  return index === 0 ? "a" : "b";
+}
+
+function otherParent(index) {
+  return index === 0 ? 1 : 0;
 }
 
 export function joinedColumns(node) {

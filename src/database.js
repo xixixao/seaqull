@@ -71,6 +71,21 @@ last_update DATETIME${
       }`,
       "./db/film.dat",
     ],
+    [
+      "actor",
+      `actor_id integer,
+first_name VARCHAR(45),
+last_name VARCHAR(45),
+last_update DATETIME`,
+      "./db/actor.dat",
+    ],
+    [
+      "casting",
+      `actor_id integer,
+film_id integer,
+last_update DATETIME`,
+      "./db/casting.dat",
+    ],
   ];
 }
 

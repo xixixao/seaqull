@@ -40,6 +40,7 @@ import ElementUpdater from "./react-flow/components/ElementUpdater";
 import * as SelectNodes from "./SelectNodes";
 import { keyframes, styled } from "./style";
 import { database, tableColumns } from "./database";
+import { SQLITE_ACTORS_PER_FILM } from "./statesRepository";
 
 // import {
 //   DropdownMenu,
@@ -84,52 +85,13 @@ function useSetSelectedNodeState() {
 
 const LayoutRequestContext = createContext();
 
-const INIT_Y = 30;
-
-const INITIAL_ELEMENTS = [
-  {
-    id: "0",
-    type: "from",
-    data: { name: "film" },
-    position: { x: 40, y: INIT_Y },
-  },
-  {
-    id: "1",
-    type: "from",
-    data: { name: "film" },
-    position: { x: 220, y: INIT_Y },
-  },
-  {
-    id: "2",
-    type: "join",
-    data: JoinNodes.empty(),
-    position: { x: 440, y: INIT_Y + 30 },
-  },
-];
-const INITIAL_NODES = idMap(
-  INITIAL_ELEMENTS.map(({ position, ...rest }) => rest)
-);
-const INITIAL_POSITIONS = new Map(
-  INITIAL_ELEMENTS.map((element) => [element.id, element.position])
-);
-const INITIAL_EDGES = idMap([
-  Edge.newEdge(INITIAL_ELEMENTS[0], INITIAL_ELEMENTS[2]),
-  Edge.newEdge(INITIAL_ELEMENTS[1], INITIAL_ELEMENTS[2]),
-]);
-const INITIAL_SELECTED_NODE_IDS = new Set([]);
-
-const INITIAL_APP_STATE = {
-  nodes: INITIAL_NODES,
-  positions: INITIAL_POSITIONS,
-  selectedNodeIDs: INITIAL_SELECTED_NODE_IDS,
-  edges: INITIAL_EDGES,
-};
-
 function Content() {
   // const [namespace, setNamespace] = useState("foo_team");
   // const [notebookName, setNotebookName] = useState("Untitled");
 
-  const [appState, setAppState] = useImmer(INITIAL_APP_STATE);
+  const [appState, setAppState] = useImmer(
+    stateFromSnapshot(SQLITE_ACTORS_PER_FILM)
+  );
 
   const elements = mapValues(appState.nodes)
     .map((node) => ({
@@ -181,6 +143,15 @@ function Content() {
       </div>
     </AppStateContext.Provider>
   );
+}
+
+function stateFromSnapshot([nodes, positions, edges]) {
+  return {
+    nodes: idMap(nodes),
+    positions: new Map(nodes.map((element, i) => [element.id, positions[i]])),
+    selectedNodeIDs: new Set([]),
+    edges: idMap(edges),
+  };
 }
 
 // const onLoad = (reactFlowInstance) => {
@@ -447,46 +418,23 @@ const JoinNode = {
   },
   querySelectable(appState, node) {
     const parents = Nodes.parents(appState, node);
-    const joinedColumns = JoinNodes.joinedColumns(node);
-    const aOtherColumns = new Set(
-      subtractArrays(
-        Array.from(getColumnNames(appState, first(parents))),
-        joinedColumns.map(first)
-      )
+    const parentsColumnNames = parents.map((parent) =>
+      getColumnNames(appState, parent)
     );
-    const bOtherColumns = new Set(
-      subtractArrays(
-        Array.from(getColumnNames(appState, second(parents))),
-        joinedColumns.map(second)
-      )
-    );
-
-    return `SELECT ${joinedColumns
-      .map(first)
-      .map((column) => "a." + column)
-      .concat(
-        Arrays.map(
-          aOtherColumns,
-          (column) =>
-            "a." + column + (bOtherColumns.has(column) ? ` as ${column}_a` : "")
-        ),
-        Arrays.map(
-          bOtherColumns,
-          (column) =>
-            "b." + column + (aOtherColumns.has(column) ? ` as ${column}_b` : "")
-        )
-      )
-      .join(",")} FROM (${getQuerySelectable(appState, parents[0])}) AS a
+    return `SELECT ${JoinNodes.selectedColumnExpressionsAliased(
+      node,
+      parentsColumnNames
+    ).join(",")} FROM (${getQuerySelectable(appState, parents[0])}) AS a
     JOIN (${getQuerySelectable(appState, parents[1])}) AS b ${
       JoinNodes.hasFilter(node) ? `ON ${JoinNodes.filters(node)}` : ""
     }`;
   },
   columnNames(appState, node) {
-    return [].concat(
-      ...Nodes.parents(appState, node).map((parent) =>
-        getColumnNames(appState, parent)
-      )
+    const parents = Nodes.parents(appState, node);
+    const parentsColumnNames = parents.map((parent) =>
+      getColumnNames(appState, parent)
     );
+    return JoinNodes.selectedColumnNames(node, parentsColumnNames);
   },
   // TODO: Obviously refactor this
   columnControl(
@@ -1214,10 +1162,6 @@ function subtractArrays(a, b) {
   return a.filter((column) => !bSet.has(column));
 }
 
-function getNode(appState, id) {
-  return appState.nodes.get(id);
-}
-
 function getSource(appState, node) {
   return only(Nodes.parents(appState, node));
 }
@@ -1399,13 +1343,20 @@ const ResultsTableLoader = memo(({ appState, setSelectedNodeState }) => {
   const [isLoading, setIsLoading] = useState(false);
   const selected = only(Nodes.selected(appState));
   useEffect(() => {
-    if (selected == null) {
+    const isSelecting = selected != null;
+    let queried = selected ?? lastShownNode;
+    if (queried == null) {
       return;
     }
     // console.log(appState);
-    const query = getQuery(appState, selected);
+    const query = (isSelecting ? getQuery : getQuerySelectable)(
+      appState,
+      queried
+    );
     // console.log(query);
-    const queryAdditionalValues = getQueryAdditionalValues(appState, selected);
+    const queryAdditionalValues = isSelecting
+      ? getQueryAdditionalValues(appState, queried)
+      : null;
     if (query != null) {
       setIsLoading(true);
     }
@@ -1420,10 +1371,8 @@ const ResultsTableLoader = memo(({ appState, setSelectedNodeState }) => {
               .map((query) => execQuery(database, query)),
             appState: appState,
           });
-          setUpdated(
-            lastShownNode != null && !Node.is(selected, lastShownNode)
-          );
-          setLastShownNode(selected);
+          setUpdated(lastShownNode != null && !Node.is(queried, lastShownNode));
+          setLastShownNode(queried);
         }
         const DELAY_OF_SHOWING_RESULTS = 1000;
         setTimeout(() => setUpdated(false), DELAY_OF_SHOWING_RESULTS);
@@ -1460,7 +1409,7 @@ const borderBlink = keyframes({
 const TH = styled("th");
 const TD = styled("td");
 
-const ResultsTableLoaded = memo(function TableLoaded({
+const ResultsTableLoaded = memo(function ResultsTableLoaded({
   state: { table, additionalTables, appState },
   setSelectedNodeState,
 }) {
@@ -1470,10 +1419,7 @@ const ResultsTableLoaded = memo(function TableLoaded({
   //   selectedNodeID
   // );
   // const columnNames = getAllColumnNames(appState, selectedNodeID);
-  const selectedNode = getSelectedNode(appState);
-  if (selectedNode == null) {
-    return null;
-  }
+  const selectedNode = only(Nodes.selected(appState));
   const tables = [table].concat(additionalTables);
   const brokenTable = tables.find((table) => table instanceof ResultError);
   if (brokenTable != null) {
@@ -1510,6 +1456,9 @@ const ResultsTableLoaded = memo(function TableLoaded({
               >
                 {column !== ""
                   ? (() => {
+                      if (selectedNode == null) {
+                        return column;
+                      }
                       const control = getType(selectedNode).columnControl(
                         appState,
                         selectedNode,
@@ -1548,10 +1497,6 @@ const ResultsTableLoaded = memo(function TableLoaded({
     </table>
   );
 });
-
-function getSelectedNode(appState) {
-  return only(Nodes.selected(appState));
-}
 
 function Input({ displayValue, focused, label, value, onChange: setValue }) {
   const [edited, setEdited] = useState(focused ?? false ? "" : null);

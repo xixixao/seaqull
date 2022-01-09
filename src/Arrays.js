@@ -31,5 +31,5 @@ export function onlyThrows(array) {
 }
 
 export function isEqual(a, b) {
-  return a.every((x, i) => b[i] === x);
+  return a.length === b.length && a.every((x, i) => b[i] === x);
 }
