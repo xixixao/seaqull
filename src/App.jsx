@@ -28,6 +28,7 @@ import { produce } from "./immer";
 import { invariant } from "./invariant";
 // import * as NameNodes from "./NameNodes";
 import * as JoinNodes from "./JoinNodes";
+import * as OrderNodes from "./OrderNodes";
 import * as Node from "./Node";
 import * as Nodes from "./Nodes";
 import ReactFlow, {
@@ -863,85 +864,76 @@ function AggregationSelector({ onChange }) {
 
 const OrderNode = {
   name: "OrderNode",
-  Component({ node, appState, setAppState }) {
+  Component(node) {
+    const setSelectedNodeState = useSetSelectedNodeState();
     return (
-      <NodeInput
-        label="ORDER BY"
-        value={
-          Object.keys(node.columnToOrder ?? {}).length === 0
-            ? "∅"
-            : OrderNode.orderClause(node)
-        }
-        node={node}
-        appState={appState}
-        showTools={true}
-        setAppState={setAppState}
-        onChange={(orderClause) => {
-          setAppState((appState) => {
-            let columnToOrder = {};
-            orderClause
-              .split(/, */)
-              .map((columnOrder) => columnOrder.split(/ +/))
-              .filter(([column]) => column !== "∅")
-              .forEach(([column, order]) => {
-                columnToOrder[column] = order ?? "ASC";
-              });
-            appState.nodes[node.id].columnToOrder = columnToOrder;
-          });
-        }}
-      />
+      <NodeUI node={node}>
+        ORDER BY{" "}
+        <Input
+          value={
+            !OrderNodes.hasOrdered(node) ? "∅" : OrderNodes.orderClause(node)
+          }
+          onChange={(orderClause) => {
+            setSelectedNodeState((node) => {
+              let columnToOrder = {};
+              orderClause
+                .split(/, */)
+                .map((columnOrder) => columnOrder.split(/ +/))
+                .filter(([column]) => column !== "∅")
+                .forEach(([column, order]) => {
+                  columnToOrder[column] = order ?? "ASC";
+                });
+              node.data.columnToOrder = columnToOrder;
+            });
+          }}
+        />
+      </NodeUI>
     );
   },
-  emptyNodeData() {},
-  // TODO: Should leave the order entirely to the user
-  orderClause(node) {
-    const columnToOrder = node.columnToOrder ?? {};
-    return Object.keys(columnToOrder)
-      .map((column) => `${column} ${columnToOrder[column]}`)
-      .join(", ");
-  },
+  emptyNodeData: OrderNodes.empty,
   query(appState, node) {
-    const fromQuery = getQuery(appState, node.source);
-    if (Object.keys(node.columnToOrder ?? {}).length === 0) {
+    const sourceNode = getSource(appState, node);
+    const fromQuery = getQuerySelectable(appState, sourceNode);
+    if (!OrderNodes.hasOrdered(node)) {
       return fromQuery;
     }
     return `SELECT * FROM  (${fromQuery})
-    ORDER BY ${OrderNode.orderClause(node)}`;
+    ORDER BY ${OrderNodes.orderClause(node)}`;
   },
   queryAdditionalValues() {
     return null;
   },
+  querySelectable(appState, node) {
+    return OrderNode.query(appState, node);
+  },
   columnNames(appState, node) {
     return getColumnNames(appState, getSource(appState, node));
   },
-  columnControl(appState, node, columnName, setAppState) {
+  columnControl(appState, node, columnName, setSelectedNodeState) {
     // const selectableColumnNames = getColumnNames(appState, node.source);
     // // TODO: Fix O(N^2) algo to be nlogn
     // if (!selectableColumnNames.find((column) => column === columnName)) {
     //   return null;
     // }
-    const columnToOrderNotNull = node.columnToOrder ?? {};
+    const columnToOrderNotNull = node.data.columnToOrder ?? {};
     const state = columnToOrderNotNull[columnName];
     return (
       <>
         <Button
           onClick={() => {
-            setAppState((appState) => {
-              appState.nodes[node.id].columnToOrder = produce(
-                columnToOrderNotNull,
-                (map) => {
-                  switch (state) {
-                    case "ASC":
-                      map[columnName] = "DESC";
-                      break;
-                    case "DESC":
-                      delete map[columnName];
-                      break;
-                    default:
-                      map[columnName] = "ASC";
-                  }
+            setSelectedNodeState((node) => {
+              node.data.columnToOrder = produce(columnToOrderNotNull, (map) => {
+                switch (state) {
+                  case "ASC":
+                    map[columnName] = "DESC";
+                    break;
+                  case "DESC":
+                    delete map[columnName];
+                    break;
+                  default:
+                    map[columnName] = "ASC";
                 }
-              );
+              });
             });
           }}
         >
@@ -957,39 +949,40 @@ const OrderNode = {
           })()}
         </Button>
         <HorizontalSpace />
+        {columnName}
       </>
     );
   },
 };
 
-function NodeInput({
-  label,
-  node,
-  appState,
-  value,
-  showTools,
-  setAppState,
-  children,
-  onChange,
-}) {
-  const { selectedNodeID } = appState;
-  const isSelected = node.id === selectedNodeID;
-  return (
-    <NodeUI
-      node={node}
-      appState={appState}
-      showTools={showTools}
-      setAppState={setAppState}
-    >
-      {label}{" "}
-      <Input
-        displayValue={isSelected ? value : value.slice(0, 10) + "..."}
-        value={value}
-        onChange={onChange}
-      />
-    </NodeUI>
-  );
-}
+// function NodeInput({
+//   label,
+//   node,
+//   appState,
+//   value,
+//   showTools,
+//   setAppState,
+//   children,
+//   onChange,
+// }) {
+//   const { selectedNodeID } = appState;
+//   const isSelected = node.id === selectedNodeID;
+//   return (
+//     <NodeUI
+//       node={node}
+//       appState={appState}
+//       showTools={showTools}
+//       setAppState={setAppState}
+//     >
+//       {label}{" "}
+//       <Input
+//         displayValue={isSelected ? value : value.slice(0, 10) + "..."}
+//         value={value}
+//         onChange={onChange}
+//       />
+//     </NodeUI>
+//   );
+// }
 
 function NodeUI({ node, showTools, children }) {
   const isSelected = node.selected;
