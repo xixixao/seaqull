@@ -918,7 +918,7 @@ const OrderNode = {
     const columnToOrderNotNull = node.data.columnToOrder ?? {};
     const state = columnToOrderNotNull[columnName];
     return (
-      <>
+      <Row>
         <Button
           onClick={() => {
             setSelectedNodeState((node) => {
@@ -950,7 +950,7 @@ const OrderNode = {
         </Button>
         <HorizontalSpace />
         {columnName}
-      </>
+      </Row>
     );
   },
 };
