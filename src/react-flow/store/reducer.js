@@ -12,154 +12,130 @@ import {
 import { getHandleBounds } from "../components/Nodes/utils";
 import * as constants from "./contants";
 import { initialState } from "./index";
+import { useSetAppStateContext } from "../../state";
+
+import * as Nodes from "../../Nodes";
+
+export function useUpdateNodeDimensions() {
+  const setAppState = useSetAppStateContext();
+  return (updates) =>
+    setAppState((appState) => {
+      updates.forEach(({ id, nodeElement, forceUpdate }) => {
+        const position = Nodes.positionWithID(appState, id);
+        const dimensions = getDimensions(nodeElement);
+        const doUpdate =
+          dimensions.width &&
+          dimensions.height &&
+          (position.width !== dimensions.width ||
+            position.height !== dimensions.height ||
+            forceUpdate);
+        if (doUpdate) {
+          const handleBounds = getHandleBounds(
+            nodeElement,
+            1 // TODO: state.transform[2]
+          );
+          position.width = dimensions.width;
+          position.height = dimensions.height;
+          position.handleBounds = handleBounds;
+        }
+      });
+    });
+}
+
+// Probably not needed
+// export function useUpdateNodePosDiff(update) {
+//   const setAppState = useSetAppStateContext();
+//   setAppState((appState) => {
+//     const { id, diff, isDragging } = update;
+//     const shouldUpdate =
+//       id === node.id ||
+//       (id == null &&
+//         state.selectedElements?.find((sNode) => sNode.id === node.id));
+//     if (!shouldUpdate) {
+//       return;
+//     }
+//     const position = Nodes.positionWithID(appState, id);
+//     position.isDragging = isDragging;
+//     if (diff) {
+//       position.x += diff.x;
+//       position.y += diff.y;
+//     }
+//   });
+// }
+
 export default function reactFlowReducer(state = initialState, action) {
   switch (action.type) {
-    case constants.SET_ELEMENTS: {
-      const { elements: propElements, selectedNodeIDs } = action.payload;
-      const nextElements = {
-        nextNodes: [],
-        nextEdges: [],
-      };
-      const { nextNodes, nextEdges } = propElements.reduce(
-        (res, propElement) => {
-          if (isNode(propElement)) {
-            const storeNode = state.nodes.find(
-              (node) => node.id === propElement.id
-            );
-            if (storeNode) {
-              const updatedNode = {
-                ...storeNode,
-                ...propElement,
-              };
-              if (
-                storeNode.position.x !== propElement.position.x ||
-                storeNode.position.y !== propElement.position.y
-              ) {
-                updatedNode.__rf.position = propElement.position;
-              }
-              if (
-                typeof propElement.type !== "undefined" &&
-                propElement.type !== storeNode.type
-              ) {
-                // we reset the elements dimensions here in order to force a re-calculation of the bounds.
-                // When the type of a node changes it is possible that the number or positions of handles changes too.
-                updatedNode.__rf.width = null;
-              }
-              res.nextNodes.push(updatedNode);
-            } else {
-              res.nextNodes.push(parseNode(propElement, state.nodeExtent));
-            }
-          } else if (isEdge(propElement)) {
-            const storeEdge = state.edges.find(
-              (se) => se.id === propElement.id
-            );
-            if (storeEdge) {
-              res.nextEdges.push({
-                ...storeEdge,
-                ...propElement,
-              });
-            } else {
-              res.nextEdges.push(parseEdge(propElement));
-            }
-          }
-          return res;
-        },
-        nextElements
-      );
-      let selectedElements = state.selectedElements;
-      let i = 0;
-      for (const id of selectedNodeIDs) {
-        if ((state.selectedElements ?? [])[i]?.id !== id) {
-          selectedElements = Array.from(selectedNodeIDs).map((id) => ({ id }));
-          break;
-        }
-        i++;
-      }
-      return { ...state, selectedElements, nodes: nextNodes, edges: nextEdges };
-    }
+    // case constants.SET_ELEMENTS: {
+    //   const { elements: propElements, selectedNodeIDs } = action.payload;
+    //   const nextElements = {
+    //     nextNodes: [],
+    //     nextEdges: [],
+    //   };
+    //   const { nextNodes, nextEdges } = propElements.reduce(
+    //     (res, propElement) => {
+    //       if (isNode(propElement)) {
+    //         const storeNode = state.nodes.find(
+    //           (node) => node.id === propElement.id
+    //         );
+    //         if (storeNode) {
+    //           const updatedNode = {
+    //             ...storeNode,
+    //             ...propElement,
+    //           };
+    //           if (
+    //             storeNode.position.x !== propElement.position.x ||
+    //             storeNode.position.y !== propElement.position.y
+    //           ) {
+    //             updatedNode.__rf.position = propElement.position;
+    //           }
+    //           if (
+    //             typeof propElement.type !== "undefined" &&
+    //             propElement.type !== storeNode.type
+    //           ) {
+    //             // we reset the elements dimensions here in order to force a re-calculation of the bounds.
+    //             // When the type of a node changes it is possible that the number or positions of handles changes too.
+    //             updatedNode.__rf.width = null;
+    //           }
+    //           res.nextNodes.push(updatedNode);
+    //         } else {
+    //           res.nextNodes.push(parseNode(propElement, state.nodeExtent));
+    //         }
+    //       } else if (isEdge(propElement)) {
+    //         const storeEdge = state.edges.find(
+    //           (se) => se.id === propElement.id
+    //         );
+    //         if (storeEdge) {
+    //           res.nextEdges.push({
+    //             ...storeEdge,
+    //             ...propElement,
+    //           });
+    //         } else {
+    //           res.nextEdges.push(parseEdge(propElement));
+    //         }
+    //       }
+    //       return res;
+    //     },
+    //     nextElements
+    //   );
+    //   let selectedElements = state.selectedElements;
+    //   let i = 0;
+    //   for (const id of selectedNodeIDs) {
+    //     if ((state.selectedElements ?? [])[i]?.id !== id) {
+    //       selectedElements = Array.from(selectedNodeIDs).map((id) => ({ id }));
+    //       break;
+    //     }
+    //     i++;
+    //   }
+    //   return { ...state, selectedElements, nodes: nextNodes, edges: nextEdges };
+    // }
     case constants.UPDATE_NODE_DIMENSIONS: {
-      const updatedNodes = state.nodes.map((node) => {
-        const update = action.payload.find((u) => u.id === node.id);
-        if (update) {
-          const dimensions = getDimensions(update.nodeElement);
-          const doUpdate =
-            dimensions.width &&
-            dimensions.height &&
-            (node.__rf.width !== dimensions.width ||
-              node.__rf.height !== dimensions.height ||
-              update.forceUpdate);
-          if (doUpdate) {
-            const handleBounds = getHandleBounds(
-              update.nodeElement,
-              state.transform[2]
-            );
-            return {
-              ...node,
-              __rf: {
-                ...node.__rf,
-                ...dimensions,
-                handleBounds,
-              },
-            };
-          }
-        }
-        return node;
-      });
-      return {
-        ...state,
-        nodes: updatedNodes,
-      };
+      throw new Error("migrate to context");
     }
     case constants.UPDATE_NODE_POS: {
-      const { id, pos } = action.payload;
-      let position = pos;
-      if (state.snapToGrid) {
-        const [gridSizeX, gridSizeY] = state.snapGrid;
-        position = {
-          x: gridSizeX * Math.round(pos.x / gridSizeX),
-          y: gridSizeY * Math.round(pos.y / gridSizeY),
-        };
-      }
-      const nextNodes = state.nodes.map((node) => {
-        if (node.id === id) {
-          return {
-            ...node,
-            __rf: {
-              ...node.__rf,
-              position,
-            },
-          };
-        }
-        return node;
-      });
-      return { ...state, nodes: nextNodes };
+      throw new Error("migrate to context");
     }
     case constants.UPDATE_NODE_POS_DIFF: {
-      const { id, diff, isDragging } = action.payload;
-      const nextNodes = state.nodes.map((node) => {
-        if (
-          id === node.id ||
-          (id == null &&
-            state.selectedElements?.find((sNode) => sNode.id === node.id))
-        ) {
-          const updatedNode = {
-            ...node,
-            __rf: {
-              ...node.__rf,
-              isDragging,
-            },
-          };
-          if (diff) {
-            updatedNode.__rf.position = {
-              x: node.__rf.position.x + diff.x,
-              y: node.__rf.position.y + diff.y,
-            };
-          }
-          return updatedNode;
-        }
-        return node;
-      });
-      return { ...state, nodes: nextNodes };
+      throw new Error("migrate to context");
     }
     case constants.SET_USER_SELECTION: {
       const mousePos = action.payload;
@@ -342,6 +318,7 @@ export default function reactFlowReducer(state = initialState, action) {
     case constants.SET_ELEMENTS_SELECTABLE:
     case constants.SET_MULTI_SELECTION_ACTIVE:
     case constants.SET_CONNECTION_MODE:
+      console.log(action.payload);
       return { ...state, ...action.payload };
     default:
       return state;

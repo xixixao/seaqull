@@ -33,6 +33,8 @@ const defaultEdgeTypes = {
   step: StepEdge,
   smoothstep: SmoothStepEdge,
 };
+
+const snapGridDefault = [15, 15];
 const ReactFlow = forwardRef(
   (
     {
@@ -72,7 +74,7 @@ const ReactFlow = forwardRef(
       multiSelectionKeyCode = "Meta",
       zoomActivationKeyCode = "Meta",
       snapToGrid = false,
-      snapGrid = [15, 15],
+      snapGrid = snapGridDefault,
       onlyRenderVisibleElements = false,
       selectNodesOnDrag = true,
       nodesDraggable,

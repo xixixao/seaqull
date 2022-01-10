@@ -1,6 +1,8 @@
-import React, { memo, useMemo } from "react";
+import React, { memo, useContext, useMemo } from "react";
 import { getNodesInside } from "../../utils/graph";
 import { useStoreState, useStoreActions } from "../../store/hooks";
+import { AppStateContext } from "../../../state";
+import { useUpdateNodeDimensions } from "../../store/reducer";
 const NodeRenderer = (props) => {
   const transform = useStoreState((state) => state.transform);
   const selectedElements = useStoreState((state) => state.selectedElements);
@@ -9,10 +11,9 @@ const NodeRenderer = (props) => {
   const elementsSelectable = useStoreState((state) => state.elementsSelectable);
   const width = useStoreState((state) => state.width);
   const height = useStoreState((state) => state.height);
-  const nodes = useStoreState((state) => state.nodes);
-  const updateNodeDimensions = useStoreActions(
-    (actions) => actions.updateNodeDimensions
-  );
+  const nodes = Array.from(useContext(AppStateContext.nodes).values());
+  const positions = useContext(AppStateContext.positions);
+  const updateNodeDimensions = useUpdateNodeDimensions();
   const visibleNodes = props.onlyRenderVisibleElements
     ? getNodesInside(nodes, { x: 0, y: 0, width, height }, transform, true)
     : nodes;
@@ -37,6 +38,7 @@ const NodeRenderer = (props) => {
   return (
     <div className="react-flow__nodes" style={transformStyle}>
       {visibleNodes.map((node) => {
+        const position = positions.get(node.id);
         const nodeType = node.type || "default";
         const NodeComponent =
           props.nodeTypes[nodeType] || props.nodeTypes.default;
@@ -68,12 +70,10 @@ const NodeRenderer = (props) => {
             sourcePosition={node.sourcePosition}
             targetPosition={node.targetPosition}
             isHidden={node.isHidden}
-            xPos={node.__rf.position.x}
-            yPos={node.__rf.position.y}
-            isDragging={node.__rf.isDragging}
-            isInitialized={
-              node.__rf.width !== null && node.__rf.height !== null
-            }
+            xPos={position.x}
+            yPos={position.y}
+            isDragging={position.isDragging}
+            isInitialized={position.width !== null && position.height !== null}
             snapGrid={props.snapGrid}
             snapToGrid={props.snapToGrid}
             selectNodesOnDrag={props.selectNodesOnDrag}

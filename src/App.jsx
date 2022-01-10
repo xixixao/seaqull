@@ -111,7 +111,6 @@ function Content() {
           height: "100%",
         }}
       >
-        <ReactFlowUpdater />
         <NodesPane />
         <div
           style={{
@@ -125,29 +124,6 @@ function Content() {
         </div>
       </div>
     </>
-  );
-}
-
-function ReactFlowUpdater() {
-  const appState = useAppStateContext();
-
-  const elements = mapValues(appState.nodes)
-    .map((node) => ({
-      ...node,
-      position: appState.positions.get(node.id),
-    }))
-    .concat(
-      mapValues(appState.edges).map((edge) => ({
-        ...edge,
-        source: edge.parentID,
-        target: edge.childID,
-      }))
-    );
-  return (
-    <ElementUpdater
-      elements={elements}
-      selectedNodeIDs={appState.selectedNodeIDs}
-    />
   );
 }
 
@@ -183,28 +159,58 @@ function NodesPane() {
   //   (actions) => actions.updateNodePosDiff
   // );
   const setAppState = useSetAppStateContext();
-  const nodePositions = useStoreState((store) => store.nodes);
 
   const layoutRequestRef = useRef(null);
   useLayoutEffect(() => {
-    // console.log(nodePositions);
+    // console.log();
     setAppState((appState) => {
       if (layoutRequestRef.current != null) {
         const [nodeID, layoutCallback] = layoutRequestRef.current;
-        if (
-          nodePositions.find(({ id }) => id === nodeID)?.__rf.height != null
-        ) {
+        if (Nodes.positionWithID(nodeID).height != null) {
           const node = Nodes.nodeWithID(appState, nodeID);
-          layoutCallback(appState, node, nodePositions);
+          layoutCallback(appState, node);
           layoutRequestRef.current = null;
         }
       }
     });
-  }, [nodePositions, setAppState]);
+  }, [setAppState]);
 
   const onRequestLayout = useCallback((request) => {
     layoutRequestRef.current = request;
   }, []);
+
+  const onNodeDrag = useCallback(
+    (event, _node, { deltaX, deltaY }) => {
+      setAppState((appState) => {
+        const node = only(Nodes.selected(appState));
+        if (node != null) {
+          const parentEdge = Edges.tightParent(appState, node);
+          const shouldDragDetachNode = parentEdge != null && event.altKey;
+          if (shouldDragDetachNode) {
+            const parent = Edges.parentNode(appState, parentEdge);
+            const children = Nodes.tightChildren(appState, node);
+            Edge.detach(parentEdge);
+            Edges.removeAll(appState, Edges.tightChildren(appState, node));
+            Edges.addTightChildren(appState, parent, children);
+            Node.moveBy(appState, node, deltaX, deltaY);
+            Nodes.layout(appState, parent);
+            return;
+          }
+        }
+        const draggedNodeRoots = Nodes.dedupe(
+          Nodes.selected(appState).map((node) =>
+            Nodes.tightRoot(appState, node)
+          )
+        );
+        draggedNodeRoots.forEach((node) => {
+          Node.moveBy(appState, node, deltaX, deltaY);
+          Nodes.layout(appState, node);
+        });
+      });
+      return false;
+    },
+    [setAppState]
+  );
 
   return (
     <LayoutRequestContext.Provider value={onRequestLayout}>
@@ -227,7 +233,7 @@ function NodesPane() {
                   Nodes.remove(appState, node);
                   if (tightParent != null) {
                     Edges.addTightChildren(appState, tightParent, children);
-                    Nodes.layout(appState, tightParent, nodePositions);
+                    Nodes.layout(appState, tightParent);
                   }
                 });
                 Nodes.select(appState, []);
@@ -239,38 +245,7 @@ function NodesPane() {
         <ReactFlow
           nodeTypes={NODE_COMPONENTS}
           edgeTypes={EDGE_COMPONENTS}
-          onNodeDrag={(event, _node, { deltaX, deltaY }) => {
-            setAppState((appState) => {
-              const node = only(Nodes.selected(appState));
-              if (node != null) {
-                const parentEdge = Edges.tightParent(appState, node);
-                const shouldDragDetachNode = parentEdge != null && event.altKey;
-                if (shouldDragDetachNode) {
-                  const parent = Edges.parentNode(appState, parentEdge);
-                  const children = Nodes.tightChildren(appState, node);
-                  Edge.detach(parentEdge);
-                  Edges.removeAll(
-                    appState,
-                    Edges.tightChildren(appState, node)
-                  );
-                  Edges.addTightChildren(appState, parent, children);
-                  Node.moveBy(appState, node, deltaX, deltaY);
-                  Nodes.layout(appState, parent, nodePositions);
-                  return;
-                }
-              }
-              const draggedNodeRoots = Nodes.dedupe(
-                Nodes.selected(appState).map((node) =>
-                  Nodes.tightRoot(appState, node)
-                )
-              );
-              draggedNodeRoots.forEach((node) => {
-                Node.moveBy(appState, node, deltaX, deltaY);
-                Nodes.layout(appState, node, nodePositions);
-              });
-            });
-            return false;
-          }}
+          onNodeDrag={onNodeDrag}
           onSelectionChange={(elements) => {
             const nodes = (elements ?? []).filter(
               (element) => element.source == null
@@ -1240,13 +1215,13 @@ function attachTightNode(type) {
     // const selectedNode = onlyThrows(Nodes.selected(appState));
     attachAndSelectNode(appState, newNode);
     return [Node.id(newNode), layoutTightChild];
-    // Nodes.layout(appState, selectedNode, nodePositions);
+    // Nodes.layout(appState, selectedNode, );
   };
 }
 
-function layoutTightChild(appState, node, nodePositions) {
+function layoutTightChild(appState, node) {
   const parent = Nodes.tightParent(appState, node);
-  Nodes.layout(appState, parent, nodePositions);
+  Nodes.layout(appState, parent);
 }
 
 function addFromNode(appState) {
@@ -1271,13 +1246,8 @@ function addJoinNode(appState) {
   return [Node.id(newNode), layoutChild];
 }
 
-function layoutChild(appState, node, nodePositions) {
-  Nodes.layoutDetached(
-    appState,
-    Nodes.parents(appState, node),
-    node,
-    nodePositions
-  );
+function layoutChild(appState, node) {
+  Nodes.layoutDetached(appState, Nodes.parents(appState, node), node);
 }
 
 function attachAndSelectNode(appState, newNode) {

@@ -26,11 +26,11 @@ export function createEdgeTypes(edgeTypes) {
     ...specialTypes,
   };
 }
-export function getHandlePosition(position, node, handle = null) {
-  const x = (handle?.x || 0) + node.__rf.position.x;
-  const y = (handle?.y || 0) + node.__rf.position.y;
-  const width = handle?.width || node.__rf.width;
-  const height = handle?.height || node.__rf.height;
+export function getHandlePosition(position, pos, node, handle = null) {
+  const x = (handle?.x || 0) + pos.x;
+  const y = (handle?.y || 0) + pos.y;
+  const width = handle?.width || pos.width;
+  const height = handle?.height || pos.height;
   switch (position) {
     case Position.Top:
       return {
@@ -54,6 +54,7 @@ export function getHandlePosition(position, node, handle = null) {
       };
   }
 }
+
 export function getHandle(bounds, handleId) {
   if (!bounds) {
     return null;
@@ -71,18 +72,22 @@ export function getHandle(bounds, handleId) {
 export const getEdgePositions = (
   sourceNode,
   sourceHandle,
+  sourcePos,
   sourcePosition,
   targetNode,
   targetHandle,
+  targetPos,
   targetPosition
 ) => {
   const sourceHandlePos = getHandlePosition(
     sourcePosition,
+    sourcePos,
     sourceNode,
     sourceHandle
   );
   const targetHandlePos = getHandlePosition(
     targetPosition,
+    targetPos,
     targetNode,
     targetHandle
   );
@@ -93,6 +98,7 @@ export const getEdgePositions = (
     targetY: targetHandlePos.y,
   };
 };
+
 export function isEdgeVisible({
   sourcePos,
   targetPos,
@@ -130,12 +136,13 @@ export function isEdgeVisible({
   return overlappingArea > 0;
 }
 export const getSourceTargetNodes = (edge, nodes) => {
+  return;
   return nodes.reduce(
     (res, node) => {
-      if (node.id === edge.source) {
+      if (node.id === edge.parentID) {
         res.sourceNode = node;
       }
-      if (node.id === edge.target) {
+      if (node.id === edge.childID) {
         res.targetNode = node;
       }
       return res;

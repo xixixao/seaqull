@@ -26,6 +26,14 @@ export function nodeWithID(appState, id) {
   return nodes(appState).get(id);
 }
 
+export function positionWithID(appState, id) {
+  return positions(appState).get(id);
+}
+
+export function positionOf(appState, node) {
+  return positions(appState).get(Node.id(node));
+}
+
 export function nodes(appState) {
   return appState.nodes;
 }
@@ -146,8 +154,8 @@ function newNodeID(appState) {
 }
 
 // TODO: `layout` can stay here but the algo should go into a separate module
-export function layout(appState, node, nodePositions) {
-  const { height } = getDimensions(nodePositions, node);
+export function layout(appState, node) {
+  const { height } = positionOf(appState, node);
 
   tightChildren(appState, node).forEach((child) => {
     Node.move(
@@ -156,17 +164,17 @@ export function layout(appState, node, nodePositions) {
       Node.x(appState, node),
       Node.y(appState, node) + height
     );
-    layout(appState, child, nodePositions);
+    layout(appState, child);
   });
 }
 
 // TODO: `layout` can stay here but the algo should go into a separate module
-export function layoutStandalone(appState, node, nodePositions) {
+export function layoutStandalone(appState, node) {
   const INIT_Y = 30;
   const NODE_HORIZONTAL_OFFSET = 30;
 
   const maxX = Math.max(
-    ...nodePositions.map(({ __rf }) => __rf.position.x + __rf.width)
+    ...Array.map(positions(appState), ({ x, width }) => x + width)
   );
 
   Node.move(appState, node, maxX + NODE_HORIZONTAL_OFFSET, INIT_Y);
@@ -178,25 +186,14 @@ export function layoutDetached(appState, parents, node, nodePositions) {
 
   const maxX = Math.max(
     ...parents
-      .map((parent) => getDimensions(nodePositions, parent))
+      .map((parent) => positionOf(nodePositions, parent))
       .map(({ x, width }) => x + width)
   );
   const maxY = Math.max(
     ...parents
-      .map((parent) => getDimensions(nodePositions, parent))
+      .map((parent) => positionOf(nodePositions, parent))
       .map(({ y, height }) => y + height)
   );
 
   Node.move(appState, node, maxX + NODE_HORIZONTAL_OFFSET, maxY);
-}
-
-function getDimensions(nodePositions, node) {
-  const {
-    __rf: {
-      position: { x, y },
-      width,
-      height,
-    },
-  } = nodePositions.find(({ id }) => Node.hasID(node, id));
-  return { x, y, width, height };
 }

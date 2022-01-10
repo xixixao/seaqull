@@ -20,8 +20,8 @@ export const setElements = (elements) =>
   createAction(constants.SET_ELEMENTS, elements);
 export const updateNodeDimensions = (updates) =>
   createAction(constants.UPDATE_NODE_DIMENSIONS, updates);
-export const updateNodePos = (payload) =>
-  createAction(constants.UPDATE_NODE_POS, payload);
+// export const updateNodePos = (payload) =>
+//   createAction(constants.UPDATE_NODE_POS, payload);
 export const updateNodePosDiff = (payload) =>
   createAction(constants.UPDATE_NODE_POS_DIFF, payload);
 export const setUserSelection = (mousePos) =>

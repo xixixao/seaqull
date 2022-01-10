@@ -9,6 +9,7 @@ import React, {
 import { DraggableCore } from "react-draggable";
 import cc from "classcat";
 import { useStoreActions } from "../../store/hooks";
+import { useUpdateNodeDimensions } from "../../store/reducer";
 export default function wrapNode(NodeComponent) {
   const NodeWrapper = ({
     id,
@@ -43,9 +44,7 @@ export default function wrapNode(NodeComponent) {
     resizeObserver,
     dragHandle,
   }) => {
-    const updateNodeDimensions = useStoreActions(
-      (actions) => actions.updateNodeDimensions
-    );
+    const updateNodeDimensions = useUpdateNodeDimensions();
     const addSelectedElements = useStoreActions(
       (actions) => actions.addSelectedElements
     );
@@ -202,11 +201,13 @@ export default function wrapNode(NodeComponent) {
       [node, onNodeDoubleClick]
     );
     useLayoutEffect(() => {
-      if (nodeElement.current && !isHidden) {
-        updateNodeDimensions([
-          { id, nodeElement: nodeElement.current, forceUpdate: true },
-        ]);
-      }
+      setTimeout(() => {
+        if (nodeElement.current && !isHidden) {
+          updateNodeDimensions([
+            { id, nodeElement: nodeElement.current, forceUpdate: true },
+          ]);
+        }
+      }, 0);
     }, [id, isHidden, sourcePosition, targetPosition]);
     useEffect(() => {
       if (nodeElement.current) {

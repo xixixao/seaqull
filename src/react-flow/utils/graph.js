@@ -38,8 +38,8 @@ const connectionExists = (edge, elements) => {
   return elements.some(
     (el) =>
       isEdge(el) &&
-      el.source === edge.source &&
-      el.target === edge.target &&
+      el.source === edge.parentID &&
+      el.target === edge.childID &&
       (el.sourceHandle === edge.sourceHandle ||
         (!el.sourceHandle && !edge.sourceHandle)) &&
       (el.targetHandle === edge.targetHandle ||

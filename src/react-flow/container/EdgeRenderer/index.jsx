@@ -1,19 +1,18 @@
-import React, { memo, useCallback } from "react";
-import { useStoreState } from "../../store/hooks";
+import React, { memo, useCallback, useContext } from "react";
+import * as Edges from "../../../Edges";
+import * as Nodes from "../../../Nodes";
+import { AppStateContext, useAppStateContext } from "../../../state";
 import ConnectionLine from "../../components/ConnectionLine/index";
+import { useStoreState } from "../../store/hooks";
+import { Position } from "../../types";
 import { isEdge } from "../../utils/graph";
 import MarkerDefinitions from "./MarkerDefinitions";
-import {
-  getEdgePositions,
-  getHandle,
-  isEdgeVisible,
-  getSourceTargetNodes,
-} from "./utils";
-import { Position, ConnectionMode } from "../../types";
+import { getEdgePositions, getHandle, isEdgeVisible } from "./utils";
+
 const Edge = ({
   edge,
   props,
-  nodes,
+  appState,
   selectedElements,
   elementsSelectable,
   transform,
@@ -24,7 +23,9 @@ const Edge = ({
 }) => {
   const sourceHandleId = edge.sourceHandle || null;
   const targetHandleId = edge.targetHandle || null;
-  const { sourceNode, targetNode } = getSourceTargetNodes(edge, nodes);
+  const sourceNode = Edges.parentNode(appState, edge);
+  const targetNode = Edges.childNode(appState, edge);
+  // const { sourceNode, targetNode } = getSourceTargetNodes(edge, nodes);
   const onConnectEdge = useCallback(
     (connection) => {
       props.onEdgeUpdate?.(edge, connection);
@@ -33,23 +34,25 @@ const Edge = ({
   );
   if (!sourceNode) {
     console.warn(
-      `couldn't create edge for source id: ${edge.source}; edge id: ${edge.id}`
+      `couldn't create edge for parent id: ${edge.parentID}; edge id: ${edge.id}`
     );
     return null;
   }
   if (!targetNode) {
     console.warn(
-      `couldn't create edge for target id: ${edge.target}; edge id: ${edge.id}`
+      `couldn't create edge for child id: ${edge.childID}; edge id: ${edge.id}`
     );
     return null;
   }
+  const sourcePos = Nodes.positionOf(appState, sourceNode);
+  const targetPos = Nodes.positionOf(appState, targetNode);
   // source and target node need to be initialized
-  if (!sourceNode.__rf.width || !targetNode.__rf.width) {
+  if (!sourcePos.width || !targetPos.width) {
     return null;
   }
   const edgeType = edge.type || "default";
   const EdgeComponent = props.edgeTypes[edgeType] || props.edgeTypes.default;
-  const targetNodeBounds = targetNode.__rf.handleBounds;
+  const targetNodeBounds = targetPos.handleBounds;
   // when connection type is loose we can define all handles as sources
   // const targetNodeHandles =
   //   connectionMode === ConnectionMode.Strict
@@ -58,10 +61,7 @@ const Edge = ({
   const targetNodeHandles = true
     ? targetNodeBounds.target
     : targetNodeBounds.target || targetNodeBounds.source;
-  const sourceHandle = getHandle(
-    sourceNode.__rf.handleBounds.source,
-    sourceHandleId
-  );
+  const sourceHandle = getHandle(sourcePos.handleBounds.source, sourceHandleId);
   const targetHandle = getHandle(targetNodeHandles, targetHandleId);
   const sourcePosition = sourceHandle ? sourceHandle.position : Position.Bottom;
   const targetPosition = targetHandle ? targetHandle.position : Position.Top;
@@ -80,9 +80,11 @@ const Edge = ({
   const { sourceX, sourceY, targetX, targetY } = getEdgePositions(
     sourceNode,
     sourceHandle,
+    sourcePos,
     sourcePosition,
     targetNode,
     targetHandle,
+    targetPos,
     targetPosition
   );
   const isVisible = onlyRenderVisibleElements
@@ -117,8 +119,8 @@ const Edge = ({
       labelBgBorderRadius={edge.labelBgBorderRadius}
       style={edge.style}
       arrowHeadType={edge.arrowHeadType}
-      source={edge.source}
-      target={edge.target}
+      source={edge.parentID}
+      target={edge.childID}
       sourceHandleId={sourceHandleId}
       targetHandleId={targetHandleId}
       sourceX={sourceX}
@@ -145,8 +147,9 @@ const Edge = ({
 };
 const EdgeRenderer = (props) => {
   const transform = useStoreState((state) => state.transform);
-  const nodes = useStoreState((state) => state.nodes);
-  const edges = useStoreState((state) => state.edges);
+  // const nodes = useContext(AppStateContext.nodes);
+  const appState = useAppStateContext();
+  const edges = Array.from(useContext(AppStateContext.edges).values());
   const connectionNodeId = useStoreState((state) => state.connectionNodeId);
   const connectionHandleId = useStoreState((state) => state.connectionHandleId);
   const connectionHandleType = useStoreState(
@@ -179,7 +182,7 @@ const EdgeRenderer = (props) => {
             key={edge.id}
             edge={edge}
             props={props}
-            nodes={nodes}
+            appState={appState}
             selectedElements={selectedElements}
             elementsSelectable={elementsSelectable}
             transform={transform}
@@ -190,7 +193,7 @@ const EdgeRenderer = (props) => {
         ))}
         {renderConnectionLine && (
           <ConnectionLine
-            nodes={nodes}
+            nodes={[]}
             connectionNodeId={connectionNodeId}
             connectionHandleId={connectionHandleId}
             connectionHandleType={connectionHandleType}
