@@ -54,6 +54,9 @@ export function createContextState(defaults) {
         const [key, setter] = setters[i];
 
         setter((value) => {
+          if (newState.value != null) {
+            return updater({ ...newState.value, [key]: value })[key];
+          }
           acc[key] = value;
           next(acc, i + 1, setters);
           return newState.value[key];
