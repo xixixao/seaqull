@@ -1293,7 +1293,8 @@ function ResultsTable() {
   const selected = only(Nodes.selected(appState));
   useEffect(() => {
     const isSelecting = selected != null;
-    let queried = selected ?? lastShownNode;
+    let queried =
+      selected ?? (lastShownNode && Nodes.current(appState, lastShownNode));
     if (queried == null) {
       return;
     }

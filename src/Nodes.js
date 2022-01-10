@@ -17,13 +17,16 @@ export function countSelected(appState) {
 export function selected(appState) {
   return nodesWithID(appState, appState.selectedNodeIDs);
 }
-
 export function nodesWithID(appState, ids) {
   return Arrays.map(ids, (id) => nodeWithID(appState, id));
 }
 
 export function nodeWithID(appState, id) {
   return nodes(appState).get(id);
+}
+
+export function current(appState, node) {
+  return nodeWithID(appState, Node.id(node));
 }
 
 export function positionWithID(appState, id) {
