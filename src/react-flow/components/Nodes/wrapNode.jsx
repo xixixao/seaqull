@@ -9,8 +9,7 @@ import React, {
 import { DraggableCore } from "react-draggable";
 import cc from "classcat";
 import { useStoreActions } from "../../store/hooks";
-import { Provider } from "../../contexts/NodeIdContext";
-export default (NodeComponent) => {
+export default function wrapNode(NodeComponent) {
   const NodeWrapper = ({
     id,
     type,
@@ -253,25 +252,23 @@ export default (NodeComponent) => {
           onDoubleClick={onNodeDoubleClickHandler}
           data-id={id}
         >
-          <Provider value={id}>
-            <NodeComponent
-              id={id}
-              data={data}
-              type={type}
-              xPos={xPos}
-              yPos={yPos}
-              selected={selected}
-              isConnectable={isConnectable}
-              sourcePosition={sourcePosition}
-              targetPosition={targetPosition}
-              isDragging={isDragging}
-              dragHandle={dragHandle}
-            />
-          </Provider>
+          <NodeComponent
+            id={id}
+            data={data}
+            type={type}
+            xPos={xPos}
+            yPos={yPos}
+            selected={selected}
+            isConnectable={isConnectable}
+            sourcePosition={sourcePosition}
+            targetPosition={targetPosition}
+            isDragging={isDragging}
+            dragHandle={dragHandle}
+          />
         </div>
       </DraggableCore>
     );
   };
   NodeWrapper.displayName = "NodeWrapper";
   return memo(NodeWrapper);
-};
+}
