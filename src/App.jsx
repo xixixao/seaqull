@@ -42,6 +42,11 @@ import * as SelectNodes from "./SelectNodes";
 import { keyframes, styled } from "./style";
 import { database, tableColumns } from "./database";
 import { SQLITE_ACTORS_PER_FILM } from "./statesRepository";
+import {
+  AppStateContextProvider,
+  useAppStateContext,
+  useSetAppStateContext,
+} from "./state";
 
 // import {
 //   DropdownMenu,
@@ -61,19 +66,17 @@ import { SQLITE_ACTORS_PER_FILM } from "./statesRepository";
 function App() {
   return (
     <ReactFlowProvider>
-      <Content />
+      <AppStateContextProvider
+        initialState={stateFromSnapshot(SQLITE_ACTORS_PER_FILM)}
+      >
+        <Content />
+      </AppStateContextProvider>
     </ReactFlowProvider>
   );
 }
 
-const AppStateContext = createContext();
-
-function useAppStateContext() {
-  return useContext(AppStateContext);
-}
-
 function useSetSelectedNodeState() {
-  const [, setAppState] = useAppStateContext();
+  const setAppState = useSetAppStateContext();
   return useCallback(
     (producer) => {
       setAppState((appState) => {
@@ -90,9 +93,7 @@ function Content() {
   // const [namespace, setNamespace] = useState("foo_team");
   // const [notebookName, setNotebookName] = useState("Untitled");
 
-  const [appState, setAppState] = useImmer(
-    stateFromSnapshot(SQLITE_ACTORS_PER_FILM)
-  );
+  const appState = useAppStateContext();
 
   const elements = mapValues(appState.nodes)
     .map((node) => ({
@@ -108,7 +109,7 @@ function Content() {
     );
 
   return (
-    <AppStateContext.Provider value={[appState, setAppState]}>
+    <>
       {/* <div style={{ padding: "0 4px 4px" }}>
         <Input label="namespace" value={namespace} onChange={setNamespace} />
         <HorizontalSpace />
@@ -142,7 +143,7 @@ function Content() {
           <ResultsTable />
         </div>
       </div>
-    </AppStateContext.Provider>
+    </>
   );
 }
 
@@ -177,7 +178,7 @@ function NodesPane() {
   // const updateNodePosDiff = useStoreActions(
   //   (actions) => actions.updateNodePosDiff
   // );
-  const [appState, setAppState] = useAppStateContext();
+  const setAppState = useSetAppStateContext();
   const nodePositions = useStoreState((store) => store.nodes);
 
   const layoutRequestRef = useRef(null);
@@ -195,7 +196,7 @@ function NodesPane() {
         }
       }
     });
-  }, [nodePositions, appState, setAppState]);
+  }, [nodePositions, setAppState]);
 
   const onRequestLayout = useCallback((request) => {
     layoutRequestRef.current = request;
@@ -986,7 +987,7 @@ const OrderNode = {
 
 function NodeUI({ node, showTools, children }) {
   const isSelected = node.selected;
-  const [appState] = useAppStateContext();
+  const appState = useAppStateContext();
   return (
     <div>
       <Box isSelected={isSelected}>
@@ -1038,7 +1039,7 @@ function NodeUI({ node, showTools, children }) {
 }
 
 function NodeUIAddButtons({ node, showTools }) {
-  const [appState] = useAppStateContext();
+  const appState = useAppStateContext();
   if (Nodes.countSelected(appState) > 2) {
     return null;
   }
@@ -1212,7 +1213,7 @@ function AddFromNodeButton() {
 }
 
 function AttachNodeButton({ children, onAdd }) {
-  const [, setAppState] = useAppStateContext();
+  const setAppState = useSetAppStateContext();
   const onRequestLayout = useContext(LayoutRequestContext);
   return (
     <ButtonWithIcon
@@ -1311,7 +1312,7 @@ const Box = styled("div", {
 
 // Memoize to ignore position changes
 function ResultsTable() {
-  const [appState] = useAppStateContext();
+  const appState = useAppStateContext();
   const setSelectedNodeState = useSetSelectedNodeState();
   const graph = useMemo(
     () => ({
