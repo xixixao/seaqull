@@ -1,6 +1,6 @@
 import produce from "immer";
-import { useCallback, useContext } from "react";
-import { createContextState } from "./contextState";
+import { useCallback } from "react";
+import { createContextState, useCombinedContext } from "./contextState";
 
 const { state, useCombinedSetter, provider } = createContextState({
   nodes: new Map(),
@@ -9,7 +9,10 @@ const { state, useCombinedSetter, provider } = createContextState({
   edges: new Map(),
 });
 
+export const AppStateContextProvider = provider;
+
 export const AppStateContext = state;
+
 export function useSetAppStateContext() {
   const setState = useCombinedSetter();
   return useCallback(
@@ -19,12 +22,12 @@ export function useSetAppStateContext() {
     [setState]
   );
 }
-export const AppStateContextProvider = provider;
 
 export function useAppStateContext() {
-  const nodes = useContext(AppStateContext.nodes);
-  const positions = useContext(AppStateContext.positions);
-  const selectedNodeIDs = useContext(AppStateContext.selectedNodeIDs);
-  const edges = useContext(AppStateContext.edges);
-  return { nodes, positions, selectedNodeIDs, edges };
+  return useCombinedContext(AppStateContext);
+}
+
+export function useAppStateDataContext() {
+  const { positions, ...DataContext } = AppStateContext;
+  return useCombinedContext(DataContext);
 }

@@ -6,31 +6,29 @@ import React, {
   useContext,
   useEffect,
   useLayoutEffect,
-  useMemo,
   useRef,
   useState,
 } from "react";
-import { useImmer } from "use-immer";
 import * as Arrays from "./Arrays";
-import { only, onlyThrows, first, second } from "./Arrays";
+import { first, only, onlyThrows, second } from "./Arrays";
 import { Button } from "./components/Button";
 import { ButtonWithIcon } from "./components/ButtonWithIcon";
 import { Column } from "./components/Column";
 import { IconButton } from "./components/IconButton";
 import { PaneControls } from "./components/PaneControls";
 import { Row } from "./components/Row";
+import { database, tableColumns } from "./database";
 import * as Edge from "./Edge";
 import * as Edges from "./Edges";
 import * as FromNodes from "./FromNodes";
-import * as WhereNodes from "./WhereNodes";
 import * as GroupNodes from "./GroupNodes";
 import { produce } from "./immer";
 import { invariant } from "./invariant";
 // import * as NameNodes from "./NameNodes";
 import * as JoinNodes from "./JoinNodes";
-import * as OrderNodes from "./OrderNodes";
 import * as Node from "./Node";
 import * as Nodes from "./Nodes";
+import * as OrderNodes from "./OrderNodes";
 import ReactFlow, {
   Background,
   Handle,
@@ -39,14 +37,15 @@ import ReactFlow, {
 } from "./react-flow";
 import ElementUpdater from "./react-flow/components/ElementUpdater";
 import * as SelectNodes from "./SelectNodes";
-import { keyframes, styled } from "./style";
-import { database, tableColumns } from "./database";
-import { SQLITE_ACTORS_PER_FILM } from "./statesRepository";
 import {
   AppStateContextProvider,
   useAppStateContext,
+  useAppStateDataContext,
   useSetAppStateContext,
 } from "./state";
+import { SQLITE_ACTORS_PER_FILM } from "./statesRepository";
+import { keyframes, styled } from "./style";
+import * as WhereNodes from "./WhereNodes";
 
 // import {
 //   DropdownMenu,
@@ -93,21 +92,6 @@ function Content() {
   // const [namespace, setNamespace] = useState("foo_team");
   // const [notebookName, setNotebookName] = useState("Untitled");
 
-  const appState = useAppStateContext();
-
-  const elements = mapValues(appState.nodes)
-    .map((node) => ({
-      ...node,
-      position: appState.positions.get(node.id),
-    }))
-    .concat(
-      mapValues(appState.edges).map((edge) => ({
-        ...edge,
-        source: edge.parentID,
-        target: edge.childID,
-      }))
-    );
-
   return (
     <>
       {/* <div style={{ padding: "0 4px 4px" }}>
@@ -127,10 +111,7 @@ function Content() {
           height: "100%",
         }}
       >
-        <ElementUpdater
-          elements={elements}
-          selectedNodeIDs={appState.selectedNodeIDs}
-        />
+        <ReactFlowUpdater />
         <NodesPane />
         <div
           style={{
@@ -144,6 +125,29 @@ function Content() {
         </div>
       </div>
     </>
+  );
+}
+
+function ReactFlowUpdater() {
+  const appState = useAppStateContext();
+
+  const elements = mapValues(appState.nodes)
+    .map((node) => ({
+      ...node,
+      position: appState.positions.get(node.id),
+    }))
+    .concat(
+      mapValues(appState.edges).map((edge) => ({
+        ...edge,
+        source: edge.parentID,
+        target: edge.childID,
+      }))
+    );
+  return (
+    <ElementUpdater
+      elements={elements}
+      selectedNodeIDs={appState.selectedNodeIDs}
+    />
   );
 }
 
@@ -1310,27 +1314,8 @@ const Box = styled("div", {
   // margin: "0 4px 2px 0",
 });
 
-// Memoize to ignore position changes
 function ResultsTable() {
-  const appState = useAppStateContext();
-  const setSelectedNodeState = useSetSelectedNodeState();
-  const graph = useMemo(
-    () => ({
-      nodes: appState.nodes,
-      edges: appState.edges,
-      selectedNodeIDs: appState.selectedNodeIDs,
-    }),
-    [appState.edges, appState.nodes, appState.selectedNodeIDs]
-  );
-  return (
-    <ResultsTableLoader
-      appState={graph}
-      setSelectedNodeState={setSelectedNodeState}
-    />
-  );
-}
-
-const ResultsTableLoader = memo(({ appState, setSelectedNodeState }) => {
+  const appState = useAppStateDataContext();
   const [tableState, setTableState] = useState();
   const [lastShownNode, setLastShownNode] = useState(null);
   const [updated, setUpdated] = useState();
@@ -1372,6 +1357,7 @@ const ResultsTableLoader = memo(({ appState, setSelectedNodeState }) => {
         setTimeout(() => setUpdated(false), DELAY_OF_SHOWING_RESULTS);
       }, 300)
     );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [appState, selected]);
 
   if (isLoading && tableState?.table == null) {
@@ -1387,13 +1373,10 @@ const ResultsTableLoader = memo(({ appState, setSelectedNodeState }) => {
         animation: updated ? `${borderBlink} 1s ease-out` : null,
       }}
     >
-      <ResultsTableLoaded
-        state={tableState}
-        setSelectedNodeState={setSelectedNodeState}
-      />
+      <ResultsTableLoaded state={tableState} />
     </Div>
   );
-});
+}
 
 const borderBlink = keyframes({
   from: { borderColor: "$lime9" },
@@ -1405,7 +1388,6 @@ const TD = styled("td");
 
 const ResultsTableLoaded = memo(function ResultsTableLoaded({
   state: { table, additionalTables, appState },
-  setSelectedNodeState,
 }) {
   // const { selectedNodeID } = appState;
   // const availableColumnNamesSet = getAvailableColumnNamesSet(
@@ -1413,6 +1395,7 @@ const ResultsTableLoaded = memo(function ResultsTableLoaded({
   //   selectedNodeID
   // );
   // const columnNames = getAllColumnNames(appState, selectedNodeID);
+  const setSelectedNodeState = useSetSelectedNodeState();
   const selectedNode = only(Nodes.selected(appState));
   const tables = [table].concat(additionalTables);
   const brokenTable = tables.find((table) => table instanceof ResultError);

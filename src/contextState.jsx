@@ -1,4 +1,10 @@
-import { createContext, useCallback, useContext, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useMemo,
+  useState,
+} from "react";
 import { objectMap, objectReduce } from "./objectMap";
 
 export function createContextState(defaults) {
@@ -64,4 +70,15 @@ export function createContextState(defaults) {
     useCombinedSetter,
     provider: ContextStateProvider,
   };
+}
+
+const id = (x) => x;
+export function useCombinedContext(contextMap, fn = id) {
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const values = objectMap(contextMap, (context) => useContext(context));
+  return useMemo(
+    () => fn(values),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    Object.values(values)
+  );
 }
