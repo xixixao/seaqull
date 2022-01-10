@@ -15,31 +15,36 @@ import { initialState } from "./index";
 import { useSetAppStateContext } from "../../state";
 
 import * as Nodes from "../../Nodes";
+import { current } from "immer";
+import { useCallback } from "react";
 
 export function useUpdateNodeDimensions() {
   const setAppState = useSetAppStateContext();
-  return (updates) =>
-    setAppState((appState) => {
-      updates.forEach(({ id, nodeElement, forceUpdate }) => {
-        const position = Nodes.positionWithID(appState, id);
-        const dimensions = getDimensions(nodeElement);
-        const doUpdate =
-          dimensions.width &&
-          dimensions.height &&
-          (position.width !== dimensions.width ||
-            position.height !== dimensions.height ||
-            forceUpdate);
-        if (doUpdate) {
-          const handleBounds = getHandleBounds(
-            nodeElement,
-            1 // TODO: state.transform[2]
-          );
-          position.width = dimensions.width;
-          position.height = dimensions.height;
-          position.handleBounds = handleBounds;
-        }
-      });
-    });
+  return useCallback(
+    (updates) =>
+      setAppState((appState) => {
+        updates.forEach(({ id, nodeElement, forceUpdate }) => {
+          const position = Nodes.positionWithID(appState, id);
+          const dimensions = getDimensions(nodeElement);
+          const doUpdate =
+            dimensions.width &&
+            dimensions.height &&
+            (position.width !== dimensions.width ||
+              position.height !== dimensions.height ||
+              forceUpdate);
+          if (doUpdate) {
+            const handleBounds = getHandleBounds(
+              nodeElement,
+              1 // TODO: state.transform[2]
+            );
+            position.width = dimensions.width;
+            position.height = dimensions.height;
+            position.handleBounds = handleBounds;
+          }
+        });
+      }),
+    [setAppState]
+  );
 }
 
 // Probably not needed

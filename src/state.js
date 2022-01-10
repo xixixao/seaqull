@@ -1,8 +1,8 @@
 import produce from "immer";
-import { useCallback } from "react";
+import { useCallback, useContext } from "react";
 import { createContextState, useCombinedContext } from "./contextState";
 
-const { state, useCombinedSetter, provider } = createContextState({
+const { state, setter, provider } = createContextState({
   nodes: new Map(),
   positions: new Map(),
   selectedNodeIDs: new Set(),
@@ -14,7 +14,7 @@ export const AppStateContextProvider = provider;
 export const AppStateContext = state;
 
 export function useSetAppStateContext() {
-  const setState = useCombinedSetter();
+  const setState = useContext(setter);
   return useCallback(
     (updater) => {
       setState((value) => produce(value, updater));
@@ -27,7 +27,8 @@ export function useAppStateContext() {
   return useCombinedContext(AppStateContext);
 }
 
+const { positions, ...DataContext } = AppStateContext;
+
 export function useAppStateDataContext() {
-  const { positions, ...DataContext } = AppStateContext;
   return useCombinedContext(DataContext);
 }

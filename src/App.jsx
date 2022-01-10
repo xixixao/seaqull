@@ -1,4 +1,5 @@
 import { DropdownMenuIcon, PlusIcon } from "@modulz/radix-icons";
+import { current } from "immer";
 import React, {
   createContext,
   memo,
@@ -43,7 +44,7 @@ import {
   useAppStateDataContext,
   useSetAppStateContext,
 } from "./state";
-import { SQLITE_ACTORS_PER_FILM } from "./statesRepository";
+import { SQLITE_ACTORS } from "./statesRepository";
 import { keyframes, styled } from "./style";
 import * as WhereNodes from "./WhereNodes";
 
@@ -65,9 +66,7 @@ import * as WhereNodes from "./WhereNodes";
 function App() {
   return (
     <ReactFlowProvider>
-      <AppStateContextProvider
-        initialState={stateFromSnapshot(SQLITE_ACTORS_PER_FILM)}
-      >
+      <AppStateContextProvider initialState={stateFromSnapshot(SQLITE_ACTORS)}>
         <Content />
       </AppStateContextProvider>
     </ReactFlowProvider>
@@ -131,7 +130,7 @@ function stateFromSnapshot([nodes, positions, edges]) {
   return {
     nodes: idMap(nodes),
     positions: new Map(nodes.map((element, i) => [element.id, positions[i]])),
-    selectedNodeIDs: new Set([]),
+    selectedNodeIDs: new Set([nodes.map(Node.id)[0]]),
     edges: idMap(edges),
   };
 }
@@ -147,10 +146,6 @@ function idMap(array) {
   return new Map(array.map((element) => [element.id, element]));
 }
 
-function mapValues(map) {
-  return Array.from(map.values());
-}
-
 function NodesPane() {
   //   const onElementsRemove = (elementsToRemove) =>
   //     setElements((els) => removeElements(elementsToRemove, els));
@@ -163,17 +158,17 @@ function NodesPane() {
 
   const layoutRequestRef = useRef(null);
   useLayoutEffect(() => {
-    // console.log();
-    setAppState((appState) => {
-      if (layoutRequestRef.current != null) {
-        const [nodeID, layoutCallback] = layoutRequestRef.current;
+    if (layoutRequestRef.current != null) {
+      const request = layoutRequestRef.current;
+      setAppState((appState) => {
+        const [nodeID, layoutCallback] = request;
         if (Nodes.positionWithID(appState, nodeID).height != null) {
           const node = Nodes.nodeWithID(appState, nodeID);
           layoutCallback(appState, node);
-          layoutRequestRef.current = null;
         }
-      }
-    });
+      });
+      layoutRequestRef.current = null;
+    }
   }, [appState, setAppState]);
 
   const onRequestLayout = useCallback((request) => {
@@ -212,6 +207,24 @@ function NodesPane() {
     },
     [setAppState]
   );
+  const onSelectionChange = useCallback(
+    (elements) => {
+      const nodes = (elements ?? []).filter(
+        (element) => element.source == null
+      );
+      setAppState((appState) => {
+        if (
+          !Arrays.isEqual(
+            nodes.map(Node.id),
+            Array.from(appState.selectedNodeIDs)
+          )
+        ) {
+          Nodes.select(appState, nodes);
+        }
+      });
+    },
+    [setAppState]
+  );
 
   return (
     <LayoutRequestContext.Provider value={onRequestLayout}>
@@ -247,21 +260,7 @@ function NodesPane() {
           nodeTypes={NODE_COMPONENTS}
           edgeTypes={EDGE_COMPONENTS}
           onNodeDrag={onNodeDrag}
-          onSelectionChange={(elements) => {
-            const nodes = (elements ?? []).filter(
-              (element) => element.source == null
-            );
-            setAppState((appState) => {
-              if (
-                !Arrays.isEqual(
-                  nodes.map(Node.id),
-                  Array.from(appState.selectedNodeIDs)
-                )
-              ) {
-                Nodes.select(appState, nodes);
-              }
-            });
-          }}
+          onSelectionChange={onSelectionChange}
           // onElementsRemove={onElementsRemove}
           // onConnect={onConnect}
           // onLoad={onLoad}

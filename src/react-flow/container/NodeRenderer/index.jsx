@@ -1,6 +1,6 @@
 import React, { memo, useContext, useMemo } from "react";
 import { getNodesInside } from "../../utils/graph";
-import { useStoreState, useStoreActions } from "../../store/hooks";
+import { useStoreState } from "../../store/hooks";
 import { AppStateContext } from "../../../state";
 import { useUpdateNodeDimensions } from "../../store/reducer";
 const NodeRenderer = (props) => {
@@ -34,7 +34,7 @@ const NodeRenderer = (props) => {
       }));
       updateNodeDimensions(updates);
     });
-  }, []);
+  }, [updateNodeDimensions]);
   return (
     <div className="react-flow__nodes" style={transformStyle}>
       {visibleNodes.map((node) => {

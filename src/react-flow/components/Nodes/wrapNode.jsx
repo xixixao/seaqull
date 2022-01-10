@@ -201,21 +201,19 @@ export default function wrapNode(NodeComponent) {
       [node, onNodeDoubleClick]
     );
     useLayoutEffect(() => {
-      // setTimeout(() => {
       if (nodeElement.current && !isHidden) {
         updateNodeDimensions([
           { id, nodeElement: nodeElement.current, forceUpdate: true },
         ]);
       }
-      // }, 0);
-    }, [id, isHidden, sourcePosition, targetPosition]);
+    }, [id, isHidden, sourcePosition, targetPosition, updateNodeDimensions]);
     useEffect(() => {
       if (nodeElement.current) {
         const currNode = nodeElement.current;
         resizeObserver?.observe(currNode);
         return () => resizeObserver?.unobserve(currNode);
       }
-    }, []);
+    }, [resizeObserver]);
     if (isHidden) {
       return null;
     }

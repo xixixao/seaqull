@@ -1,3 +1,9 @@
+export const SQLITE_ACTORS = [
+  [{ id: "0", type: "from", data: { name: "actor" } }],
+  [{ x: 40, y: 30 }],
+  [],
+];
+
 export const SQLITE_ACTORS_IN_FILM = [
   [
     { id: "0", type: "from", data: { name: "actor" } },
