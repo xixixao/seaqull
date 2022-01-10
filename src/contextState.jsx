@@ -44,23 +44,28 @@ export function createContextState(defaults) {
       useContext(setterContext)
     );
     return useCallback((updater) => {
-      // let newState = { value: null, id: Math.random() };
-      let newState = null;
+      let newState = { value: null, id: Math.random() };
+      // let newState = null;
 
       function next(acc, i, setters) {
         if (setters.length === i) {
-          newState = updater(acc);
+          newState.value = updater(acc);
           return;
         }
         const [key, setter] = setters[i];
 
         setter((value) => {
-          if (newState != null) {
-            return updater({ ...newState, [key]: value })[key];
+          if (newState.value != null) {
+            return updater({ ...newState.value, [key]: value })[key];
           }
+          // console.log(newState, key);
           acc[key] = value;
           next(acc, i + 1, setters);
-          return newState[key];
+          if (newState.value == null) {
+            console.log("bailing out", key);
+            return value;
+          }
+          return newState.value[key];
         });
       }
 

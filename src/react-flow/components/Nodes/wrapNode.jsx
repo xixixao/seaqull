@@ -201,13 +201,13 @@ export default function wrapNode(NodeComponent) {
       [node, onNodeDoubleClick]
     );
     useLayoutEffect(() => {
-      setTimeout(() => {
-        if (nodeElement.current && !isHidden) {
-          updateNodeDimensions([
-            { id, nodeElement: nodeElement.current, forceUpdate: true },
-          ]);
-        }
-      }, 0);
+      // setTimeout(() => {
+      if (nodeElement.current && !isHidden) {
+        updateNodeDimensions([
+          { id, nodeElement: nodeElement.current, forceUpdate: true },
+        ]);
+      }
+      // }, 0);
     }, [id, isHidden, sourcePosition, targetPosition]);
     useEffect(() => {
       if (nodeElement.current) {

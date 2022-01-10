@@ -158,6 +158,7 @@ function NodesPane() {
   // const updateNodePosDiff = useStoreActions(
   //   (actions) => actions.updateNodePosDiff
   // );
+  const appState = useAppStateContext();
   const setAppState = useSetAppStateContext();
 
   const layoutRequestRef = useRef(null);
@@ -166,14 +167,14 @@ function NodesPane() {
     setAppState((appState) => {
       if (layoutRequestRef.current != null) {
         const [nodeID, layoutCallback] = layoutRequestRef.current;
-        if (Nodes.positionWithID(nodeID).height != null) {
+        if (Nodes.positionWithID(appState, nodeID).height != null) {
           const node = Nodes.nodeWithID(appState, nodeID);
           layoutCallback(appState, node);
           layoutRequestRef.current = null;
         }
       }
     });
-  }, [setAppState]);
+  }, [appState, setAppState]);
 
   const onRequestLayout = useCallback((request) => {
     layoutRequestRef.current = request;
