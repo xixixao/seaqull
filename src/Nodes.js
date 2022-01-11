@@ -14,7 +14,7 @@ export function select(appState, nodes) {
 export function alsoSelect(appState, nodes) {
   select(
     appState,
-    nodes.concat(Arrays.map(appState.selectedNodeIDs, Node.fake))
+    Arrays.map(appState.selectedNodeIDs, Node.fake).concat(nodes)
   );
 }
 
@@ -191,17 +191,17 @@ export function groupBy(nodes, groupper) {
 
 export function overlappingLeafs(appState, targetNode) {
   const targetPosition = positionOf(appState, targetNode);
-  const targetRoot = tightRoot(appState, targetNode);
-  return leafs(appState).filter((node) => {
+  return tightLeafs(appState).filter((node) => {
     const position = positionOf(appState, node);
-    const root = tightRoot(appState, node);
     return (
-      !Node.is(root, targetRoot) && doNodesOverlap(position, targetPosition, 20)
+      !Node.is(targetNode, node) &&
+      doNodesOverlap(position, targetPosition, 20) &&
+      !Edges.isAncestor(appState, targetNode, node)
     );
   });
 }
 
-function leafs(appState) {
+function tightLeafs(appState) {
   return Arrays.filter(
     nodes(appState),
     (node) => Edges.tightChildren(appState, node).length === 0

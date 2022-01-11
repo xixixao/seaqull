@@ -4,6 +4,15 @@ import * as Nodes from "./Nodes";
 import * as Arrays from "./Arrays";
 import { only } from "./Arrays";
 
+export function isAncestor(appState, target, source) {
+  return children(appState, target).some((childEdge) => {
+    const id = Edge.childID(childEdge);
+    return (
+      Node.hasID(source, id) || isAncestor(appState, Node.fake(id), source)
+    );
+  });
+}
+
 export function children(appState, node) {
   return Arrays.filter(edges(appState), (edge) =>
     Node.hasID(node, Edge.parentID(edge))

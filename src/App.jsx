@@ -38,7 +38,7 @@ import {
   useSetAppStateCallback,
   useSetAppStateContext,
 } from "./state";
-import { SQLITE_FILMS_BY_FIRST_NAMES } from "./statesRepository";
+import { SQLITE_FILMS_OF_MOST_POPULAR_FIRST_NAME } from "./statesRepository";
 import { keyframes, styled } from "./style";
 import * as WhereNodes from "./WhereNodes";
 
@@ -61,7 +61,9 @@ function App() {
   return (
     <ReactFlowProvider>
       <AppStateContextProvider
-        initialState={stateFromSnapshot(SQLITE_FILMS_BY_FIRST_NAMES)}
+        initialState={stateFromSnapshot(
+          SQLITE_FILMS_OF_MOST_POPULAR_FIRST_NAME
+        )}
       >
         <Content />
       </AppStateContextProvider>
@@ -1269,7 +1271,9 @@ function ResultsTable() {
         (isEditing ? getQuery : getQuerySelectable)(appState, node)
       )
       .concat(isEditing ? getQueryAdditionalValues(appState, oneShown) : [])
-      .filter((query) => query != null);
+      .filter((query) => query != null)
+      .slice(0, 2); // TODO: For now limit number of tables for perf reasons
+    // and interaction with dragging
     // console.log(appState);
     // console.log(query);
     if (queries.length > 0) {
