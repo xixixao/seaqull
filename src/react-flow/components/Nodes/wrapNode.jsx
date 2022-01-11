@@ -157,6 +157,7 @@ export default function wrapNode(NodeComponent) {
         isSelectable,
         onNodeDragStart,
         addSelectedElements,
+        multiSelectionActive,
       ]
     );
     const onDrag = useCallback(

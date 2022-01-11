@@ -2,7 +2,10 @@
  * The user selection rectangle gets displayed when a user drags the mouse while pressing shift
  */
 import React, { memo } from "react";
+import { useAppStateContext } from "../../../state";
 import { useStoreActions, useStoreState } from "../../store/hooks";
+import { useAddSelectedElements } from "../../store/reducer";
+import { getNodesInside } from "../../utils/graph";
 function getMousePosition(event) {
   const reactFlowNode = event.target.closest(".react-flow");
   if (!reactFlowNode) {
@@ -45,6 +48,11 @@ export default memo(({ selectionKeyPressed }) => {
   const unsetNodesSelection = useStoreActions(
     (actions) => actions.unsetNodesSelection
   );
+  const userSelectionRect = useStoreState((state) => state.userSelectionRect);
+  const transform = useStoreState((state) => state.transform);
+  const appState = useAppStateContext();
+  const addSelectedElements = useAddSelectedElements();
+
   const renderUserSelectionPane = selectionActive || selectionKeyPressed;
   if (!elementsSelectable || !renderUserSelectionPane) {
     return null;
@@ -64,7 +72,25 @@ export default memo(({ selectionKeyPressed }) => {
     if (!mousePos) {
       return;
     }
-    updateUserSelection(mousePos);
+
+    const startX = userSelectionRect.startX ?? 0;
+    const startY = userSelectionRect.startY ?? 0;
+    const nextUserSelectRect = {
+      ...userSelectionRect,
+      x: mousePos.x < startX ? mousePos.x : userSelectionRect.x,
+      y: mousePos.y < startY ? mousePos.y : userSelectionRect.y,
+      width: Math.abs(mousePos.x - startX),
+      height: Math.abs(mousePos.y - startY),
+    };
+    const selectedNodes = getNodesInside(
+      appState,
+      nextUserSelectRect,
+      transform,
+      false,
+      true
+    );
+    addSelectedElements(selectedNodes);
+    updateUserSelection(nextUserSelectRect);
   };
   const onMouseUp = () => {
     unsetUserSelection();

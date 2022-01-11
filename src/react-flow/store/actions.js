@@ -26,8 +26,8 @@ export const updateNodePosDiff = (payload) =>
   createAction(constants.UPDATE_NODE_POS_DIFF, payload);
 export const setUserSelection = (mousePos) =>
   createAction(constants.SET_USER_SELECTION, mousePos);
-export const updateUserSelection = (mousePos) =>
-  createAction(constants.UPDATE_USER_SELECTION, mousePos);
+export const updateUserSelection = (userSelectionRect) =>
+  createAction(constants.UPDATE_USER_SELECTION, { userSelectionRect });
 export const unsetUserSelection = () =>
   createAction(constants.UNSET_USER_SELECTION);
 export const setSelection = (selectionActive) =>

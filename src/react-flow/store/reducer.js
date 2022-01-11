@@ -1,9 +1,7 @@
-import isEqual from "fast-deep-equal";
 import * as Nodes from "../../Nodes";
 import { useSetAppStateCallback } from "../../state";
 import { getHandleBounds } from "../components/Nodes/utils";
 import { clampPosition, getDimensions } from "../utils";
-import { getConnectedEdges, getNodesInside } from "../utils/graph";
 import * as constants from "./contants";
 import { initialState } from "./index";
 
@@ -35,7 +33,7 @@ export function useUpdateNodeDimensions() {
 export function useAddSelectedElements() {
   return useSetAppStateCallback(
     (nodesToAdd, multiSelectionActive) => (appState) => {
-      (multiSelectionActive ? Nodes.select : Nodes.alsoSelect)(
+      (multiSelectionActive ? Nodes.alsoSelect : Nodes.select)(
         appState,
         nodesToAdd
       );
@@ -71,7 +69,6 @@ export function useResetSelectedElements() {
 // }
 
 export default function reactFlowReducer(state = initialState, action) {
-  console.log(action.type);
   switch (action.type) {
     // case constants.SET_ELEMENTS: {
     //   const { elements: propElements, selectedNodeIDs } = action.payload;
@@ -161,42 +158,29 @@ export default function reactFlowReducer(state = initialState, action) {
         },
       };
     }
-    case constants.UPDATE_USER_SELECTION: {
-      const mousePos = action.payload;
-      const startX = state.userSelectionRect.startX ?? 0;
-      const startY = state.userSelectionRect.startY ?? 0;
-      const nextUserSelectRect = {
-        ...state.userSelectionRect,
-        x: mousePos.x < startX ? mousePos.x : state.userSelectionRect.x,
-        y: mousePos.y < startY ? mousePos.y : state.userSelectionRect.y,
-        width: Math.abs(mousePos.x - startX),
-        height: Math.abs(mousePos.y - startY),
-      };
-      const selectedNodes = getNodesInside(
-        state.nodes,
-        nextUserSelectRect,
-        state.transform,
-        false,
-        true
-      );
-      const selectedEdges = getConnectedEdges(selectedNodes, state.edges);
-      const nextSelectedElements = [...selectedNodes, ...selectedEdges];
-      const selectedElementsChanged = !isEqual(
-        nextSelectedElements,
-        state.selectedElements
-      );
-      const selectedElementsUpdate = selectedElementsChanged
-        ? {
-            selectedElements:
-              nextSelectedElements.length > 0 ? nextSelectedElements : null,
-          }
-        : {};
-      return {
-        ...state,
-        ...selectedElementsUpdate,
-        userSelectionRect: nextUserSelectRect,
-      };
-    }
+    // case constants.UPDATE_USER_SELECTION: {
+
+    // const mousePos = action.payload;
+    // const startX = state.userSelectionRect.startX ?? 0;
+    // const startY = state.userSelectionRect.startY ?? 0;
+    // const nextUserSelectRect = {
+    //   ...state.userSelectionRect,
+    //   x: mousePos.x < startX ? mousePos.x : state.userSelectionRect.x,
+    //   y: mousePos.y < startY ? mousePos.y : state.userSelectionRect.y,
+    //   width: Math.abs(mousePos.x - startX),
+    //   height: Math.abs(mousePos.y - startY),
+    // };
+    // const selectedNodes = getNodesInside(
+    //   state.nodes,
+    //   nextUserSelectRect,
+    //   state.transform,
+    //   false,
+    //   true
+    // );
+    // const selectedEdges = getConnectedEdges(selectedNodes, state.edges);
+    // const nextSelectedElements = [...selectedNodes, ...selectedEdges];
+
+    // }
     case constants.UNSET_USER_SELECTION: {
       // const selectedNodes = state.selectedElements?.filter(
       //   (node) => isNode(node) && node.__rf
@@ -290,11 +274,12 @@ export default function reactFlowReducer(state = initialState, action) {
         }),
       };
     }
+    // case constants.RESET_SELECTED_ELEMENTS:
+    case constants.UPDATE_USER_SELECTION:
     case constants.SET_ON_CONNECT:
     case constants.SET_ON_CONNECT_START:
     case constants.SET_ON_CONNECT_STOP:
     case constants.SET_ON_CONNECT_END:
-    case constants.RESET_SELECTED_ELEMENTS:
     case constants.UNSET_NODES_SELECTION:
     case constants.UPDATE_TRANSFORM:
     case constants.UPDATE_SIZE:

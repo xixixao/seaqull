@@ -1,3 +1,6 @@
+import * as Arrays from "../../Arrays";
+import * as Nodes from "../../Nodes";
+
 import { clampPosition, clamp } from "../utils";
 export const isEdge = (element) =>
   "id" in element && "source" in element && "target" in element;
@@ -168,7 +171,7 @@ export const graphPosToZoomedPos = ({ x, y }, [tx, ty, tScale]) => ({
   y: y * tScale + ty,
 });
 export const getNodesInside = (
-  nodes,
+  appState,
   rect,
   [tx, ty, tScale] = [0, 0, 1],
   partially = false,
@@ -181,32 +184,36 @@ export const getNodesInside = (
     width: rect.width / tScale,
     height: rect.height / tScale,
   });
-  return nodes.filter(
-    ({ selectable = true, __rf: { position, width, height, isDragging } }) => {
-      if (excludeNonSelectableNodes && !selectable) {
-        return false;
-      }
-      const nBox = rectToBox({ ...position, width, height });
-      const xOverlap = Math.max(
-        0,
-        Math.min(rBox.x2, nBox.x2) - Math.max(rBox.x, nBox.x)
-      );
-      const yOverlap = Math.max(
-        0,
-        Math.min(rBox.y2, nBox.y2) - Math.max(rBox.y, nBox.y)
-      );
-      const overlappingArea = Math.ceil(xOverlap * yOverlap);
-      if (width === null || height === null || isDragging) {
-        // nodes are initialized with width and height = null
-        return true;
-      }
-      if (partially) {
-        return overlappingArea > 0;
-      }
-      const area = width * height;
-      return overlappingArea >= area;
+  return Arrays.filter(appState.nodes, (node) => {
+    const selectable = true;
+    const { x, y, width, height, isDragging } = Nodes.positionOf(
+      appState,
+      node
+    );
+    if (excludeNonSelectableNodes && !selectable) {
+      return false;
     }
-  );
+    const nBox = rectToBox({ x, y, width, height });
+    const xOverlap = Math.max(
+      0,
+      Math.min(rBox.x2, nBox.x2) - Math.max(rBox.x, nBox.x)
+    );
+    const yOverlap = Math.max(
+      0,
+      Math.min(rBox.y2, nBox.y2) - Math.max(rBox.y, nBox.y)
+    );
+    const overlappingArea = Math.ceil(xOverlap * yOverlap);
+    if (width === null || height === null || isDragging) {
+      // nodes are initialized with width and height = null
+      // TODO: Lol this is kinda dubious for selection
+      return true;
+    }
+    if (partially) {
+      return overlappingArea > 0;
+    }
+    const area = width * height;
+    return overlappingArea >= area;
+  });
 };
 export const getConnectedEdges = (nodes, edges) => {
   const nodeIds = nodes.map((node) => node.id);

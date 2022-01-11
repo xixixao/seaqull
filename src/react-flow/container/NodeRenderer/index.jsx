@@ -7,7 +7,6 @@ import * as Nodes from "../../../Nodes";
 
 const NodeRenderer = (props) => {
   const transform = useStoreState((state) => state.transform);
-  const selectedElements = useStoreState((state) => state.selectedElements);
   const nodesDraggable = useStoreState((state) => state.nodesDraggable);
   const nodesConnectable = useStoreState((state) => state.nodesConnectable);
   const elementsSelectable = useStoreState((state) => state.elementsSelectable);
@@ -15,7 +14,6 @@ const NodeRenderer = (props) => {
   const width = useStoreState((state) => state.width);
   const height = useStoreState((state) => state.height);
   const appState = useAppStateContext();
-  console.log(appState);
   const nodes = Array.from(appState.nodes.values());
   const visibleNodes = props.onlyRenderVisibleElements
     ? getNodesInside(nodes, { x: 0, y: 0, width, height }, transform, true)

@@ -38,7 +38,7 @@ import {
   useSetAppStateCallback,
   useSetAppStateContext,
 } from "./state";
-import { SQLITE_ACTORS } from "./statesRepository";
+import { SQLITE_ACTORS_PER_FILM } from "./statesRepository";
 import { keyframes, styled } from "./style";
 import * as WhereNodes from "./WhereNodes";
 
@@ -60,7 +60,9 @@ import * as WhereNodes from "./WhereNodes";
 function App() {
   return (
     <ReactFlowProvider>
-      <AppStateContextProvider initialState={stateFromSnapshot(SQLITE_ACTORS)}>
+      <AppStateContextProvider
+        initialState={stateFromSnapshot(SQLITE_ACTORS_PER_FILM)}
+      >
         <Content />
       </AppStateContextProvider>
     </ReactFlowProvider>
@@ -118,15 +120,10 @@ function stateFromSnapshot([nodes, positions, edges]) {
   return {
     nodes: idMap(nodes),
     positions: new Map(nodes.map((element, i) => [element.id, positions[i]])),
-    selectedNodeIDs: new Set([nodes.map(Node.id)[0]]),
+    selectedNodeIDs: new Set(),
     edges: idMap(edges),
   };
 }
-
-// const onLoad = (reactFlowInstance) => {
-//   console.log("flow loaded:", reactFlowInstance);
-//   // reactFlowInstance.fitView();
-// };
 
 const Div = styled("div");
 

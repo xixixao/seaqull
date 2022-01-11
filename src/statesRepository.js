@@ -19,6 +19,7 @@ export const SQLITE_ACTORS_IN_FILM = [
     { x: 40, y: 30 },
     { x: 241, y: 30 },
     { x: 379, y: 58 },
+    { x: 633, y: 30 },
   ],
   [
     { id: "e02", parentID: "0", childID: "2" },

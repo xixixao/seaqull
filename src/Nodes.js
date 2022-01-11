@@ -196,17 +196,17 @@ export function layoutStandalone(appState, node) {
 }
 
 // TODO: `layout` can stay here but the algo should go into a separate module
-export function layoutDetached(appState, parents, node, nodePositions) {
+export function layoutDetached(appState, parents, node) {
   const NODE_HORIZONTAL_OFFSET = 30;
 
   const maxX = Math.max(
     ...parents
-      .map((parent) => positionOf(nodePositions, parent))
+      .map((parent) => positionOf(appState, parent))
       .map(({ x, width }) => x + width)
   );
   const maxY = Math.max(
     ...parents
-      .map((parent) => positionOf(nodePositions, parent))
+      .map((parent) => positionOf(appState, parent))
       .map(({ y, height }) => y + height)
   );
 
