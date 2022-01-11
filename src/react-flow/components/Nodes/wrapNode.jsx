@@ -1,4 +1,5 @@
 import cc from "classcat";
+import { current } from "immer";
 import React, {
   memo,
   useCallback,
@@ -194,7 +195,7 @@ export default function wrapNode(NodeComponent) {
 
           const tightGroups = Nodes.groupBy(Nodes.selected(appState), (node) =>
             Nodes.tightRoot(appState, node)
-          );
+          ).map((nodes) => Nodes.sortTight(appState, nodes));
           tightGroups.forEach((nodes) => {
             const firstNode = first(nodes);
             const parentEdge = Edges.tightParent(appState, firstNode);
@@ -218,7 +219,7 @@ export default function wrapNode(NodeComponent) {
           const onlyDraggedGroup = only(tightGroups);
           const validPotentialTightParent =
             onlyDraggedGroup != null
-              ? only(Nodes.overlapping(appState, first(onlyDraggedGroup)))
+              ? only(Nodes.overlappingLeafs(appState, first(onlyDraggedGroup)))
               : null;
           appState.highlightedNodeIDs = Nodes.idSet(
             validPotentialTightParent != null ? [validPotentialTightParent] : []
@@ -275,7 +276,7 @@ export default function wrapNode(NodeComponent) {
             return;
           }
           const validPotentialTightParent = only(
-            Nodes.overlapping(appState, first(onlyDraggedGroup))
+            Nodes.overlappingLeafs(appState, first(onlyDraggedGroup))
           );
           if (validPotentialTightParent == null) {
             return;

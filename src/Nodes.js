@@ -134,6 +134,30 @@ export function tightParent(appState, node) {
   return edge != null ? Edges.parentNode(appState, edge) : null;
 }
 
+export function tightChild(appState, node) {
+  const edge = Arrays.only(Edges.tightChildren(appState, node));
+  return edge != null ? Edges.childNode(appState, edge) : null;
+}
+
+export function tightStack(appState, node) {
+  const stack = [node];
+  let last = node;
+  while (last != null) {
+    const child = tightChild(appState, last);
+    if (child != null) {
+      stack.push(child);
+    }
+    last = child;
+  }
+  return stack;
+}
+
+export function sortTight(appState, nodes) {
+  const set = idSet(nodes);
+  const root = tightRoot(appState, nodes[0]);
+  return tightStack(appState, root).filter((node) => set.has(Node.id(node)));
+}
+
 export function tightRoot(appState, node) {
   const parent = tightParent(appState, node);
   if (parent == null) {
@@ -165,15 +189,34 @@ export function groupBy(nodes, groupper) {
   return Array.from(grouped.values());
 }
 
-export function overlapping(appState, targetNode) {
+export function overlappingLeafs(appState, targetNode) {
   const targetPosition = positionOf(appState, targetNode);
-  return Arrays.filter(nodes(appState), (node) => {
+  const targetRoot = tightRoot(appState, targetNode);
+  return leafs(appState).filter((node) => {
     const position = positionOf(appState, node);
+    const root = tightRoot(appState, node);
     return (
-      !Node.is(node, targetNode) && doNodesOverlap(position, targetPosition, 20)
+      !Node.is(root, targetRoot) && doNodesOverlap(position, targetPosition, 20)
     );
   });
 }
+
+function leafs(appState) {
+  return Arrays.filter(
+    nodes(appState),
+    (node) => Edges.tightChildren(appState, node).length === 0
+  );
+}
+
+// function overlapping(appState, targetNode) {
+//   const targetPosition = positionOf(appState, targetNode);
+//   return Arrays.filter(nodes(appState), (node) => {
+//     const position = positionOf(appState, node);
+//     return (
+//       !Node.is(node, targetNode) && doNodesOverlap(position, targetPosition, 20)
+//     );
+//   });
+// }
 
 const GENERATED_NAMES = "abcdefghijklmnopqrstuvwxyz".split("");
 
