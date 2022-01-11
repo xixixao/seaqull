@@ -1227,7 +1227,7 @@ const Box = styled("div", {
     isSelected: {
       true: {
         borderColor: "$blue9",
-        boxShadow: "0 0 0 0.5px $blue9",
+        boxShadow: "0 0 0 0.5px $colors$blue9",
       },
     },
     isHighlighted: {
