@@ -1252,17 +1252,13 @@ function ResultsTable() {
     if (previous == null && !isSelecting) {
       return;
     }
-    const onlySelected = only(selected);
-    const isSelectingMultiple = onlySelected == null;
-    const queries = selected
+    const oneShown = only(selected) ?? previous;
+    const isEditing = selected.length === 1;
+    const queries = (isSelecting ? selected : [oneShown])
       .map((node) =>
-        (isSelectingMultiple ? getQuery : getQuerySelectable)(appState, node)
+        (isEditing ? getQuery : getQuerySelectable)(appState, node)
       )
-      .concat(
-        isSelectingMultiple
-          ? []
-          : getQueryAdditionalValues(appState, onlySelected)
-      )
+      .concat(isEditing ? getQueryAdditionalValues(appState, oneShown) : [])
       .filter((query) => query != null);
     // console.log(appState);
     // console.log(query);
@@ -1280,10 +1276,10 @@ function ResultsTable() {
           });
           setUpdated(
             lastShownNode != null &&
-              onlySelected != null &&
-              !Node.is(onlySelected, lastShownNode)
+              oneShown != null &&
+              !Node.is(oneShown, lastShownNode)
           );
-          setLastShownNode(onlySelected);
+          setLastShownNode(oneShown);
         }
         const NEW_RESULTS_INDICATOR_DURATION = 1000;
         setTimeout(() => setUpdated(false), NEW_RESULTS_INDICATOR_DURATION);
