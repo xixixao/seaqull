@@ -70,3 +70,64 @@ export const SQLITE_ACTORS_PER_FILM = [
     { id: "e45", parentID: "4", childID: "5", type: "tight" },
   ],
 ];
+
+export const SQLITE_FILMS_BY_FIRST_NAMES = [
+  [
+    { id: "0", type: "from", data: { name: "actor" } },
+    { id: "1", data: { name: "casting" }, type: "from" },
+    { id: "2", data: { selected: ["actor_id", "first_name"] }, type: "select" },
+    { id: "3", data: { selected: ["actor_id", "film_id"] }, type: "select" },
+    { id: "4", data: { filters: "a.actor_id = b.actor_id" }, type: "join" },
+    {
+      id: "5",
+      data: {
+        groupedColumns: new Set(["first_name"]),
+        aggregations: [["film_id", "COUNT DISTINCT"]],
+      },
+      type: "group",
+    },
+    {
+      id: "6",
+      data: { columnToOrder: { count_distinct_film_id: "DESC" } },
+      type: "order",
+    },
+  ],
+  [
+    {
+      x: 39,
+      y: 30,
+    },
+    {
+      x: 336,
+      y: 30,
+    },
+    {
+      x: 39,
+      y: 58,
+    },
+    {
+      x: 336,
+      y: 58,
+    },
+    {
+      x: 543,
+      y: 135,
+    },
+    {
+      x: 959,
+      y: 173,
+    },
+    {
+      x: 959,
+      y: 223,
+    },
+  ],
+  [
+    { id: "e02", parentID: "0", childID: "2", type: "tight" },
+    { id: "e13", parentID: "1", childID: "3", type: "tight" },
+    { id: "e24", parentID: "2", childID: "4" },
+    { id: "e34", parentID: "3", childID: "4" },
+    { id: "e45", parentID: "4", childID: "5", type: null },
+    { id: "e56", parentID: "5", childID: "6", type: "tight" },
+  ],
+];

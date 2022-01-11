@@ -38,7 +38,7 @@ import {
   useSetAppStateCallback,
   useSetAppStateContext,
 } from "./state";
-import { SQLITE_ACTORS_PER_FILM } from "./statesRepository";
+import { SQLITE_FILMS_BY_FIRST_NAMES } from "./statesRepository";
 import { keyframes, styled } from "./style";
 import * as WhereNodes from "./WhereNodes";
 
@@ -61,7 +61,7 @@ function App() {
   return (
     <ReactFlowProvider>
       <AppStateContextProvider
-        initialState={stateFromSnapshot(SQLITE_ACTORS_PER_FILM)}
+        initialState={stateFromSnapshot(SQLITE_FILMS_BY_FIRST_NAMES)}
       >
         <Content />
       </AppStateContextProvider>
@@ -193,6 +193,11 @@ function NodesPane() {
             setAppState((appState) => {
               if (Nodes.countSelected(appState) > 0) {
                 const selectedNodes = Nodes.selected(appState);
+                const onlySelected = only(selectedNodes);
+                const tightParent =
+                  onlySelected != null
+                    ? Nodes.tightParent(appState, onlySelected)
+                    : null;
                 selectedNodes.forEach((node) => {
                   const tightParent = Nodes.tightParent(appState, node);
                   const children = Nodes.children(appState, node);
@@ -202,7 +207,11 @@ function NodesPane() {
                     Nodes.layout(appState, tightParent);
                   }
                 });
-                Nodes.select(appState, []);
+
+                Nodes.select(
+                  appState,
+                  tightParent != null ? [tightParent] : []
+                );
               }
             });
           }
@@ -1326,6 +1335,16 @@ const ResultsTableLoaded = memo(function ResultsTableLoaded({
   // const columnNames = getAllColumnNames(appState, selectedNodeID);
   const setSelectedNodeState = useSetSelectedNodeState();
   const selectedNode = only(Nodes.selected(appState));
+  if (tables[0] instanceof NoResultsError) {
+    return (
+      <Column
+        css={{ background: "$amber3", padding: "$12", borderRadius: "$4" }}
+      >
+        <div>No results</div>
+        <div>{tables[0].sql}</div>
+      </Column>
+    );
+  }
   const brokenTable = tables.find((table) => table instanceof ResultError);
   if (brokenTable != null) {
     return (
@@ -1485,13 +1504,24 @@ class ResultError {
   }
 }
 
+class NoResultsError {
+  constructor(sql) {
+    this.sql = sql;
+  }
+}
+
 function execQuery(db, sql) {
   // console.log(sql);
+  let result = null;
   try {
-    return db.exec(sql + " LIMIT 100")[0];
+    result = db.exec(sql + " LIMIT 100");
   } catch (e) {
     return new ResultError(sql, e);
   }
+  if (result.length === 0) {
+    return new NoResultsError(sql);
+  }
+  return result[0];
 }
 
 const NODE_TYPES = {

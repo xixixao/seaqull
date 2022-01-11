@@ -74,8 +74,8 @@ last_update DATETIME${
     [
       "actor",
       `actor_id integer,
-first_name VARCHAR(45),
-last_name VARCHAR(45),
+first_name TEXT,
+last_name TEXT,
 last_update DATETIME`,
       "./db/actor.dat",
     ],
