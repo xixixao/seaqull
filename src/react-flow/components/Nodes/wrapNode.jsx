@@ -270,7 +270,7 @@ export default function wrapNode(NodeComponent) {
           }
           const tightGroups = Nodes.groupBy(Nodes.selected(appState), (node) =>
             Nodes.tightRoot(appState, node)
-          );
+          ).map((nodes) => Nodes.sortTight(appState, nodes));
           const onlyDraggedGroup = only(tightGroups);
           if (onlyDraggedGroup == null) {
             return;
