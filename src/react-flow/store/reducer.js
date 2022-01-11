@@ -1,50 +1,52 @@
 import isEqual from "fast-deep-equal";
-import { clampPosition, getDimensions } from "../utils";
-import {
-  getNodesInside,
-  getConnectedEdges,
-  getRectOfNodes,
-  isNode,
-  isEdge,
-  parseNode,
-  parseEdge,
-} from "../utils/graph";
+import * as Nodes from "../../Nodes";
+import { useSetAppStateCallback } from "../../state";
 import { getHandleBounds } from "../components/Nodes/utils";
+import { clampPosition, getDimensions } from "../utils";
+import { getConnectedEdges, getNodesInside } from "../utils/graph";
 import * as constants from "./contants";
 import { initialState } from "./index";
-import { useSetAppStateContext } from "../../state";
-
-import * as Nodes from "../../Nodes";
-import { current } from "immer";
-import { useCallback } from "react";
 
 export function useUpdateNodeDimensions() {
-  const setAppState = useSetAppStateContext();
-  return useCallback(
-    (updates) =>
-      setAppState((appState) => {
-        updates.forEach(({ id, nodeElement, forceUpdate }) => {
-          const position = Nodes.positionWithID(appState, id);
-          const dimensions = getDimensions(nodeElement);
-          const doUpdate =
-            dimensions.width &&
-            dimensions.height &&
-            (position.width !== dimensions.width ||
-              position.height !== dimensions.height ||
-              forceUpdate);
-          if (doUpdate) {
-            const handleBounds = getHandleBounds(
-              nodeElement,
-              1 // TODO: state.transform[2]
-            );
-            position.width = dimensions.width;
-            position.height = dimensions.height;
-            position.handleBounds = handleBounds;
-          }
-        });
-      }),
-    [setAppState]
+  return useSetAppStateCallback((updates) => (appState) => {
+    updates.forEach(({ id, nodeElement, forceUpdate }) => {
+      const position = Nodes.positionWithID(appState, id);
+      const dimensions = getDimensions(nodeElement);
+      const doUpdate =
+        dimensions.width &&
+        dimensions.height &&
+        (position.width !== dimensions.width ||
+          position.height !== dimensions.height ||
+          forceUpdate);
+      if (doUpdate) {
+        const handleBounds = getHandleBounds(
+          nodeElement,
+          1 // TODO: state.transform[2]
+        );
+        position.width = dimensions.width;
+        position.height = dimensions.height;
+        position.handleBounds = handleBounds;
+      }
+    });
+  });
+}
+
+// Actually setSelectedElements
+export function useAddSelectedElements() {
+  return useSetAppStateCallback(
+    (nodesToAdd, multiSelectionActive) => (appState) => {
+      (multiSelectionActive ? Nodes.select : Nodes.alsoSelect)(
+        appState,
+        nodesToAdd
+      );
+    }
   );
+}
+
+export function useResetSelectedElements() {
+  return useSetAppStateCallback((nodesToAdd) => (appState) => {
+    Nodes.select(appState, []);
+  });
 }
 
 // Probably not needed
@@ -69,6 +71,7 @@ export function useUpdateNodeDimensions() {
 // }
 
 export default function reactFlowReducer(state = initialState, action) {
+  console.log(action.type);
   switch (action.type) {
     // case constants.SET_ELEMENTS: {
     //   const { elements: propElements, selectedNodeIDs } = action.payload;
@@ -205,8 +208,8 @@ export default function reactFlowReducer(state = initialState, action) {
           ...state.userSelectionRect,
           draw: false,
         },
+        nodesSelectionActive: false,
       };
-      stateUpdate.nodesSelectionActive = false;
       // if ((selectedNodes ?? []).length < 2) {
       //   // stateUpdate.selectedElements = null;
       // stateUpdate.nodesSelectionActive = false;
@@ -217,43 +220,25 @@ export default function reactFlowReducer(state = initialState, action) {
       // }
       return stateUpdate;
     }
-    case constants.SET_SELECTED_ELEMENTS: {
-      const elements = action.payload;
-      const selectedElementsArr = Array.isArray(elements)
-        ? elements
-        : [elements];
-      const selectedElementsUpdated = !isEqual(
-        selectedElementsArr,
-        state.selectedElements
-      );
-      const selectedElements = selectedElementsUpdated
-        ? selectedElementsArr
-        : state.selectedElements;
-      return {
-        ...state,
-        selectedElements,
-      };
-    }
+    // case constants.SET_SELECTED_ELEMENTS: {
+    //   const elements = action.payload;
+    //   const selectedElementsArr = Array.isArray(elements)
+    //     ? elements
+    //     : [elements];
+    //   const selectedElementsUpdated = !isEqual(
+    //     selectedElementsArr,
+    //     state.selectedElements
+    //   );
+    //   const selectedElements = selectedElementsUpdated
+    //     ? selectedElementsArr
+    //     : state.selectedElements;
+    //   return {
+    //     ...state,
+    //     selectedElements,
+    //   };
+    // }
     case constants.ADD_SELECTED_ELEMENTS: {
-      const { multiSelectionActive, selectedElements } = state;
-      const elements = action.payload;
-      const selectedElementsArr = Array.isArray(elements)
-        ? elements
-        : [elements];
-      let nextElements = selectedElementsArr;
-      if (multiSelectionActive) {
-        nextElements = selectedElements
-          ? [...selectedElementsArr, ...selectedElements]
-          : selectedElementsArr;
-      }
-      const selectedElementsUpdated = !isEqual(
-        nextElements,
-        state.selectedElements
-      );
-      const nextSelectedElements = selectedElementsUpdated
-        ? nextElements
-        : state.selectedElements;
-      return { ...state, selectedElements: nextSelectedElements };
+      throw new Error("migrate to context");
     }
     case constants.INIT_D3ZOOM: {
       const { d3Zoom, d3Selection, d3ZoomHandler, transform } = action.payload;

@@ -8,8 +8,12 @@ import React, {
 } from "react";
 import { DraggableCore } from "react-draggable";
 import cc from "classcat";
-import { useStoreActions } from "../../store/hooks";
-import { useUpdateNodeDimensions } from "../../store/reducer";
+import { useStoreActions, useStoreState } from "../../store/hooks";
+import {
+  useAddSelectedElements,
+  useUpdateNodeDimensions,
+} from "../../store/reducer";
+
 export default function wrapNode(NodeComponent) {
   const NodeWrapper = ({
     id,
@@ -45,15 +49,14 @@ export default function wrapNode(NodeComponent) {
     dragHandle,
   }) => {
     const updateNodeDimensions = useUpdateNodeDimensions();
-    const addSelectedElements = useStoreActions(
-      (actions) => actions.addSelectedElements
-    );
+    const addSelectedElements = useAddSelectedElements();
     const updateNodePosDiff = useStoreActions(
       (actions) => actions.updateNodePosDiff
     );
     const unsetNodesSelection = useStoreActions(
       (actions) => actions.unsetNodesSelection
     );
+    const multiSelectionActive = useStoreState((s) => s.multiSelectionActive);
     const nodeElement = useRef(null);
     const node = useMemo(
       () => ({ id, type, position: { x: xPos, y: yPos }, data }),
@@ -124,13 +127,14 @@ export default function wrapNode(NodeComponent) {
           if (isSelectable) {
             unsetNodesSelection();
             if (!selected) {
-              addSelectedElements(node);
+              // TODO: Move multiSelectionActive to context
+              addSelectedElements([node], multiSelectionActive);
             }
           }
           onClick?.(event, node);
         }
       },
-      [isSelectable, selected, isDraggable, onClick, node]
+      [isSelectable, selected, isDraggable, onClick, node, addSelectedElements]
     );
     const onDragStart = useCallback(
       (event) => {
@@ -138,14 +142,22 @@ export default function wrapNode(NodeComponent) {
         if (selectNodesOnDrag && isSelectable) {
           unsetNodesSelection();
           if (!selected) {
-            addSelectedElements(node);
+            // TODO: Move multiSelectionActive to context
+            addSelectedElements([node], multiSelectionActive);
           }
         } else if (!selectNodesOnDrag && !selected && isSelectable) {
           unsetNodesSelection();
           addSelectedElements([]);
         }
       },
-      [node, selected, selectNodesOnDrag, isSelectable, onNodeDragStart]
+      [
+        node,
+        selected,
+        selectNodesOnDrag,
+        isSelectable,
+        onNodeDragStart,
+        addSelectedElements,
+      ]
     );
     const onDrag = useCallback(
       (event, draggableData) => {
@@ -173,7 +185,7 @@ export default function wrapNode(NodeComponent) {
         // Because of that we set dragging to true inside the onDrag handler and handle the click here
         if (!isDragging) {
           if (isSelectable && !selectNodesOnDrag && !selected) {
-            addSelectedElements(node);
+            addSelectedElements([node]);
           }
           onClick?.(event, node);
           return;

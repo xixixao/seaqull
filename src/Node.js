@@ -14,6 +14,10 @@ export function id(node) {
   return node.id;
 }
 
+export function fake(id) {
+  return { id };
+}
+
 export function x(appState, node) {
   return position(appState, node).x;
 }

@@ -7,7 +7,14 @@ import { onlyThrows } from "./Arrays";
 import { invariant } from "./invariant";
 
 export function select(appState, nodes) {
-  appState.selectedNodeIDs = new Set(nodes.map((node) => Node.id(node)));
+  appState.selectedNodeIDs = new Set(nodes.map(Node.id));
+}
+
+export function alsoSelect(appState, nodes) {
+  select(
+    appState,
+    nodes.concat(Arrays.map(appState.selectedNodeIDs, Node.fake))
+  );
 }
 
 export function countSelected(appState) {
@@ -17,6 +24,11 @@ export function countSelected(appState) {
 export function selected(appState) {
   return nodesWithID(appState, appState.selectedNodeIDs);
 }
+
+export function hasSelected(appState, node) {
+  return appState.selectedNodeIDs.has(Node.id(node));
+}
+
 export function nodesWithID(appState, ids) {
   return Arrays.map(ids, (id) => nodeWithID(appState, id));
 }

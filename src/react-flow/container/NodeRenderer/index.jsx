@@ -1,19 +1,22 @@
-import React, { memo, useContext, useMemo } from "react";
-import { getNodesInside } from "../../utils/graph";
+import React, { memo, useMemo } from "react";
+import { useAppStateContext } from "../../../state";
 import { useStoreState } from "../../store/hooks";
-import { AppStateContext } from "../../../state";
 import { useUpdateNodeDimensions } from "../../store/reducer";
+import { getNodesInside } from "../../utils/graph";
+import * as Nodes from "../../../Nodes";
+
 const NodeRenderer = (props) => {
   const transform = useStoreState((state) => state.transform);
   const selectedElements = useStoreState((state) => state.selectedElements);
   const nodesDraggable = useStoreState((state) => state.nodesDraggable);
   const nodesConnectable = useStoreState((state) => state.nodesConnectable);
   const elementsSelectable = useStoreState((state) => state.elementsSelectable);
+  const updateNodeDimensions = useUpdateNodeDimensions();
   const width = useStoreState((state) => state.width);
   const height = useStoreState((state) => state.height);
-  const nodes = Array.from(useContext(AppStateContext.nodes).values());
-  const positions = useContext(AppStateContext.positions);
-  const updateNodeDimensions = useUpdateNodeDimensions();
+  const appState = useAppStateContext();
+  console.log(appState);
+  const nodes = Array.from(appState.nodes.values());
   const visibleNodes = props.onlyRenderVisibleElements
     ? getNodesInside(nodes, { x: 0, y: 0, width, height }, transform, true)
     : nodes;
@@ -38,7 +41,7 @@ const NodeRenderer = (props) => {
   return (
     <div className="react-flow__nodes" style={transformStyle}>
       {visibleNodes.map((node) => {
-        const position = positions.get(node.id);
+        const position = Nodes.positionOf(appState, node);
         const nodeType = node.type || "default";
         const NodeComponent =
           props.nodeTypes[nodeType] || props.nodeTypes.default;
@@ -87,9 +90,7 @@ const NodeRenderer = (props) => {
             onNodeDrag={props.onNodeDrag}
             onNodeDragStop={props.onNodeDragStop}
             scale={transform[2]}
-            selected={
-              selectedElements?.some(({ id }) => id === node.id) || false
-            }
+            selected={Nodes.hasSelected(appState, node)}
             isDraggable={isDraggable}
             isSelectable={isSelectable}
             isConnectable={isConnectable}

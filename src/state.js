@@ -23,6 +23,18 @@ export function useSetAppStateContext() {
   );
 }
 
+export function useSetAppStateCallback(callbackToUpdater) {
+  const setAppState = useSetAppStateContext();
+  return useCallback(
+    (...args) => {
+      const updater = callbackToUpdater(...args);
+      setAppState(updater);
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [setAppState]
+  );
+}
+
 export function useAppStateContext() {
   return useCombinedContext(AppStateContext);
 }

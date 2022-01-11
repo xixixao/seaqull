@@ -38,12 +38,12 @@ export const unsetNodesSelection = () =>
   createAction(constants.UNSET_NODES_SELECTION, {
     nodesSelectionActive: false,
   });
-export const resetSelectedElements = () =>
-  createAction(constants.RESET_SELECTED_ELEMENTS, {
-    selectedElements: null,
-  });
-export const setSelectedElements = (elements) =>
-  createAction(constants.SET_SELECTED_ELEMENTS, elements);
+// export const resetSelectedElements = () =>
+//   createAction(constants.RESET_SELECTED_ELEMENTS, {
+//     selectedElements: null,
+//   });
+// export const setSelectedElements = (elements) =>
+// createAction(constants.SET_SELECTED_ELEMENTS, elements);
 export const addSelectedElements = (elements) =>
   createAction(constants.ADD_SELECTED_ELEMENTS, elements);
 export const updateTransform = (transform) =>

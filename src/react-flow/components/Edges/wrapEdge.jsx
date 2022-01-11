@@ -85,10 +85,11 @@ export default (EdgeComponent) => {
     }, [id, source, target, type, sourceHandleId, targetHandleId, data]);
     const onEdgeClick = useCallback(
       (event) => {
-        if (elementsSelectable) {
-          unsetNodesSelection();
-          addSelectedElements(edgeElement);
-        }
+        // TODO: This is for supporting edge selection
+        // if (elementsSelectable) {
+        //   unsetNodesSelection();
+        //   addSelectedElements(edgeElement);
+        // }
         onClick?.(event, edgeElement);
       },
       [elementsSelectable, edgeElement, onClick]

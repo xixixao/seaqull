@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useStore, useStoreActions } from "../store/hooks";
 import useKeyPress from "./useKeyPress";
 import { isNode, getConnectedEdges } from "../utils/graph";
+import { useResetSelectedElements } from "../store/reducer";
 export default ({ deleteKeyCode, multiSelectionKeyCode, onElementsRemove }) => {
   const store = useStore();
   const unsetNodesSelection = useStoreActions(
@@ -10,9 +11,7 @@ export default ({ deleteKeyCode, multiSelectionKeyCode, onElementsRemove }) => {
   const setMultiSelectionActive = useStoreActions(
     (actions) => actions.setMultiSelectionActive
   );
-  const resetSelectedElements = useStoreActions(
-    (actions) => actions.resetSelectedElements
-  );
+  const resetSelectedElements = useResetSelectedElements();
   const deleteKeyPressed = useKeyPress(deleteKeyCode);
   const multiSelectionKeyPressed = useKeyPress(multiSelectionKeyCode);
   useEffect(() => {

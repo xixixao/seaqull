@@ -5,6 +5,7 @@ import useKeyPress from "../../hooks/useKeyPress";
 import ZoomPane from "../ZoomPane";
 import UserSelection from "../../components/UserSelection";
 import NodesSelection from "../../components/NodesSelection";
+import { useResetSelectedElements } from "../../store/reducer";
 const FlowRenderer = ({
   children,
   onPaneClick,
@@ -38,9 +39,7 @@ const FlowRenderer = ({
   const unsetNodesSelection = useStoreActions(
     (actions) => actions.unsetNodesSelection
   );
-  const resetSelectedElements = useStoreActions(
-    (actions) => actions.resetSelectedElements
-  );
+  const resetSelectedElements = useResetSelectedElements();
   const nodesSelectionActive = useStoreState(
     (state) => state.nodesSelectionActive
   );
