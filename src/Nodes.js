@@ -211,7 +211,7 @@ export function layoutStandalone(appState, node) {
   const NODE_HORIZONTAL_OFFSET = 30;
 
   const maxX = Math.max(
-    ...Array.map(positions(appState), ({ x, width }) => x + width)
+    ...Arrays.map(positions(appState), ({ x, width }) => x + width)
   );
 
   Node.move(appState, node, maxX + NODE_HORIZONTAL_OFFSET, INIT_Y);
