@@ -1250,6 +1250,7 @@ function ResultsTable() {
     const isSelecting = selected.length > 0;
     const previous = lastShownNode && Nodes.current(appState, lastShownNode);
     if (previous == null && !isSelecting) {
+      setTableState(null);
       return;
     }
     const oneShown = only(selected) ?? previous;
