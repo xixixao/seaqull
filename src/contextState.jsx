@@ -6,7 +6,7 @@ export function createContextState(defaults) {
   const SetterContext = createContext();
 
   function ContextStateProvider({ initialState, children }) {
-    const [state, setState] = useState(initialState);
+    const [state, setState] = useState({ ...defaults, ...initialState });
     return (
       <SetterContext.Provider value={setState}>
         {objectReduce(

@@ -1,13 +1,20 @@
+import cc from "classcat";
 import React, {
+  memo,
+  useCallback,
   useEffect,
   useLayoutEffect,
-  useRef,
-  memo,
   useMemo,
-  useCallback,
+  useRef,
 } from "react";
 import { DraggableCore } from "react-draggable";
-import cc from "classcat";
+import * as Arrays from "../../../Arrays";
+import { first, only } from "../../../Arrays";
+import * as Edge from "../../../Edge";
+import * as Edges from "../../../Edges";
+import * as Node from "../../../Node";
+import * as Nodes from "../../../Nodes";
+import { useSetAppStateContext } from "../../../state";
 import { useStoreActions, useStoreState } from "../../store/hooks";
 import {
   useAddSelectedElements,
@@ -23,6 +30,7 @@ export default function wrapNode(NodeComponent) {
     xPos,
     yPos,
     selected,
+    highlight,
     onClick,
     onMouseEnter,
     onMouseMove,
@@ -48,6 +56,7 @@ export default function wrapNode(NodeComponent) {
     resizeObserver,
     dragHandle,
   }) => {
+    const setAppState = useSetAppStateContext();
     const updateNodeDimensions = useUpdateNodeDimensions();
     const addSelectedElements = useAddSelectedElements();
     const updateNodePosDiff = useStoreActions(
@@ -162,49 +171,138 @@ export default function wrapNode(NodeComponent) {
     );
     const onDrag = useCallback(
       (event, draggableData) => {
-        if (onNodeDrag) {
-          node.position.x += draggableData.deltaX;
-          node.position.y += draggableData.deltaY;
-          if (onNodeDrag(event, node, draggableData) === false) {
+        const { deltaX, deltaY } = draggableData;
+        setAppState((appState) => {
+          Nodes.selected(appState).forEach((node) => {
+            Nodes.positionOf(appState, node).isDragging = true;
+          });
+
+          const isDetachMode = event.altKey;
+          appState.highlightedNodeIDs = new Set();
+          if (!isDetachMode) {
+            const draggedNodeRoots = Nodes.dedupe(
+              Nodes.selected(appState).map((node) =>
+                Nodes.tightRoot(appState, node)
+              )
+            );
+            draggedNodeRoots.forEach((node) => {
+              Node.moveBy(appState, node, deltaX, deltaY);
+              Nodes.layout(appState, node);
+            });
             return;
           }
-        }
-        updateNodePosDiff({
-          id,
-          diff: {
-            x: draggableData.deltaX,
-            y: draggableData.deltaY,
-          },
-          isDragging: true,
+
+          const tightGroups = Nodes.groupBy(Nodes.selected(appState), (node) =>
+            Nodes.tightRoot(appState, node)
+          );
+          tightGroups.forEach((nodes) => {
+            const firstNode = first(nodes);
+            const parentEdge = Edges.tightParent(appState, firstNode);
+            if (parentEdge != null) {
+              const parent = Edges.parentNode(appState, parentEdge);
+
+              const lastNode = Arrays.last(nodes);
+              const children = Nodes.tightChildren(appState, lastNode);
+              Edge.detach(parentEdge);
+              Edges.removeAll(
+                appState,
+                Edges.tightChildren(appState, lastNode)
+              );
+              Edges.addTightChildren(appState, parent, children);
+              Nodes.layout(appState, parent);
+            }
+
+            Node.moveBy(appState, firstNode, deltaX, deltaY);
+            Nodes.layout(appState, firstNode);
+          });
+          const onlyDraggedGroup = only(tightGroups);
+          const validPotentialTightParent =
+            onlyDraggedGroup != null
+              ? only(Nodes.overlapping(appState, first(onlyDraggedGroup)))
+              : null;
+          appState.highlightedNodeIDs = Nodes.idSet(
+            validPotentialTightParent != null ? [validPotentialTightParent] : []
+          );
         });
+
+        // if (onNodeDrag) {
+        //   // node.position.x += draggableData.deltaX;
+        //   // node.position.y += draggableData.deltaY;
+        //   if (onNodeDrag(event, node, draggableData) === false) {
+        //     return;
+        //   }
+        // }
+        // updateNodePosDiff({
+        //   id,
+        //   diff: {
+        //     x: draggableData.deltaX,
+        //     y: draggableData.deltaY,
+        //   },
+        //   isDragging: true,
+        // });
       },
-      [id, node, onNodeDrag]
+      [setAppState]
     );
+
     const onDragStop = useCallback(
       (event) => {
         // onDragStop also gets called when user just clicks on a node.
         // Because of that we set dragging to true inside the onDrag handler and handle the click here
-        if (!isDragging) {
-          if (isSelectable && !selectNodesOnDrag && !selected) {
-            addSelectedElements([node]);
+
+        // TODO: Dead code because we have "select on drag" and no onClick
+        // if (!isDragging) {
+        //   if (isSelectable && !selectNodesOnDrag && !selected) {
+        //     addSelectedElements([node]);
+        //   }
+        //   onClick?.(event, node);
+        //   return;
+        // }
+        setAppState((appState) => {
+          Nodes.selected(appState).forEach((node) => {
+            Nodes.positionOf(appState, node).isDragging = false;
+          });
+          appState.highlightedNodeIDs = new Set();
+
+          const isDetachMode = event.altKey;
+          if (!isDetachMode) {
+            return;
           }
-          onClick?.(event, node);
-          return;
-        }
-        updateNodePosDiff({
-          id: node.id,
-          isDragging: false,
+          const tightGroups = Nodes.groupBy(Nodes.selected(appState), (node) =>
+            Nodes.tightRoot(appState, node)
+          );
+          const onlyDraggedGroup = only(tightGroups);
+          if (onlyDraggedGroup == null) {
+            return;
+          }
+          const validPotentialTightParent = only(
+            Nodes.overlapping(appState, first(onlyDraggedGroup))
+          );
+          if (validPotentialTightParent == null) {
+            return;
+          }
+          const firstNode = first(onlyDraggedGroup);
+          Edges.removeAll(appState, Edges.parents(appState, firstNode));
+          Edges.addTightChild(appState, validPotentialTightParent, firstNode);
+          Nodes.layout(appState, validPotentialTightParent);
         });
-        onNodeDragStop?.(event, node);
+
+        // updateNodePosDiff({
+        //   id: node.id,
+        //   isDragging: false,
+        // });
+
+        // onNodeDragStop?.(event, node);
       },
       [
-        node,
-        isSelectable,
-        selectNodesOnDrag,
-        onClick,
-        onNodeDragStop,
-        isDragging,
-        selected,
+        id,
+        setAppState,
+        //   node,
+        //   isSelectable,
+        //   selectNodesOnDrag,
+        //   onClick,
+        //   onNodeDragStop,
+        //   isDragging,
+        //   selected,
       ]
     );
     const onNodeDoubleClickHandler = useCallback(
@@ -271,6 +369,7 @@ export default function wrapNode(NodeComponent) {
             xPos={xPos}
             yPos={yPos}
             selected={selected}
+            highlight={highlight}
             isConnectable={isConnectable}
             sourcePosition={sourcePosition}
             targetPosition={targetPosition}

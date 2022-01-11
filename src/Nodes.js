@@ -5,9 +5,10 @@ import * as Iterable from "./Iterable";
 import * as Arrays from "./Arrays";
 import { onlyThrows } from "./Arrays";
 import { invariant } from "./invariant";
+import { doNodesOverlap } from "./react-flow/utils/graph";
 
 export function select(appState, nodes) {
-  appState.selectedNodeIDs = new Set(nodes.map(Node.id));
+  appState.selectedNodeIDs = idSet(nodes);
 }
 
 export function alsoSelect(appState, nodes) {
@@ -147,6 +148,27 @@ export function idSet(nodes) {
 
 export function dedupe(nodes) {
   return Array.from(new Set(nodes));
+}
+
+export function groupBy(nodes, groupper) {
+  const grouped = new Map();
+  nodes.forEach((node) => {
+    const key = Node.id(groupper(node));
+    const group = grouped.get(key) ?? [];
+    group.push(node);
+    grouped.set(key, group);
+  });
+  return Array.from(grouped.values());
+}
+
+export function overlapping(appState, targetNode) {
+  const targetPosition = positionOf(appState, targetNode);
+  return Arrays.filter(nodes(appState), (node) => {
+    const position = positionOf(appState, node);
+    return (
+      !Node.is(node, targetNode) && doNodesOverlap(position, targetPosition, 20)
+    );
+  });
 }
 
 const GENERATED_NAMES = "abcdefghijklmnopqrstuvwxyz".split("");

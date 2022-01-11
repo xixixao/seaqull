@@ -120,7 +120,6 @@ function stateFromSnapshot([nodes, positions, edges]) {
   return {
     nodes: idMap(nodes),
     positions: new Map(nodes.map((element, i) => [element.id, positions[i]])),
-    selectedNodeIDs: new Set(),
     edges: idMap(edges),
   };
 }
@@ -160,38 +159,6 @@ function NodesPane() {
     layoutRequestRef.current = request;
   }, []);
 
-  const onNodeDrag = useCallback(
-    (event, _node, { deltaX, deltaY }) => {
-      setAppState((appState) => {
-        const node = only(Nodes.selected(appState));
-        if (node != null) {
-          const parentEdge = Edges.tightParent(appState, node);
-          const shouldDragDetachNode = parentEdge != null && event.altKey;
-          if (shouldDragDetachNode) {
-            const parent = Edges.parentNode(appState, parentEdge);
-            const children = Nodes.tightChildren(appState, node);
-            Edge.detach(parentEdge);
-            Edges.removeAll(appState, Edges.tightChildren(appState, node));
-            Edges.addTightChildren(appState, parent, children);
-            Node.moveBy(appState, node, deltaX, deltaY);
-            Nodes.layout(appState, parent);
-            return;
-          }
-        }
-        const draggedNodeRoots = Nodes.dedupe(
-          Nodes.selected(appState).map((node) =>
-            Nodes.tightRoot(appState, node)
-          )
-        );
-        draggedNodeRoots.forEach((node) => {
-          Node.moveBy(appState, node, deltaX, deltaY);
-          Nodes.layout(appState, node);
-        });
-      });
-      return false;
-    },
-    [setAppState]
-  );
   const onSelectionChange = useCallback(
     (elements) => {
       const nodes = (elements ?? []).filter(
@@ -244,7 +211,6 @@ function NodesPane() {
         <ReactFlow
           nodeTypes={NODE_COMPONENTS}
           edgeTypes={EDGE_COMPONENTS}
-          onNodeDrag={onNodeDrag}
           onSelectionChange={onSelectionChange}
           // onElementsRemove={onElementsRemove}
           // onConnect={onConnect}
@@ -950,11 +916,10 @@ const OrderNode = {
 // }
 
 function NodeUI({ node, showTools, children }) {
-  const isSelected = node.selected;
   const appState = useAppStateContext();
   return (
     <div>
-      <Box isSelected={isSelected}>
+      <Box isHighlighted={node.highlight} isSelected={node.selected}>
         {children}
         <Handle
           style={visibleIf(Nodes.hasDetachedParents(appState, node))}
@@ -1004,7 +969,7 @@ function NodeUI({ node, showTools, children }) {
 
 function NodeUIAddButtons({ node, showTools }) {
   const appState = useAppStateContext();
-  if (Nodes.countSelected(appState) > 2) {
+  if (Nodes.countSelected(appState) > 2 || node.isDragging) {
     return null;
   }
 
@@ -1261,8 +1226,13 @@ const Box = styled("div", {
   variants: {
     isSelected: {
       true: {
-        borderColor: "#0041d0",
-        boxShadow: "0 0 0 0.5px #0041d0",
+        borderColor: "$blue9",
+        boxShadow: "0 0 0 0.5px $blue9",
+      },
+    },
+    isHighlighted: {
+      true: {
+        borderBottomColor: "$amber9",
       },
     },
   },

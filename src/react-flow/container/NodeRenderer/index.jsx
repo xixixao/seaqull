@@ -89,6 +89,7 @@ const NodeRenderer = (props) => {
             onNodeDragStop={props.onNodeDragStop}
             scale={transform[2]}
             selected={Nodes.hasSelected(appState, node)}
+            highlight={appState.highlightedNodeIDs.has(node.id)}
             isDraggable={isDraggable}
             isSelectable={isSelectable}
             isConnectable={isConnectable}

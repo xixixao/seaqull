@@ -6,6 +6,7 @@ const { state, setter, provider } = createContextState({
   nodes: new Map(),
   positions: new Map(),
   selectedNodeIDs: new Set(),
+  highlightedNodeIDs: new Set(),
   edges: new Map(),
 });
 

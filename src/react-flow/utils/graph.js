@@ -215,6 +215,21 @@ export const getNodesInside = (
     return overlappingArea >= area;
   });
 };
+
+export function doNodesOverlap(a, b, gap = 0) {
+  const aBox = rectToBox(a);
+  const bBox = rectToBox(b);
+  const xOverlap = Math.max(
+    0,
+    gap + Math.min(aBox.x2, bBox.x2) - Math.max(aBox.x, bBox.x)
+  );
+  const yOverlap = Math.max(
+    0,
+    gap + Math.min(aBox.y2, bBox.y2) - Math.max(aBox.y, bBox.y)
+  );
+  return xOverlap > 0 && yOverlap > 0;
+}
+
 export const getConnectedEdges = (nodes, edges) => {
   const nodeIds = nodes.map((node) => node.id);
   return edges.filter(
