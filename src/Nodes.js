@@ -22,6 +22,10 @@ export function countSelected(appState) {
   return appState.selectedNodeIDs.size;
 }
 
+export function isSelecting(appState) {
+  return appState.selectedNodeIDs.size > 0;
+}
+
 export function selected(appState) {
   return nodesWithID(appState, appState.selectedNodeIDs);
 }

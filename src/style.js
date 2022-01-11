@@ -410,7 +410,7 @@ globalCss({
     // borderColor: "inherit",
     // borderBottom: "1px solid $slate7",
     position: "sticky",
-    top: "-2px",
+    top: "0",
     background: "$panel",
     whiteSpace: "nowrap",
     textAlign: "start",

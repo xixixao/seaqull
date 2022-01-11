@@ -1241,54 +1241,60 @@ const Box = styled("div", {
 
 function ResultsTable() {
   const appState = useAppStateDataContext();
-  const [tableState, setTableState] = useState();
+  const [tableState, setTableState] = useState(null);
   const [lastShownNode, setLastShownNode] = useState(null);
   const [updated, setUpdated] = useState();
   const [isLoading, setIsLoading] = useState(false);
-  const selected = only(Nodes.selected(appState));
   useEffect(() => {
-    const isSelecting = selected != null;
-    let queried =
-      selected ?? (lastShownNode && Nodes.current(appState, lastShownNode));
-    if (queried == null) {
+    const selected = Nodes.selected(appState);
+    const isSelecting = selected.length > 0;
+    const previous = lastShownNode && Nodes.current(appState, lastShownNode);
+    if (previous == null && !isSelecting) {
       return;
     }
+    const onlySelected = only(selected);
+    const isSelectingMultiple = onlySelected == null;
+    const queries = selected
+      .map((node) =>
+        (isSelectingMultiple ? getQuery : getQuerySelectable)(appState, node)
+      )
+      .concat(
+        isSelectingMultiple
+          ? []
+          : getQueryAdditionalValues(appState, onlySelected)
+      )
+      .filter((query) => query != null);
     // console.log(appState);
-    const query = (isSelecting ? getQuery : getQuerySelectable)(
-      appState,
-      queried
-    );
     // console.log(query);
-    const queryAdditionalValues = isSelecting
-      ? getQueryAdditionalValues(appState, queried)
-      : null;
-    if (query != null) {
+    if (queries.length > 0) {
       setIsLoading(true);
     }
+    const ARTIFICIAL_DELAY = 300;
     database.then((database) =>
       setTimeout(() => {
         setIsLoading(false);
-        if (query != null) {
+        if (queries.length > 0) {
           setTableState({
-            table: execQuery(database, query),
-            additionalTables: (queryAdditionalValues ?? [])
-              .filter((query) => query != null)
-              .map((query) => execQuery(database, query)),
+            tables: queries.map((query) => execQuery(database, query)),
             appState: appState,
           });
-          setUpdated(lastShownNode != null && !Node.is(queried, lastShownNode));
-          setLastShownNode(queried);
+          setUpdated(
+            lastShownNode != null &&
+              onlySelected != null &&
+              !Node.is(onlySelected, lastShownNode)
+          );
+          setLastShownNode(onlySelected);
         }
-        const DELAY_OF_SHOWING_RESULTS = 1000;
-        setTimeout(() => setUpdated(false), DELAY_OF_SHOWING_RESULTS);
-      }, 300)
+        const NEW_RESULTS_INDICATOR_DURATION = 1000;
+        setTimeout(() => setUpdated(false), NEW_RESULTS_INDICATOR_DURATION);
+      }, ARTIFICIAL_DELAY)
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [appState, selected]);
+  }, [appState]);
 
-  if (isLoading && tableState?.table == null) {
+  if (isLoading && tableState == null) {
     return <div style={{ padding: 12 }}>Loading...</div>;
-  } else if (tableState?.table == null) {
+  } else if (tableState == null) {
     return null;
   }
   return (
@@ -1313,7 +1319,7 @@ const TH = styled("th");
 const TD = styled("td");
 
 const ResultsTableLoaded = memo(function ResultsTableLoaded({
-  state: { table, additionalTables, appState },
+  state: { tables, appState },
 }) {
   // const { selectedNodeID } = appState;
   // const availableColumnNamesSet = getAvailableColumnNamesSet(
@@ -1323,7 +1329,6 @@ const ResultsTableLoaded = memo(function ResultsTableLoaded({
   // const columnNames = getAllColumnNames(appState, selectedNodeID);
   const setSelectedNodeState = useSetSelectedNodeState();
   const selectedNode = only(Nodes.selected(appState));
-  const tables = [table].concat(additionalTables);
   const brokenTable = tables.find((table) => table instanceof ResultError);
   if (brokenTable != null) {
     return (
@@ -1333,14 +1338,14 @@ const ResultsTableLoaded = memo(function ResultsTableLoaded({
       </Column>
     );
   }
-  const columns = table.columns.concat(
-    ...additionalTables.map((table) => [""].concat(table.columns))
+  const columns = tables[0].columns.concat(
+    ...tables.slice(1).map((table) => [""].concat(table.columns))
   );
-  const values = [table.values].concat(
-    ...additionalTables.map((table) => [[[""]], table.values])
+  const values = [tables[0].values].concat(
+    ...tables.slice(1).map((table) => [[[""]], table.values])
   );
   const rowCount = Math.max(...values.map((rows) => rows.length));
-  const primaryColumnCount = table.columns.length;
+  const primaryColumnCount = tables[0].columns.length;
   return (
     <table>
       <thead>
