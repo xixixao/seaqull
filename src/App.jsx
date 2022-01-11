@@ -1,5 +1,4 @@
 import { DropdownMenuIcon, PlusIcon } from "@modulz/radix-icons";
-import { current } from "immer";
 import React, {
   createContext,
   memo,
@@ -30,18 +29,13 @@ import * as JoinNodes from "./JoinNodes";
 import * as Node from "./Node";
 import * as Nodes from "./Nodes";
 import * as OrderNodes from "./OrderNodes";
-import ReactFlow, {
-  Background,
-  Handle,
-  ReactFlowProvider,
-  useStoreState,
-} from "./react-flow";
-import ElementUpdater from "./react-flow/components/ElementUpdater";
+import ReactFlow, { Background, Handle, ReactFlowProvider } from "./react-flow";
 import * as SelectNodes from "./SelectNodes";
 import {
   AppStateContextProvider,
   useAppStateContext,
   useAppStateDataContext,
+  useSetAppStateCallback,
   useSetAppStateContext,
 } from "./state";
 import { SQLITE_ACTORS } from "./statesRepository";
@@ -74,15 +68,9 @@ function App() {
 }
 
 function useSetSelectedNodeState() {
-  const setAppState = useSetAppStateContext();
-  return useCallback(
-    (producer) => {
-      setAppState((appState) => {
-        producer(onlyThrows(Nodes.selected(appState)));
-      });
-    },
-    [setAppState]
-  );
+  return useSetAppStateCallback((producer) => (appState) => {
+    producer(onlyThrows(Nodes.selected(appState)));
+  });
 }
 
 const LayoutRequestContext = createContext();
