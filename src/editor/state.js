@@ -1,6 +1,6 @@
 import produce from "immer";
 import { useCallback, useContext } from "react";
-import { createContextState, useCombinedContext } from "./contextState";
+import { createContextState, useCombinedContext } from "../react/contextState";
 
 const { state, setter, provider } = createContextState({
   nodes: new Map(),

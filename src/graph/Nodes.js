@@ -1,11 +1,11 @@
 import * as Node from "./Node";
 import * as Edge from "./Edge";
 import * as Edges from "./Edges";
-import * as Iterable from "./Iterable";
-import * as Arrays from "./Arrays";
-import { onlyThrows } from "./Arrays";
-import { invariant } from "./invariant";
-import { doNodesOverlap } from "./react-flow/utils/graph";
+import * as Iterable from "js/Iterable";
+import * as Arrays from "js/Arrays";
+import { onlyThrows } from "js/Arrays";
+import { invariant } from "js/invariant";
+import { doNodesOverlap } from "../react-flow/utils/graph";
 
 export function select(appState, nodes) {
   appState.selectedNodeIDs = idSet(nodes);

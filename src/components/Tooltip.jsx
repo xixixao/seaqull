@@ -1,5 +1,5 @@
 import React from "react";
-import { styled } from "../style";
+import { styled } from "../editor/style";
 import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 
 export function Tooltip({ children, content, ...props }) {

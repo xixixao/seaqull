@@ -2,7 +2,7 @@
  * The user selection rectangle gets displayed when a user drags the mouse while pressing shift
  */
 import React, { memo } from "react";
-import { useAppStateContext } from "../../../state";
+import { useAppStateContext } from "../../../editor/state";
 import { useStoreActions, useStoreState } from "../../store/hooks";
 import { useAddSelectedElements } from "../../store/reducer";
 import { getNodesInside } from "../../utils/graph";

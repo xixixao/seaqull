@@ -1,5 +1,5 @@
-import { invariant } from "./invariant";
-import * as Iterable from "./Iterable";
+import { invariant } from "js/invariant";
+import * as Iterable from "js/Iterable";
 
 export function map(iterable, mapper) {
   return Array.from(Iterable.map(iterable, mapper));

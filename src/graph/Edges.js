@@ -1,8 +1,8 @@
 import * as Edge from "./Edge";
 import * as Node from "./Node";
 import * as Nodes from "./Nodes";
-import * as Arrays from "./Arrays";
-import { only } from "./Arrays";
+import * as Arrays from "js/Arrays";
+import { only } from "js/Arrays";
 
 export function isAncestor(appState, target, source) {
   return children(appState, target).some((childEdge) => {

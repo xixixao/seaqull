@@ -1,5 +1,5 @@
-import * as Sets from "./Sets";
-import * as Arrays from "./Arrays";
+import * as Sets from "js/Sets";
+import * as Arrays from "js/Arrays";
 
 export function empty(filters = "") {
   return { filters };

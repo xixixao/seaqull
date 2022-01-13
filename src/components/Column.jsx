@@ -1,4 +1,4 @@
-import { styled } from "../style";
+import { styled } from "../editor/style";
 
 export const Column = styled("div", {
   display: "flex",

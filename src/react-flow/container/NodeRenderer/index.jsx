@@ -1,9 +1,9 @@
 import React, { memo, useMemo } from "react";
-import { useAppStateContext } from "../../../state";
+import { useAppStateContext } from "../../../editor/state";
 import { useStoreState } from "../../store/hooks";
 import { useUpdateNodeDimensions } from "../../store/reducer";
 import { getNodesInside } from "../../utils/graph";
-import * as Nodes from "../../../Nodes";
+import * as Nodes from "../../../graph/Nodes";
 
 const NodeRenderer = (props) => {
   const transform = useStoreState((state) => state.transform);

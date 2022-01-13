@@ -9,28 +9,32 @@ import React, {
   useRef,
   useState,
 } from "react";
-import * as Arrays from "./Arrays";
-import { first, only, onlyThrows, second } from "./Arrays";
-import { Button } from "./components/Button";
-import { ButtonWithIcon } from "./components/ButtonWithIcon";
-import { Column } from "./components/Column";
-import { IconButton } from "./components/IconButton";
-import { PaneControls } from "./components/PaneControls";
-import { Row } from "./components/Row";
-import { database, tableColumns } from "./database";
-import * as Edge from "./Edge";
-import * as Edges from "./Edges";
-import * as FromNodes from "./FromNodes";
-import * as GroupNodes from "./GroupNodes";
-import { produce } from "./immer";
-import { invariant } from "./invariant";
+import * as Arrays from "js/Arrays";
+import { first, only, onlyThrows, second } from "js/Arrays";
+import { Button } from "../components/Button";
+import { ButtonWithIcon } from "../components/ButtonWithIcon";
+import { Column } from "../components/Column";
+import { IconButton } from "../components/IconButton";
+import { PaneControls } from "../components/PaneControls";
+import { Row } from "../components/Row";
+import { database, tableColumns } from "../sqlite/database";
+import * as Edge from "../graph/Edge";
+import * as Edges from "../graph/Edges";
+import * as FromNodes from "../sqlite/FromNodes";
+import * as GroupNodes from "../sqlite/GroupNodes";
+import { produce } from "js/immer";
+import { invariant } from "js/invariant";
 // import * as NameNodes from "./NameNodes";
-import * as JoinNodes from "./JoinNodes";
-import * as Node from "./Node";
-import * as Nodes from "./Nodes";
-import * as OrderNodes from "./OrderNodes";
-import ReactFlow, { Background, Handle, ReactFlowProvider } from "./react-flow";
-import * as SelectNodes from "./SelectNodes";
+import * as JoinNodes from "../sqlite/JoinNodes";
+import * as Node from "../graph/Node";
+import * as Nodes from "../graph/Nodes";
+import * as OrderNodes from "../sqlite/OrderNodes";
+import ReactFlow, {
+  Background,
+  Handle,
+  ReactFlowProvider,
+} from "../react-flow";
+import * as SelectNodes from "../sqlite/SelectNodes";
 import {
   AppStateContextProvider,
   useAppStateContext,
@@ -38,9 +42,9 @@ import {
   useSetAppStateCallback,
   useSetAppStateContext,
 } from "./state";
-import { SQLITE_FILMS_OF_MOST_POPULAR_FIRST_NAME } from "./statesRepository";
+import { SQLITE_FILMS_OF_MOST_POPULAR_FIRST_NAME } from "../sqlite/statesRepository";
 import { keyframes, styled } from "./style";
-import * as WhereNodes from "./WhereNodes";
+import * as WhereNodes from "../sqlite/WhereNodes";
 
 // import {
 //   DropdownMenu,

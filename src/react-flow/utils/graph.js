@@ -1,5 +1,5 @@
-import * as Arrays from "../../Arrays";
-import * as Nodes from "../../Nodes";
+import * as Arrays from "js/Arrays";
+import * as Nodes from "../../graph/Nodes";
 
 import { clampPosition, clamp } from "../utils";
 export const isEdge = (element) =>

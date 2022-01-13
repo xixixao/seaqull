@@ -1,4 +1,4 @@
-export function objectMap(object, fn) {
+export function map(object, fn) {
   const newObject = {};
   Object.keys(object).forEach((key) => {
     newObject[key] = fn(object[key], key);
@@ -6,7 +6,7 @@ export function objectMap(object, fn) {
   return newObject;
 }
 
-export function objectReduce(object, fn, acc) {
+export function reduce(object, fn, acc) {
   return Object.keys(object).reduce((acc, key) => {
     return fn(acc, object[key], key);
   }, acc);

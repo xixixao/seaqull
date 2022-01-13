@@ -9,13 +9,13 @@ import React, {
   useRef,
 } from "react";
 import { DraggableCore } from "react-draggable";
-import * as Arrays from "../../../Arrays";
-import { first, only } from "../../../Arrays";
-import * as Edge from "../../../Edge";
-import * as Edges from "../../../Edges";
-import * as Node from "../../../Node";
-import * as Nodes from "../../../Nodes";
-import { useSetAppStateContext } from "../../../state";
+import * as Arrays from "js/Arrays";
+import { first, only } from "js/Arrays";
+import * as Edge from "../../../graph/Edge";
+import * as Edges from "../../../graph/Edges";
+import * as Node from "../../../graph/Node";
+import * as Nodes from "../../../graph/Nodes";
+import { useSetAppStateContext } from "../../../editor/state";
 import { useStoreActions, useStoreState } from "../../store/hooks";
 import {
   useAddSelectedElements,
