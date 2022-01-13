@@ -1,33 +1,37 @@
 import initSqlJs from "sql.js";
+import sqlWasmURL from "./sql-wasm.wasm?url";
 
-export const database = (async () => {
-  const [SQL, sql] = await Promise.all([
-    initSqlJs({ locateFile: (file) => `./${file}` }),
-    setupSql(),
-  ]);
-  const db = new SQL.Database();
-  // console.log(sql);
-  db.run(sql);
-  return db;
-})();
-
-export function tableColumns(tableName) {
-  const table = TABLES().find(([name]) => tableName === name);
-  if (table == null) {
-    return [];
-  }
-  const [, columns] = table;
-  return columnDefinitionToNames(columns);
+export function database(tables) {
+  return (async () => {
+    const [SQL, sql] = await Promise.all([
+      initSqlJs({ locateFile: (file) => sqlWasmURL }),
+      setupSql(tables),
+    ]);
+    const db = new SQL.Database();
+    // console.log(sql);
+    db.run(sql);
+    return {
+      db,
+      tableColumns(tableName) {
+        const table = tables.find(([name]) => tableName === name);
+        if (table == null) {
+          return [];
+        }
+        const [, columns] = table;
+        return columnDefinitionToNames(columns);
+      },
+    };
+  })();
 }
 
 function columnDefinitionToNames(definition) {
   return definition.split(",\n").map((column) => column.split(" ")[0]);
 }
 
-async function setupSql() {
+async function setupSql(tables) {
   return (
     await Promise.all(
-      TABLES().map(async (table) => {
+      tables.map(async (table) => {
         const [tableName, columns, dataURL] = table;
         const createSQL = `CREATE TABLE ${tableName} (${columns});`;
         const columnNames = columnDefinitionToNames(columns);
@@ -47,46 +51,6 @@ async function setupSql() {
       })
     )
   ).join("\n");
-}
-
-/// `film` table
-function TABLES() {
-  return [
-    [
-      "film",
-      `film_id integer,
-title VARCHAR(255),
-description text,
-release_year INTEGER,
-language_id smallint,
-rental_duration smallint,
-rental_rate numeric,
-length smallint,
-replacement_cost numeric,
-rating TEXT,
-last_update DATETIME${
-        // special_features text[],
-        // fulltext tsvector
-        ""
-      }`,
-      "./db/film.dat",
-    ],
-    [
-      "actor",
-      `actor_id integer,
-first_name TEXT,
-last_name TEXT,
-last_update DATETIME`,
-      "./db/actor.dat",
-    ],
-    [
-      "casting",
-      `actor_id integer,
-film_id integer,
-last_update DATETIME`,
-      "./db/casting.dat",
-    ],
-  ];
 }
 
 // todo move inside setup

@@ -112,7 +112,7 @@ export function add(graph, node) {
   positions(graph).set(Node.id(node), { x: 0, y: 0 });
 }
 
-function positions(graph) {
+export function positions(graph) {
   return graph.positions;
 }
 

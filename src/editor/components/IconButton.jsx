@@ -1,4 +1,4 @@
-import { styled } from "../editor/style";
+import { styled } from "../style";
 
 export const IconButton = styled("button", {
   // Reset

@@ -1,8 +1,8 @@
-import { styled } from "../editor/style";
+import { styled } from "../style";
 
-export const Column = styled("div", {
+export const Row = styled("div", {
   display: "flex",
-  flexDirection: "column",
+  flexDirection: "row",
   variants: {
     align: {
       start: {

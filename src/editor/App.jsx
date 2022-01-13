@@ -1,4 +1,11 @@
 import { DropdownMenuIcon, PlusIcon } from "@modulz/radix-icons";
+import * as Edges from "graph/Edges";
+import * as Node from "graph/Node";
+import * as Nodes from "graph/Nodes";
+import * as Arrays from "js/Arrays";
+import { first, only, onlyThrows, second } from "js/Arrays";
+import { produce } from "js/immer";
+import { invariant } from "js/invariant";
 import React, {
   createContext,
   memo,
@@ -9,33 +16,24 @@ import React, {
   useRef,
   useState,
 } from "react";
-import * as Arrays from "js/Arrays";
-import { first, only, onlyThrows, second } from "js/Arrays";
-import { Button } from "../components/Button";
-import { ButtonWithIcon } from "../components/ButtonWithIcon";
-import { Column } from "../components/Column";
-import { IconButton } from "../components/IconButton";
-import { PaneControls } from "../components/PaneControls";
-import { Row } from "../components/Row";
-import { database, tableColumns } from "../sqlite/database";
-import * as Layout from "./Layout";
-import * as Edge from "../graph/Edge";
-import * as Edges from "../graph/Edges";
+import { DVD_RENTAL_TABLES } from "../sqlite_examples/dvd_rental/dvd_rental";
+import ReactFlow, { Background, Handle } from "../react-flow";
+import { database } from "../sqlite/database";
 import * as FromNodes from "../sqlite/FromNodes";
 import * as GroupNodes from "../sqlite/GroupNodes";
-import { produce } from "js/immer";
-import { invariant } from "js/invariant";
 // import * as NameNodes from "./NameNodes";
 import * as JoinNodes from "../sqlite/JoinNodes";
-import * as Node from "../graph/Node";
-import * as Nodes from "../graph/Nodes";
 import * as OrderNodes from "../sqlite/OrderNodes";
-import ReactFlow, {
-  Background,
-  Handle,
-  ReactFlowProvider,
-} from "../react-flow";
 import * as SelectNodes from "../sqlite/SelectNodes";
+import { SQLITE_FILMS_OF_MOST_POPULAR_FIRST_NAME } from "../sqlite/statesRepository";
+import * as WhereNodes from "../sqlite/WhereNodes";
+import { Button } from "./components/Button";
+import { ButtonWithIcon } from "./components/ButtonWithIcon";
+import { Column } from "./components/Column";
+import { IconButton } from "./components/IconButton";
+import { PaneControls } from "./components/PaneControls";
+import { Row } from "./components/Row";
+import * as Layout from "./Layout";
 import {
   AppStateContextProvider,
   useAppStateContext,
@@ -43,9 +41,7 @@ import {
   useSetAppStateCallback,
   useSetAppStateContext,
 } from "./state";
-import { SQLITE_FILMS_OF_MOST_POPULAR_FIRST_NAME } from "../sqlite/statesRepository";
 import { keyframes, styled } from "./style";
-import * as WhereNodes from "../sqlite/WhereNodes";
 
 // import {
 //   DropdownMenu,
@@ -62,17 +58,15 @@ import * as WhereNodes from "../sqlite/WhereNodes";
 // ORDER
 // LIMIT
 
+const DATABASE = database(DVD_RENTAL_TABLES);
+
 function App() {
   return (
-    <ReactFlowProvider>
-      <AppStateContextProvider
-        initialState={stateFromSnapshot(
-          SQLITE_FILMS_OF_MOST_POPULAR_FIRST_NAME
-        )}
-      >
-        <Content />
-      </AppStateContextProvider>
-    </ReactFlowProvider>
+    <AppStateContextProvider
+      initialState={stateFromSnapshot(SQLITE_FILMS_OF_MOST_POPULAR_FIRST_NAME)}
+    >
+      <Content />
+    </AppStateContextProvider>
   );
 }
 
@@ -301,7 +295,7 @@ const FromNode = {
     return FromNode.query(appState, node);
   },
   columnNames(appState, node) {
-    return new Set(tableColumns(FromNodes.name(node)));
+    return new Set(DATABASE.tableColumns(FromNodes.name(node)));
   },
   columnControl() {
     return null;
@@ -1181,13 +1175,13 @@ function attachTightNode(type) {
     // const selectedNode = onlyThrows(Nodes.selected(appState));
     attachAndSelectNode(appState, newNode);
     return [Node.id(newNode), layoutTightChild];
-    // Nodes.layout(appState, selectedNode, );
+    // Layout.layoutTightStack(appState, selectedNode, );
   };
 }
 
 function layoutTightChild(appState, node) {
   const parent = Nodes.tightParent(appState, node);
-  Nodes.layout(appState, parent);
+  Layout.layoutTightStack(appState, parent);
 }
 
 function addFromNode(appState) {
@@ -1195,7 +1189,7 @@ function addFromNode(appState) {
   const newNode = Nodes.newNode(appState, { type: "from", data });
   Nodes.add(appState, newNode);
   Nodes.select(appState, [newNode]);
-  return [Node.id(newNode), Nodes.layoutStandalone];
+  return [Node.id(newNode), Layout.layoutStandalone];
 }
 
 function addJoinNode(appState) {
@@ -1213,7 +1207,7 @@ function addJoinNode(appState) {
 }
 
 function layoutChild(appState, node) {
-  Nodes.layoutDetached(appState, Nodes.parents(appState, node), node);
+  Layout.layoutDetached(appState, Nodes.parents(appState, node), node);
 }
 
 function attachAndSelectNode(appState, newNode) {
@@ -1285,7 +1279,7 @@ function ResultsTable() {
       setIsLoading(true);
     }
     const ARTIFICIAL_DELAY = 300;
-    database.then((database) =>
+    DATABASE.then((database) =>
       setTimeout(() => {
         setIsLoading(false);
         if (queries.length > 0) {
@@ -1523,7 +1517,7 @@ function execQuery(db, sql) {
   // console.log(sql);
   let result = null;
   try {
-    result = db.exec(sql + " LIMIT 100");
+    result = db.db.exec(sql + " LIMIT 100");
   } catch (e) {
     return new ResultError(sql, e);
   }

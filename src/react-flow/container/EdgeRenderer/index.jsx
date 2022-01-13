@@ -1,6 +1,6 @@
 import React, { memo, useCallback, useContext } from "react";
-import * as Edges from "../../../graph/Edges";
-import * as Nodes from "../../../graph/Nodes";
+import * as Edges from "graph/Edges";
+import * as Nodes from "graph/Nodes";
 import { AppStateContext, useAppStateContext } from "../../../editor/state";
 import ConnectionLine from "../../components/ConnectionLine/index";
 import { useStoreState } from "../../store/hooks";

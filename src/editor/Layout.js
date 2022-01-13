@@ -1,4 +1,5 @@
 import * as Nodes from "graph/Nodes";
+import * as Node from "graph/Node";
 import * as Arrays from "js/Arrays";
 
 // TODO: `layout` can stay here but the algo should go into a separate module

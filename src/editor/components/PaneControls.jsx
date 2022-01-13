@@ -1,6 +1,6 @@
 import { AllSidesIcon, ZoomInIcon, ZoomOutIcon } from "@modulz/radix-icons";
 import React, { useCallback, useEffect, useState } from "react";
-import useZoomPanHelper from "../react-flow/hooks/useZoomPanHelper";
+import useZoomPanHelper from "../../react-flow/hooks/useZoomPanHelper";
 import { Column } from "./Column";
 import { IconButton } from "./IconButton";
 import { Tooltip } from "./Tooltip";

@@ -11,10 +11,11 @@ import React, {
 import { DraggableCore } from "react-draggable";
 import * as Arrays from "js/Arrays";
 import { first, only } from "js/Arrays";
-import * as Edge from "../../../graph/Edge";
-import * as Edges from "../../../graph/Edges";
-import * as Node from "../../../graph/Node";
-import * as Nodes from "../../../graph/Nodes";
+import * as Edge from "graph/Edge";
+import * as Edges from "graph/Edges";
+import * as Node from "graph/Node";
+import * as Nodes from "graph/Nodes";
+import * as Layout from "../../../editor/Layout";
 import { useSetAppStateContext } from "../../../editor/state";
 import { useStoreActions, useStoreState } from "../../store/hooks";
 import {
@@ -188,7 +189,7 @@ export default function wrapNode(NodeComponent) {
             );
             draggedNodeRoots.forEach((node) => {
               Node.moveBy(appState, node, deltaX, deltaY);
-              Nodes.layout(appState, node);
+              Layout.layoutTightStack(appState, node);
             });
             return;
           }
@@ -210,11 +211,11 @@ export default function wrapNode(NodeComponent) {
                 Edges.tightChildren(appState, lastNode)
               );
               Edges.addTightChildren(appState, parent, children);
-              Nodes.layout(appState, parent);
+              Layout.layoutTightStack(appState, parent);
             }
 
             Node.moveBy(appState, firstNode, deltaX, deltaY);
-            Nodes.layout(appState, firstNode);
+            Layout.layoutTightStack(appState, firstNode);
           });
           const onlyDraggedGroup = only(tightGroups);
           const validPotentialTightParent =
@@ -284,7 +285,7 @@ export default function wrapNode(NodeComponent) {
           const firstNode = first(onlyDraggedGroup);
           Edges.removeAll(appState, Edges.parents(appState, firstNode));
           Edges.addTightChild(appState, validPotentialTightParent, firstNode);
-          Nodes.layout(appState, validPotentialTightParent);
+          Layout.layoutTightStack(appState, validPotentialTightParent);
         });
 
         // updateNodePosDiff({
