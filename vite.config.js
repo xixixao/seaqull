@@ -8,6 +8,7 @@ export default defineConfig({
   resolve: {
     alias: {
       js: path.resolve(__dirname, "./src/js"),
+      graph: path.resolve(__dirname, "./src/graph"),
     },
   },
   plugins: [react(), reactSvgPlugin()],

@@ -4,101 +4,99 @@ import * as Nodes from "./Nodes";
 import * as Arrays from "js/Arrays";
 import { only } from "js/Arrays";
 
-export function isAncestor(appState, target, source) {
-  return children(appState, target).some((childEdge) => {
+export function isAncestor(graph, target, source) {
+  return children(graph, target).some((childEdge) => {
     const id = Edge.childID(childEdge);
-    return (
-      Node.hasID(source, id) || isAncestor(appState, Node.fake(id), source)
-    );
+    return Node.hasID(source, id) || isAncestor(graph, Node.fake(id), source);
   });
 }
 
-export function children(appState, node) {
-  return Arrays.filter(edges(appState), (edge) =>
+export function children(graph, node) {
+  return Arrays.filter(edges(graph), (edge) =>
     Node.hasID(node, Edge.parentID(edge))
   );
 }
 
-export function parents(appState, node) {
-  return Arrays.filter(edges(appState), (edge) =>
+export function parents(graph, node) {
+  return Arrays.filter(edges(graph), (edge) =>
     Node.hasID(node, Edge.childID(edge))
   );
 }
 
-export function parentNode(appState, edge) {
-  return Nodes.nodeWithID(appState, Edge.parentID(edge));
+export function parentNode(graph, edge) {
+  return Nodes.nodeWithID(graph, Edge.parentID(edge));
 }
 
-export function childNode(appState, edge) {
-  return Nodes.nodeWithID(appState, Edge.childID(edge));
+export function childNode(graph, edge) {
+  return Nodes.nodeWithID(graph, Edge.childID(edge));
 }
 
-export function tightParent(appState, node) {
-  const parent = only(parents(appState, node));
+export function tightParent(graph, node) {
+  const parent = only(parents(graph, node));
   return parent != null && Edge.isTight(parent) ? parent : null;
 }
 
-export function tightChildren(appState, node) {
-  return children(appState, node).filter(Edge.isTight);
+export function tightChildren(graph, node) {
+  return children(graph, node).filter(Edge.isTight);
 }
 
-export function detachedChildren(appState, node) {
-  return children(appState, node).filter((edge) => !Edge.isTight(edge));
+export function detachedChildren(graph, node) {
+  return children(graph, node).filter((edge) => !Edge.isTight(edge));
 }
 
-export function detachedParents(appState, node) {
-  return parents(appState, node).filter((edge) => !Edge.isTight(edge));
+export function detachedParents(graph, node) {
+  return parents(graph, node).filter((edge) => !Edge.isTight(edge));
 }
 
-export function of(appState, node) {
+export function of(graph, node) {
   return Arrays.filter(
-    edges(appState),
+    edges(graph),
     (edge) =>
       Node.hasID(node, Edge.childID(edge)) ||
       Node.hasID(node, Edge.parentID(edge))
   );
 }
 
-export function edges(appState) {
-  return appState.edges;
+export function edges(graph) {
+  return graph.edges;
 }
 
-export function removeAll(appState, edges) {
+export function removeAll(graph, edges) {
   edges.forEach((edge) => {
-    remove(appState, edge);
+    remove(graph, edge);
   });
 }
 
-export function remove(appState, edge) {
-  return edges(appState).delete(Edge.id(edge));
+export function remove(graph, edge) {
+  return edges(graph).delete(Edge.id(edge));
 }
 
-export function addChildren(appState, parent, children) {
+export function addChildren(graph, parent, children) {
   children.forEach((child) => {
-    addChild(appState, parent, child);
+    addChild(graph, parent, child);
   });
 }
 
-export function addChild(appState, parent, child) {
-  add(appState, Edge.newEdge(parent, child));
+export function addChild(graph, parent, child) {
+  add(graph, Edge.newEdge(parent, child));
 }
 
-export function addTightChildren(appState, parent, children) {
+export function addTightChildren(graph, parent, children) {
   children.forEach((child) => {
-    addTightChild(appState, parent, child);
+    addTightChild(graph, parent, child);
   });
 }
 
-export function addTightChild(appState, parent, child) {
-  add(appState, Edge.newTightEdge(parent, child));
+export function addTightChild(graph, parent, child) {
+  add(graph, Edge.newTightEdge(parent, child));
 }
 
-// export function addAll(appState, added) {
+// export function addAll(graph, added) {
 //   added.forEach((edge) => {
-//     add(appState, edge);
+//     add(graph, edge);
 //   });
 // }
 
-export function add(appState, edge) {
-  edges(appState).set(Edge.id(edge), edge);
+export function add(graph, edge) {
+  edges(graph).set(Edge.id(edge), edge);
 }

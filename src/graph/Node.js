@@ -18,26 +18,26 @@ export function fake(id) {
   return { id };
 }
 
-export function x(appState, node) {
-  return position(appState, node).x;
+export function x(graph, node) {
+  return position(graph, node).x;
 }
 
-export function y(appState, node) {
-  return position(appState, node).y;
+export function y(graph, node) {
+  return position(graph, node).y;
 }
 
-export function move(appState, node, x, y) {
-  position(appState, node).x = x;
-  position(appState, node).y = y;
+export function move(graph, node, x, y) {
+  position(graph, node).x = x;
+  position(graph, node).y = y;
 }
 
-function position(appState, node) {
-  return appState.positions.get(node.id);
+function position(graph, node) {
+  return graph.positions.get(node.id);
 }
 
-export function moveBy(appState, node, x, y) {
-  position(appState, node).x += x;
-  position(appState, node).y += y;
+export function moveBy(graph, node, x, y) {
+  position(graph, node).x += x;
+  position(graph, node).y += y;
 }
 
 export function label(node, label) {

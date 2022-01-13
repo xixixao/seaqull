@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "js/*": ["./src/js/*"],
+      "graph/*": ["./src/graph/*"]
+    }
+  },
+  "exclude": ["node_modules"]
+}

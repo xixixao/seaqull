@@ -18,6 +18,7 @@ import { IconButton } from "../components/IconButton";
 import { PaneControls } from "../components/PaneControls";
 import { Row } from "../components/Row";
 import { database, tableColumns } from "../sqlite/database";
+import * as Layout from "./Layout";
 import * as Edge from "../graph/Edge";
 import * as Edges from "../graph/Edges";
 import * as FromNodes from "../sqlite/FromNodes";
@@ -210,7 +211,7 @@ function NodesPane() {
                   Nodes.remove(appState, node);
                   if (tightParent != null) {
                     Edges.addTightChildren(appState, tightParent, children);
-                    Nodes.layout(appState, tightParent);
+                    Layout.layoutTightStack(appState, tightParent);
                   }
                 });
 

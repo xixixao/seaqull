@@ -7,143 +7,140 @@ import { onlyThrows } from "js/Arrays";
 import { invariant } from "js/invariant";
 import { doNodesOverlap } from "../react-flow/utils/graph";
 
-export function select(appState, nodes) {
-  appState.selectedNodeIDs = idSet(nodes);
+export function select(graph, nodes) {
+  graph.selectedNodeIDs = idSet(nodes);
 }
 
-export function alsoSelect(appState, nodes) {
-  select(
-    appState,
-    Arrays.map(appState.selectedNodeIDs, Node.fake).concat(nodes)
-  );
+export function alsoSelect(graph, nodes) {
+  select(graph, Arrays.map(graph.selectedNodeIDs, Node.fake).concat(nodes));
 }
 
-export function countSelected(appState) {
-  return appState.selectedNodeIDs.size;
+export function countSelected(graph) {
+  return graph.selectedNodeIDs.size;
 }
 
-export function isSelecting(appState) {
-  return appState.selectedNodeIDs.size > 0;
+export function isSelecting(graph) {
+  return graph.selectedNodeIDs.size > 0;
 }
 
-export function selected(appState) {
-  return nodesWithID(appState, appState.selectedNodeIDs);
+export function selected(graph) {
+  return nodesWithID(graph, graph.selectedNodeIDs);
 }
 
-export function hasSelected(appState, node) {
-  return appState.selectedNodeIDs.has(Node.id(node));
+export function hasSelected(graph, node) {
+  return graph.selectedNodeIDs.has(Node.id(node));
 }
 
-export function nodesWithID(appState, ids) {
-  return Arrays.map(ids, (id) => nodeWithID(appState, id));
+export function nodesWithID(graph, ids) {
+  return Arrays.map(ids, (id) => nodeWithID(graph, id));
 }
 
-export function nodeWithID(appState, id) {
-  return nodes(appState).get(id);
+export function nodeWithID(graph, id) {
+  return nodes(graph).get(id);
 }
 
-export function current(appState, node) {
-  return nodeWithID(appState, Node.id(node));
+export function current(graph, node) {
+  return nodeWithID(graph, Node.id(node));
 }
 
-export function positionWithID(appState, id) {
-  return positions(appState).get(id);
+export function positionWithID(graph, id) {
+  return positions(graph).get(id);
 }
 
-export function positionOf(appState, node) {
-  return positions(appState).get(Node.id(node));
+export function positionOf(graph, node) {
+  return positions(graph).get(Node.id(node));
 }
 
-export function nodes(appState) {
-  return appState.nodes;
+export function nodes(graph) {
+  return graph.nodes;
 }
 
-export function newNode(appState, nodeData) {
+export function newNode(graph, nodeData) {
   return {
-    id: newNodeID(appState),
+    id: newNodeID(graph),
     data: {},
     ...nodeData,
   };
 }
 
-export function children(appState, node) {
+export function children(graph, node) {
   return nodesWithID(
-    appState,
-    Edges.children(appState, node).map((edge) => Edge.childID(edge))
+    graph,
+    Edges.children(graph, node).map((edge) => Edge.childID(edge))
   );
 }
 
-export function parents(appState, node) {
+export function parents(graph, node) {
   return nodesWithID(
-    appState,
-    Edges.parents(appState, node).map((edge) => Edge.parentID(edge))
+    graph,
+    Edges.parents(graph, node).map((edge) => Edge.parentID(edge))
   );
 }
 
-export function tightChildren(appState, node) {
-  return Edges.tightChildren(appState, node).map((edge) =>
-    Edges.childNode(appState, edge)
+export function tightChildren(graph, node) {
+  return Edges.tightChildren(graph, node).map((edge) =>
+    Edges.childNode(graph, edge)
   );
 }
 
-export function parentX(appState, node) {
-  return onlyThrows(parents(appState, node));
+export function parentX(graph, node) {
+  return onlyThrows(parents(graph, node));
 }
 
-export function hasParents(appState, node) {
-  return Edges.parents(appState, node).length > 0;
+export function hasParents(graph, node) {
+  return Edges.parents(graph, node).length > 0;
 }
 
-export function hasDetachedParents(appState, node) {
-  return Edges.detachedParents(appState, node).length > 0;
+export function hasDetachedParents(graph, node) {
+  return Edges.detachedParents(graph, node).length > 0;
 }
 
-export function hasChildren(appState, node) {
-  return Edges.children(appState, node).length > 0;
+export function hasChildren(graph, node) {
+  return Edges.children(graph, node).length > 0;
 }
 
-export function hasTightChildren(appState, node) {
-  return Edges.tightChildren(appState, node).length > 0;
+export function hasTightChildren(graph, node) {
+  return Edges.tightChildren(graph, node).length > 0;
 }
 
-export function hasDetachedChildren(appState, node) {
-  return Edges.detachedChildren(appState, node).length > 0;
+export function hasDetachedChildren(graph, node) {
+  return Edges.detachedChildren(graph, node).length > 0;
 }
 
-export function add(appState, node) {
-  nodes(appState).set(Node.id(node), node);
-  positions(appState).set(Node.id(node), { x: 0, y: 0 });
+export function add(graph, node) {
+  nodes(graph).set(Node.id(node), node);
+  positions(graph).set(Node.id(node), { x: 0, y: 0 });
 }
 
-function positions(appState) {
-  return appState.positions;
+function positions(graph) {
+  return graph.positions;
 }
 
-// export function replace(appState, old, node) {
-//   nodes(appState).set(Node.id(old), node);
+// export function replace(graph, old, node) {
+//   nodes(graph).set(Node.id(old), node);
 // }
 
-export function remove(appState, node) {
-  nodes(appState).delete(Node.id(node));
-  positions(appState).delete(Node.id(node));
-  Edges.removeAll(appState, Edges.of(appState, node));
+export function remove(graph, node) {
+  nodes(graph).delete(Node.id(node));
+  positions(graph).delete(Node.id(node));
+  Edges.removeAll(graph, Edges.of(graph, node));
 }
 
-export function tightParent(appState, node) {
-  const edge = Edges.tightParent(appState, node);
-  return edge != null ? Edges.parentNode(appState, edge) : null;
+export function tightParent(graph, node) {
+  const edge = Edges.tightParent(graph, node);
+  return edge != null ? Edges.parentNode(graph, edge) : null;
 }
 
-export function tightChild(appState, node) {
-  const edge = Arrays.only(Edges.tightChildren(appState, node));
-  return edge != null ? Edges.childNode(appState, edge) : null;
+export function tightChild(graph, node) {
+  const edge = Arrays.only(Edges.tightChildren(graph, node));
+  return edge != null ? Edges.childNode(graph, edge) : null;
 }
 
-export function tightStack(appState, node) {
+export function tightStack(graph, node) {
   const stack = [node];
   let last = node;
   while (last != null) {
-    const child = tightChild(appState, last);
+    const child = tightChild(graph, last);
     if (child != null) {
       stack.push(child);
     }
@@ -152,22 +149,22 @@ export function tightStack(appState, node) {
   return stack;
 }
 
-export function sortTight(appState, nodes) {
+export function sortTight(graph, nodes) {
   const set = idSet(nodes);
-  const root = tightRoot(appState, nodes[0]);
-  return tightStack(appState, root).filter((node) => set.has(Node.id(node)));
+  const root = tightRoot(graph, nodes[0]);
+  return tightStack(graph, root).filter((node) => set.has(Node.id(node)));
 }
 
-export function tightRoot(appState, node) {
-  const parent = tightParent(appState, node);
+export function tightRoot(graph, node) {
+  const parent = tightParent(graph, node);
   if (parent == null) {
     return node;
   }
-  return tightRoot(appState, parent);
+  return tightRoot(graph, parent);
 }
 
-export function haveSameTightRoot(appState, a, b) {
-  return Node.is(tightRoot(appState, a), tightRoot(appState, b));
+export function haveSameTightRoot(graph, a, b) {
+  return Node.is(tightRoot(graph, a), tightRoot(graph, b));
 }
 
 export function idSet(nodes) {
@@ -189,29 +186,29 @@ export function groupBy(nodes, groupper) {
   return Array.from(grouped.values());
 }
 
-export function overlappingLeafs(appState, targetNode) {
-  const targetPosition = positionOf(appState, targetNode);
-  return tightLeafs(appState).filter((node) => {
-    const position = positionOf(appState, node);
+export function overlappingLeafs(graph, targetNode) {
+  const targetPosition = positionOf(graph, targetNode);
+  return tightLeafs(graph).filter((node) => {
+    const position = positionOf(graph, node);
     return (
       !Node.is(targetNode, node) &&
       doNodesOverlap(position, targetPosition, 20) &&
-      !Edges.isAncestor(appState, targetNode, node)
+      !Edges.isAncestor(graph, targetNode, node)
     );
   });
 }
 
-function tightLeafs(appState) {
+export function tightLeafs(graph) {
   return Arrays.filter(
-    nodes(appState),
-    (node) => Edges.tightChildren(appState, node).length === 0
+    nodes(graph),
+    (node) => Edges.tightChildren(graph, node).length === 0
   );
 }
 
-// function overlapping(appState, targetNode) {
-//   const targetPosition = positionOf(appState, targetNode);
-//   return Arrays.filter(nodes(appState), (node) => {
-//     const position = positionOf(appState, node);
+// function overlapping(graph, targetNode) {
+//   const targetPosition = positionOf(graph, targetNode);
+//   return Arrays.filter(nodes(graph), (node) => {
+//     const position = positionOf(graph, node);
 //     return (
 //       !Node.is(node, targetNode) && doNodesOverlap(position, targetPosition, 20)
 //     );
@@ -220,9 +217,9 @@ function tightLeafs(appState) {
 
 const GENERATED_NAMES = "abcdefghijklmnopqrstuvwxyz".split("");
 
-export function ensureLabel(appState, node) {
+export function ensureLabel(graph, node) {
   if (Node.label(node) == null || Node.label(node) === "") {
-    const usedNames = new Set(Iterable.map(nodes(appState), Node.label));
+    const usedNames = new Set(Iterable.map(nodes(graph), Node.label));
     const generatedName = GENERATED_NAMES.filter(
       (name) => !usedNames.has(name)
     )[0];
@@ -231,53 +228,8 @@ export function ensureLabel(appState, node) {
   }
 }
 
-function newNodeID(appState) {
+function newNodeID(graph) {
   return String(
-    Math.max(...Arrays.map(nodes(appState), (node) => Node.intID(node))) + 1
+    Math.max(...Arrays.map(nodes(graph), (node) => Node.intID(node))) + 1
   );
-}
-
-// TODO: `layout` can stay here but the algo should go into a separate module
-export function layout(appState, node) {
-  const { height } = positionOf(appState, node);
-
-  tightChildren(appState, node).forEach((child) => {
-    Node.move(
-      appState,
-      child,
-      Node.x(appState, node),
-      Node.y(appState, node) + height
-    );
-    layout(appState, child);
-  });
-}
-
-// TODO: `layout` can stay here but the algo should go into a separate module
-export function layoutStandalone(appState, node) {
-  const INIT_Y = 30;
-  const NODE_HORIZONTAL_OFFSET = 30;
-
-  const maxX = Math.max(
-    ...Arrays.map(positions(appState), ({ x, width }) => x + width)
-  );
-
-  Node.move(appState, node, maxX + NODE_HORIZONTAL_OFFSET, INIT_Y);
-}
-
-// TODO: `layout` can stay here but the algo should go into a separate module
-export function layoutDetached(appState, parents, node) {
-  const NODE_HORIZONTAL_OFFSET = 30;
-
-  const maxX = Math.max(
-    ...parents
-      .map((parent) => positionOf(appState, parent))
-      .map(({ x, width }) => x + width)
-  );
-  const maxY = Math.max(
-    ...parents
-      .map((parent) => positionOf(appState, parent))
-      .map(({ y, height }) => y + height)
-  );
-
-  Node.move(appState, node, maxX + NODE_HORIZONTAL_OFFSET, maxY);
 }
