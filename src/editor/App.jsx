@@ -1,5 +1,6 @@
 import { DropdownMenuIcon, PlusIcon } from "@modulz/radix-icons";
 import * as Edges from "graph/Edges";
+import * as Objects from "js/Objects";
 import * as Node from "graph/Node";
 import * as Nodes from "graph/Nodes";
 import * as Arrays from "js/Arrays";
@@ -27,12 +28,12 @@ import * as OrderNodes from "../sqlite/OrderNodes";
 import * as SelectNodes from "../sqlite/SelectNodes";
 import { SQLITE_FILMS_OF_MOST_POPULAR_FIRST_NAME } from "../sqlite/statesRepository";
 import * as WhereNodes from "../sqlite/WhereNodes";
-import { Button } from "./components/Button";
-import { ButtonWithIcon } from "./components/ButtonWithIcon";
-import { Column } from "./components/Column";
-import { IconButton } from "./components/IconButton";
-import { PaneControls } from "./components/PaneControls";
-import { Row } from "./components/Row";
+import { Button } from "./ui/Button";
+import { ButtonWithIcon } from "./ui/ButtonWithIcon";
+import { Column } from "./ui/Column";
+import { IconButton } from "./ui/IconButton";
+import { PaneControls } from "./ui/PaneControls";
+import { Row } from "./ui/Row";
 import * as Layout from "./Layout";
 import {
   AppStateContextProvider,
@@ -1536,17 +1537,9 @@ const NODE_TYPES = {
   group: GroupNode,
   order: OrderNode,
 };
-const NODE_COMPONENTS = objectMap(NODE_TYPES, (type) => type.Component);
+const NODE_COMPONENTS = Objects.map(NODE_TYPES, (type) => type.Component);
 const EDGE_COMPONENTS = {
   tight: TightEdge,
 };
-
-function objectMap(object, fn) {
-  const newObject = {};
-  Object.keys(object).forEach((key) => {
-    newObject[key] = fn(object[key], key);
-  });
-  return newObject;
-}
 
 export default App;

@@ -3,7 +3,12 @@ import { useStore, useStoreActions } from "../store/hooks";
 import useKeyPress from "./useKeyPress";
 import { isNode, getConnectedEdges } from "../utils/graph";
 import { useResetSelectedElements } from "../store/reducer";
-export default ({ deleteKeyCode, multiSelectionKeyCode, onElementsRemove }) => {
+
+export default function useGlobalKeyHandler({
+  deleteKeyCode,
+  multiSelectionKeyCode,
+  onElementsRemove,
+}) {
   const store = useStore();
   const unsetNodesSelection = useStoreActions(
     (actions) => actions.unsetNodesSelection
@@ -31,4 +36,4 @@ export default ({ deleteKeyCode, multiSelectionKeyCode, onElementsRemove }) => {
   useEffect(() => {
     setMultiSelectionActive(multiSelectionKeyPressed);
   }, [multiSelectionKeyPressed]);
-};
+}
