@@ -1,7 +1,7 @@
 import React, { memo, useCallback, useState, useMemo } from "react";
 import cc from "classcat";
 import { useStoreActions, useStoreState } from "../../store/hooks";
-import { onMouseDown } from "../../components/Handle/handler";
+import { onMouseDown } from "../Handle/handler";
 import { EdgeAnchor } from "./EdgeAnchor";
 export default (EdgeComponent) => {
   const EdgeWrapper = ({

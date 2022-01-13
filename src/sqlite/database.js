@@ -2,26 +2,26 @@ import initSqlJs from "sql.js";
 import sqlWasmURL from "./sql-wasm.wasm?url";
 
 export function database(tables) {
-  return (async () => {
-    const [SQL, sql] = await Promise.all([
-      initSqlJs({ locateFile: (file) => sqlWasmURL }),
-      setupSql(tables),
-    ]);
-    const db = new SQL.Database();
-    // console.log(sql);
-    db.run(sql);
-    return {
-      db,
-      tableColumns(tableName) {
-        const table = tables.find(([name]) => tableName === name);
-        if (table == null) {
-          return [];
-        }
-        const [, columns] = table;
-        return columnDefinitionToNames(columns);
-      },
-    };
-  })();
+  return {
+    db: (async () => {
+      const [SQL, sql] = await Promise.all([
+        initSqlJs({ locateFile: (file) => sqlWasmURL }),
+        setupSql(tables),
+      ]);
+      const db = new SQL.Database();
+      // console.log(sql);
+      db.run(sql);
+      return db;
+    })(),
+    tableColumns(tableName) {
+      const table = tables.find(([name]) => tableName === name);
+      if (table == null) {
+        return [];
+      }
+      const [, columns] = table;
+      return columnDefinitionToNames(columns);
+    },
+  };
 }
 
 function columnDefinitionToNames(definition) {

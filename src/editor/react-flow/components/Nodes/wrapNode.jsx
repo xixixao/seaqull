@@ -15,8 +15,8 @@ import * as Edge from "graph/Edge";
 import * as Edges from "graph/Edges";
 import * as Node from "graph/Node";
 import * as Nodes from "graph/Nodes";
-import * as Layout from "../../../editor/Layout";
-import { useSetAppStateContext } from "../../../editor/state";
+import * as Layout from "../../../Layout";
+import { useSetAppStateContext } from "../../../state";
 import { useStoreActions, useStoreState } from "../../store/hooks";
 import {
   useAddSelectedElements,

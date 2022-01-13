@@ -1,5 +1,5 @@
 import React, { memo } from "react";
-import Handle from "../../components/Handle";
+import Handle from "../Handle";
 import { Position } from "../../types";
 const OutputNode = ({ data, isConnectable, targetPosition = Position.Top }) => (
   <>

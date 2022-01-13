@@ -1,6 +1,8 @@
-import produce from "immer";
+import { produce } from "js/immer";
+import { onlyThrows } from "js/Arrays";
 import { useCallback, useContext } from "react";
 import { createContextState, useCombinedContext } from "../react/contextState";
+import * as Nodes from "graph/Nodes";
 
 const { state, setter, provider } = createContextState({
   nodes: new Map(),
@@ -8,6 +10,7 @@ const { state, setter, provider } = createContextState({
   selectedNodeIDs: new Set(),
   highlightedNodeIDs: new Set(),
   edges: new Map(),
+  editorConfig: null,
 });
 
 export const AppStateContextProvider = provider;
@@ -44,4 +47,10 @@ const { positions, ...DataContext } = AppStateContext;
 
 export function useAppStateDataContext() {
   return useCombinedContext(DataContext);
+}
+
+export function useSetSelectedNodeState() {
+  return useSetAppStateCallback((producer) => (appState) => {
+    producer(onlyThrows(Nodes.selected(appState)));
+  });
 }

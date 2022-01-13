@@ -1,18 +1,12 @@
 import React, { memo } from "react";
-import Handle from "../../components/Handle";
+import Handle from "../Handle";
 import { Position } from "../../types";
-const DefaultNode = ({
+const InputNode = ({
   data,
   isConnectable,
-  targetPosition = Position.Top,
   sourcePosition = Position.Bottom,
 }) => (
   <>
-    <Handle
-      type="target"
-      position={targetPosition}
-      isConnectable={isConnectable}
-    />
     {data.label}
     <Handle
       type="source"
@@ -21,5 +15,5 @@ const DefaultNode = ({
     />
   </>
 );
-DefaultNode.displayName = "DefaultNode";
-export default memo(DefaultNode);
+InputNode.displayName = "InputNode";
+export default memo(InputNode);

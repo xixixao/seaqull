@@ -5,7 +5,7 @@ import * as Iterable from "js/Iterable";
 import * as Arrays from "js/Arrays";
 import { onlyThrows } from "js/Arrays";
 import { invariant } from "js/invariant";
-import { doNodesOverlap } from "../react-flow/utils/graph";
+import { doNodesOverlap } from "../editor/react-flow/utils/graph";
 
 export function select(graph, nodes) {
   graph.selectedNodeIDs = idSet(nodes);

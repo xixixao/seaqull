@@ -1,5 +1,5 @@
 import * as Nodes from "graph/Nodes";
-import { useSetAppStateCallback } from "../../editor/state";
+import { useSetAppStateCallback } from "../../state";
 import { getHandleBounds } from "../components/Nodes/utils";
 import { clampPosition, getDimensions } from "../utils";
 import * as constants from "./contants";

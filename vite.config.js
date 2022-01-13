@@ -9,6 +9,7 @@ export default defineConfig({
     alias: {
       js: path.resolve(__dirname, "./src/js"),
       graph: path.resolve(__dirname, "./src/graph"),
+      editor: path.resolve(__dirname, "./src/editor"),
     },
   },
   plugins: [react(), reactSvgPlugin()],

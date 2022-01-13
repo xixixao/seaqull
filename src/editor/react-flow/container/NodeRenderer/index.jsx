@@ -1,5 +1,5 @@
 import React, { memo, useMemo } from "react";
-import { useAppStateContext } from "../../../editor/state";
+import { useAppStateContext } from "../../../state";
 import { useStoreState } from "../../store/hooks";
 import { useUpdateNodeDimensions } from "../../store/reducer";
 import { getNodesInside } from "../../utils/graph";

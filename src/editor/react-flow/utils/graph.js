@@ -1,7 +1,7 @@
 import * as Arrays from "js/Arrays";
 import * as Nodes from "graph/Nodes";
 
-import { clampPosition, clamp } from "../utils";
+import { clampPosition, clamp } from ".";
 export const isEdge = (element) =>
   "id" in element && "source" in element && "target" in element;
 export const isNode = (element) =>

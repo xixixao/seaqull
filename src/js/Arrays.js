@@ -9,6 +9,10 @@ export function filter(iterable, cond) {
   return Array.from(Iterable.filter(iterable, cond));
 }
 
+export function subtractSets(a, b) {
+  return filter(a, (item) => !b.has(item));
+}
+
 export function first(array) {
   return array[0];
 }
