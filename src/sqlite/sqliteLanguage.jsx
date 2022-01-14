@@ -16,6 +16,7 @@ import {
   NODE_CONFIGS,
 } from "./sqliteNodes";
 import { AddFromNodeButton } from "./ui/SqliteNodeUI";
+import { format as formatSQL } from "sql-formatter";
 
 export default function sqliteLanguage(tables, initialStateSnapshot) {
   const DATABASE = database(tables);
@@ -59,7 +60,6 @@ function ResultsTable({ db }) {
     }
     const oneShown = only(selected) ?? previous;
     const isEditing = selected.length === 1;
-    console.log(oneShown, selected);
     const queries = (isSelecting ? selected : [oneShown])
       .map((node) =>
         (isEditing ? getQuery : getQuerySelectable)(appState, node)
@@ -138,8 +138,8 @@ const ResultsTableLoaded = memo(function ResultsTableLoaded({
       <Column
         css={{ background: "$amber3", padding: "$12", borderRadius: "$4" }}
       >
-        <div>No results</div>
-        <div>{tables[0].sql}</div>
+        <div>No results from:</div>
+        <pre>{tables[0].sql}</pre>
       </Column>
     );
   }
@@ -147,8 +147,8 @@ const ResultsTableLoaded = memo(function ResultsTableLoaded({
   if (brokenTable != null) {
     return (
       <Column css={{ background: "$red3", padding: "$12", borderRadius: "$4" }}>
-        <div>{brokenTable.sql}</div>
-        <div>{brokenTable.error.toString()}</div>
+        <div>{brokenTable.error.toString()} in:</div>
+        <pre>{brokenTable.sql}</pre>
       </Column>
     );
   }
@@ -239,10 +239,10 @@ function execQuery(db, sql) {
   try {
     result = db.exec(sql + " LIMIT 100");
   } catch (e) {
-    return new ResultError(sql, e);
+    return new ResultError(formatSQL(sql), e);
   }
   if (result.length === 0) {
-    return new NoResultsError(sql);
+    return new NoResultsError(formatSQL(sql));
   }
   return result[0];
 }

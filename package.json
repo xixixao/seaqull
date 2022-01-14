@@ -20,6 +20,7 @@
     "react-draggable": "^4.4.4",
     "react-redux": "^7.2.6",
     "redux": "^4.1.2",
+    "sql-formatter": "^4.0.2",
     "sql.js": "^1.6.2",
     "use-immer": "^0.6.0"
   },

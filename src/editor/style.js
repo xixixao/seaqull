@@ -425,4 +425,7 @@ globalCss({
     padding: "0 4px",
     whiteSpace: "nowrap",
   },
+  "tbody tr": {
+    borderBottom: "1px solid $slate3",
+  },
 })();
