@@ -247,7 +247,9 @@ function selectedColumnExpressionsAliased(node, parentsColumnNames) {
           columnNames,
           (column) =>
             `${prefixed(parentIndex, column)}${
-              otherParentColumns[otherParent(parentIndex)].has(column)
+              (otherParentColumns[otherParent(parentIndex)] ?? new Set()).has(
+                column
+              )
                 ? ` as ${alias(parentIndex, column)}`
                 : ""
             }`
@@ -272,7 +274,9 @@ function selectedColumnNames(node, parentsColumnNames) {
       .concat(
         ...otherParentColumns.map((columnNames, parentIndex) =>
           Arrays.map(columnNames, (column) =>
-            otherParentColumns[otherParent(parentIndex)].has(column)
+            (otherParentColumns[otherParent(parentIndex)] ?? new Set()).has(
+              column
+            )
               ? alias(parentIndex, column)
               : column
           )
