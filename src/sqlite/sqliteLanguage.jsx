@@ -17,6 +17,8 @@ import {
 } from "./sqliteNodes";
 import { AddFromNodeButton } from "./ui/SqliteNodeUI";
 import { format as formatSQL } from "sql-formatter";
+import { Button } from "editor/ui/Button";
+import { Row } from "editor/ui/Row";
 
 export default function sqliteLanguage(tables, initialStateSnapshot) {
   const DATABASE = database(tables);
@@ -46,7 +48,7 @@ function idMap(array) {
 
 function ResultsTable({ db }) {
   const appState = useAppStateDataContext();
-  const [tableState, setTableState] = useState(null);
+  const [resultsState, setResultsState] = useState(null);
   const [lastShownNode, setLastShownNode] = useState(null);
   const [updated, setUpdated] = useState();
   const [isLoading, setIsLoading] = useState(false);
@@ -55,7 +57,7 @@ function ResultsTable({ db }) {
     const isSelecting = selected.length > 0;
     const previous = lastShownNode && Nodes.current(appState, lastShownNode);
     if (previous == null && !isSelecting) {
-      setTableState(null);
+      setResultsState(null);
       return;
     }
     const oneShown = only(selected) ?? previous;
@@ -78,7 +80,8 @@ function ResultsTable({ db }) {
       setTimeout(() => {
         setIsLoading(false);
         if (queries.length > 0) {
-          setTableState({
+          setResultsState({
+            queries,
             tables: queries.map((query) => execQuery(database, query)),
             appState: appState,
           });
@@ -96,22 +99,50 @@ function ResultsTable({ db }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [appState]);
 
-  if (isLoading && tableState == null) {
+  if (isLoading && resultsState == null) {
     return <div style={{ padding: 12 }}>Loading...</div>;
-  } else if (tableState == null) {
+  } else if (resultsState == null) {
     return null;
   }
   return (
-    <Box
-      css={{
-        display: "inline-flex",
-        border: "1px solid transparent",
-        animation: updated ? `${borderBlink} 1s ease-out` : null,
-      }}
-    >
-      <ResultsTableLoaded state={tableState} />
-    </Box>
+    <Column>
+      <ResultsDisplay updated={updated} state={resultsState} />
+    </Column>
   );
+}
+
+function ResultsDisplay({ updated, state }) {
+  const [view, setView] = useState("table");
+  return (
+    <>
+      <Row css={{ paddingTop: "$4" }} justify="end">
+        <Button
+          onClick={() => {
+            setView(view === "table" ? "sql" : "table");
+          }}
+        >
+          {view === "table" ? "SQL" : "Results"}
+        </Button>
+      </Row>
+      <Box
+        css={{
+          display: "inline-flex",
+          border: "1px solid transparent",
+          animation: updated ? `${borderBlink} 1s ease-out` : null,
+        }}
+      >
+        {view === "table" ? (
+          <ResultsTableLoaded state={state} />
+        ) : (
+          <SQL state={state} />
+        )}
+      </Box>
+    </>
+  );
+}
+
+function SQL({ state }) {
+  return <pre>{formatSQL(state.queries[0] ?? "")}</pre>;
 }
 
 const borderBlink = keyframes({
