@@ -2,6 +2,9 @@ import initSqlJs from "sql.js";
 import sqlWasmURL from "./sql-wasm.wasm?url";
 
 export function database(tables) {
+  function table(tableName) {
+    return tables.find(([name]) => tableName === name);
+  }
   return {
     db: (async () => {
       const [SQL, sql] = await Promise.all([
@@ -13,12 +16,13 @@ export function database(tables) {
       db.run(sql);
       return db;
     })(),
+    table,
     tableColumns(tableName) {
-      const table = tables.find(([name]) => tableName === name);
-      if (table == null) {
+      const maybeTable = table(tableName);
+      if (maybeTable == null) {
         return [];
       }
-      const [, columns] = table;
+      const [, columns] = maybeTable;
       return columnDefinitionToNames(columns);
     },
   };

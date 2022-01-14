@@ -38,9 +38,15 @@ function OrderNode(node) {
 export const OrderNodeConfig = {
   name: "OrderNode",
   Component: OrderNode,
+  hasProblem(appState, node) {
+    return false; // TODO
+  },
   emptyNodeData: empty,
   query(appState, node) {
     const sourceNode = only(Nodes.parents(appState, node));
+    if (sourceNode == null) {
+      return null;
+    }
     const fromQuery = getQuerySelectable(appState, sourceNode);
     if (!hasOrdered(node)) {
       return fromQuery;
@@ -55,7 +61,11 @@ export const OrderNodeConfig = {
     return OrderNodeConfig.query(appState, node);
   },
   columnNames(appState, node) {
-    return getColumnNames(appState, only(Nodes.parents(appState, node)));
+    const sourceNode = only(Nodes.parents(appState, node));
+    if (sourceNode == null) {
+      return new Set();
+    }
+    return getColumnNames(appState, sourceNode);
   },
   columnControl(appState, node, columnName, setSelectedNodeState) {
     // const selectableColumnNames = getColumnNames(appState, node.source);

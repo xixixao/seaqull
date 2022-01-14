@@ -34,8 +34,14 @@ function GroupNode(node) {
 export const GroupNodeConfig = {
   Component: GroupNode,
   emptyNodeData: empty,
+  hasProblem(appState, node) {
+    return false; // TODO
+  },
   query(appState, node) {
     const sourceNode = only(Nodes.parents(appState, node));
+    if (sourceNode == null) {
+      return null;
+    }
     const fromQuery = getQuerySelectable(appState, sourceNode);
     if (!hasGrouped(node)) {
       return `SELECT * from (${fromQuery})`;
@@ -45,6 +51,9 @@ export const GroupNodeConfig = {
   },
   queryAdditionalValues(appState, node) {
     const sourceNode = only(Nodes.parents(appState, node));
+    if (sourceNode == null) {
+      return null;
+    }
     const fromQuery = getQuerySelectable(appState, sourceNode);
     if (!hasGrouped(node)) {
       return null;
@@ -63,11 +72,17 @@ export const GroupNodeConfig = {
       return GroupNodeConfig.query(appState, node);
     }
     const sourceNode = only(Nodes.parents(appState, node));
+    if (sourceNode == null) {
+      return null;
+    }
     const fromQuery = getQuerySelectable(appState, sourceNode);
     return sql(node, selectedColumnExpressionsAliased(node), fromQuery);
   },
   columnNames(appState, node) {
     const sourceNode = only(Nodes.parents(appState, node));
+    if (sourceNode == null) {
+      return new Set();
+    }
     return hasGrouped(node)
       ? selectedColumns(node)
       : getColumnNames(appState, sourceNode);

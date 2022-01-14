@@ -36,11 +36,15 @@ function SelectNode(node) {
 
 export const SelectNodeConfig = {
   Component: SelectNode,
-  emptyNodeData() {
-    return empty();
+  emptyNodeData: empty,
+  hasProblem(appState, node) {
+    return false; // TODO
   },
   query(appState, node) {
     const sourceNode = only(Nodes.parents(appState, node));
+    if (sourceNode == null) {
+      return null;
+    }
     const fromQuery = getQuerySelectable(appState, sourceNode);
     return `SELECT ${someOrAllColumnList(
       selectedExpressions(node)
@@ -48,6 +52,9 @@ export const SelectNodeConfig = {
   },
   queryAdditionalValues(appState, node) {
     const sourceNode = only(Nodes.parents(appState, node));
+    if (sourceNode == null) {
+      return null;
+    }
     const fromQuery = getQuerySelectable(appState, sourceNode);
     const expressions = selectedExpressions(node);
     if (expressions.length === 0) {
@@ -65,6 +72,9 @@ export const SelectNodeConfig = {
   },
   querySelectable(appState, node) {
     const sourceNode = only(Nodes.parents(appState, node));
+    if (sourceNode == null) {
+      return null;
+    }
     const fromQuery = getQuerySelectable(appState, sourceNode);
     return `SELECT ${someOrAllColumnList(
       selectedExpressionsAliased(node)
@@ -72,6 +82,9 @@ export const SelectNodeConfig = {
   },
   columnNames(appState, node) {
     const sourceNode = only(Nodes.parents(appState, node));
+    if (sourceNode == null) {
+      return new Set();
+    }
     const expressions = selectedExpressions(node);
     return expressions.length > 0
       ? selectedColumns(node)

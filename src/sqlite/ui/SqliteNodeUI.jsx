@@ -3,14 +3,19 @@ import * as Nodes from "graph/Nodes";
 import { useAppStateContext } from "editor/state";
 import { AddNodeButton } from "editor/AddNodeButton";
 import { addTightNode } from "editor/AddNodeButton";
-import { getEmptyNode } from "../sqliteNodes";
+import { getEmptyNode, getHasProblem } from "../sqliteNodes";
 import HorizontalSpace from "editor/ui/HorizontalSpace";
 import { addDetachedNode } from "editor/AddNodeButton";
 import { addStandaloneNode } from "editor/AddNodeButton";
 
 export default function SqliteNodeUI({ node, showTools, children }) {
   return (
-    <NodeUI node={node} showTools={showTools} useAddButtons={useAddButtons}>
+    <NodeUI
+      node={node}
+      showTools={showTools}
+      useAddButtons={useAddButtons}
+      hasProblem={hasProblem}
+    >
       {children}
     </NodeUI>
   );
@@ -40,6 +45,10 @@ function useAddButtons({ node, showTools }) {
       <AddTightChildStepButtons />
     </>
   );
+}
+
+function hasProblem(appState, node) {
+  return getHasProblem(appState, node);
 }
 
 function AddTightChildStepButtons() {

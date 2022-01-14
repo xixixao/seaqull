@@ -1,11 +1,8 @@
-import * as Node from "./Node";
+import * as Arrays from "js/Arrays";
+import { doNodesOverlap } from "../editor/react-flow/utils/graph";
 import * as Edge from "./Edge";
 import * as Edges from "./Edges";
-import * as Iterable from "js/Iterable";
-import * as Arrays from "js/Arrays";
-import { onlyThrows } from "js/Arrays";
-import { invariant } from "js/invariant";
-import { doNodesOverlap } from "../editor/react-flow/utils/graph";
+import * as Node from "./Node";
 
 export function select(graph, nodes) {
   graph.selectedNodeIDs = idSet(nodes);
@@ -81,10 +78,6 @@ export function tightChildren(graph, node) {
   return Edges.tightChildren(graph, node).map((edge) =>
     Edges.childNode(graph, edge)
   );
-}
-
-export function parentX(graph, node) {
-  return onlyThrows(parents(graph, node));
 }
 
 export function hasParents(graph, node) {
@@ -215,18 +208,18 @@ export function tightLeafs(graph) {
 //   });
 // }
 
-const GENERATED_NAMES = "abcdefghijklmnopqrstuvwxyz".split("");
+// const GENERATED_NAMES = "abcdefghijklmnopqrstuvwxyz".split("");
 
-export function ensureLabel(graph, node) {
-  if (Node.label(node) == null || Node.label(node) === "") {
-    const usedNames = new Set(Iterable.map(nodes(graph), Node.label));
-    const generatedName = GENERATED_NAMES.filter(
-      (name) => !usedNames.has(name)
-    )[0];
-    invariant(generatedName != null);
-    Node.setLabel(node, generatedName);
-  }
-}
+// export function ensureLabel(graph, node) {
+//   if (Node.label(node) == null || Node.label(node) === "") {
+//     const usedNames = new Set(Iterable.map(nodes(graph), Node.label));
+//     const generatedName = GENERATED_NAMES.filter(
+//       (name) => !usedNames.has(name)
+//     )[0];
+//     invariant(generatedName != null);
+//     Node.setLabel(node, generatedName);
+//   }
+// }
 
 function newNodeID(graph) {
   return String(

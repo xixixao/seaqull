@@ -117,28 +117,28 @@ function NodesPane({ children, nodeTypes }) {
         onKeyDown={(e) => {
           if (e.key === "Backspace") {
             setAppState((appState) => {
-              if (Nodes.countSelected(appState) > 0) {
-                const selectedNodes = Nodes.selected(appState);
-                const onlySelected = only(selectedNodes);
-                const tightParent =
-                  onlySelected != null
-                    ? Nodes.tightParent(appState, onlySelected)
-                    : null;
-                selectedNodes.forEach((node) => {
-                  const tightParent = Nodes.tightParent(appState, node);
-                  const children = Nodes.children(appState, node);
-                  Nodes.remove(appState, node);
-                  if (tightParent != null) {
-                    Edges.addTightChildren(appState, tightParent, children);
-                    Layout.layoutTightStack(appState, tightParent);
-                  }
-                });
-
-                Nodes.select(
-                  appState,
-                  tightParent != null ? [tightParent] : []
-                );
+              if (Nodes.countSelected(appState) === 0) {
+                return;
               }
+              const parentToSelect = Nodes.tightParent(
+                appState,
+                only(Nodes.selected(appState))
+              );
+
+              Nodes.selected(appState).forEach((node) => {
+                const tightParent = Nodes.tightParent(appState, node);
+                const children = Nodes.children(appState, node);
+                Nodes.remove(appState, node);
+                if (tightParent != null) {
+                  Edges.addTightChildren(appState, tightParent, children);
+                  Layout.layoutTightStack(appState, tightParent);
+                }
+              });
+
+              Nodes.select(
+                appState,
+                parentToSelect != null ? [parentToSelect] : []
+              );
             });
           }
         }}

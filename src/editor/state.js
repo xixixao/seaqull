@@ -1,5 +1,5 @@
 import { produce } from "js/immer";
-import { onlyThrows } from "js/Arrays";
+import { onlyWarns } from "js/Arrays";
 import { useCallback, useContext } from "react";
 import { createContextState, useCombinedContext } from "../react/contextState";
 import * as Nodes from "graph/Nodes";
@@ -51,6 +51,9 @@ export function useAppStateDataContext() {
 
 export function useSetSelectedNodeState() {
   return useSetAppStateCallback((producer) => (appState) => {
-    producer(onlyThrows(Nodes.selected(appState)));
+    const selected = onlyWarns(Nodes.selected(appState));
+    if (selected != null) {
+      producer(selected);
+    }
   });
 }

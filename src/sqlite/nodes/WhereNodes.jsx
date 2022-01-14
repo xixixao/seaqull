@@ -28,8 +28,14 @@ function WhereNode(node) {
 export const WhereNodeConfig = {
   Component: WhereNode,
   emptyNodeData: empty,
+  hasProblem(appState, node) {
+    return false; // TODO
+  },
   query(appState, node) {
     const sourceNode = only(Nodes.parents(appState, node));
+    if (sourceNode == null) {
+      return null;
+    }
     const fromQuery = getQuerySelectable(appState, sourceNode);
     if (!hasFilter(node)) {
       return `SELECT * FROM (${fromQuery})`;
@@ -44,6 +50,9 @@ export const WhereNodeConfig = {
   },
   columnNames(appState, node) {
     const sourceNode = only(Nodes.parents(appState, node));
+    if (sourceNode == null) {
+      return new Set();
+    }
     return getColumnNames(appState, sourceNode);
   },
   columnControl() {

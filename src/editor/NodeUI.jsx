@@ -9,11 +9,21 @@ import FloatOnHover from "./ui/FloatOnHover";
 import { IconButton } from "./ui/IconButton";
 import { Row } from "./ui/Row";
 
-export default function NodeUI({ node, showTools, children, useAddButtons }) {
+export default function NodeUI({
+  node,
+  showTools,
+  children,
+  useAddButtons,
+  hasProblem,
+}) {
   const appState = useAppStateContext();
   return (
     <div>
-      <NodeWrapper isHighlighted={node.highlight} isSelected={node.selected}>
+      <NodeWrapper
+        isHighlighted={node.highlight}
+        isSelected={node.selected}
+        hasProblem={!node.selected && hasProblem(appState, node)}
+      >
         {children}
         <Handle
           style={visibleIf(Nodes.hasDetachedParents(appState, node))}
@@ -138,6 +148,12 @@ const NodeWrapper = styled("div", {
     isHighlighted: {
       true: {
         borderBottomColor: "$amber9",
+      },
+    },
+    hasProblem: {
+      true: {
+        borderColor: "$red9",
+        boxShadow: "0 0 0 0.5px $colors$red9",
       },
     },
   },

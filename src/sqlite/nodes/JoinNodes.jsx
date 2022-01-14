@@ -38,6 +38,9 @@ function JoinNode(node) {
 export const JoinNodeConfig = {
   Component: JoinNode,
   emptyNodeData: empty,
+  hasProblem(appState, node) {
+    return false; // TODO
+  },
   query(appState, node) {
     const parents = Nodes.parents(appState, node);
 

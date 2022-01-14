@@ -1,4 +1,4 @@
-import { invariant } from "js/invariant";
+import { warn } from "js/invariant";
 import * as Iterable from "js/Iterable";
 
 export function map(iterable, mapper) {
@@ -29,8 +29,8 @@ export function only(array) {
   return array.length === 1 ? array[0] : null;
 }
 
-export function onlyThrows(array) {
-  invariant(array.length === 1);
+export function onlyWarns(array) {
+  warn(array.length !== 1, `Expected one element, got ${array.length}`);
   return array[0];
 }
 

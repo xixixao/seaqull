@@ -25,6 +25,8 @@ export const NODE_CONFIGS = {
 
 function getConfig(type) {
   const config = NODE_CONFIGS[type];
+  // This is for development and should never throw in prod, otherwise
+  // the `language` has a bug in it.
   invariant(config != null);
   return config;
 }
@@ -35,6 +37,10 @@ export function getEmptyNode(type) {
 
 function getNodeConfig(node) {
   return getConfig(node.type);
+}
+
+export function getHasProblem(appState, node) {
+  return getNodeConfig(node).hasProblem(appState, node);
 }
 
 export function getQuery(appState, node) {

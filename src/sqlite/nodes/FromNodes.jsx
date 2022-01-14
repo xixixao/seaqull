@@ -2,18 +2,6 @@ import Input from "editor/Input";
 import SqliteNodeUI from "../ui/SqliteNodeUI";
 import { useSetSelectedNodeState } from "editor/state";
 
-export function empty(name) {
-  return { name };
-}
-
-export function nodeName(node) {
-  return node.data.name;
-}
-
-export function setName(node, name) {
-  node.data.name = name;
-}
-
 function FromNode(node) {
   const name = nodeName(node);
   const setSelectedNodeState = useSetSelectedNodeState();
@@ -36,6 +24,9 @@ function FromNode(node) {
 export const FromNodeConfig = {
   Component: FromNode,
   emptyNodeData: empty,
+  hasProblem(appState, node) {
+    return !hasValidName(appState, node);
+  },
   query(appState, node) {
     const name = nodeName(node);
     return (name ?? "").length > 0 ? `SELECT * from ${name}` : null;
@@ -53,3 +44,19 @@ export const FromNodeConfig = {
     return null;
   },
 };
+
+function empty() {
+  return { name: null };
+}
+
+function nodeName(node) {
+  return node.data.name;
+}
+
+function hasValidName(appState, node) {
+  return appState.editorConfig.table(nodeName(node) ?? "") != null;
+}
+
+function setName(node, name) {
+  node.data.name = name;
+}

@@ -1,13 +1,12 @@
 import { PlusIcon } from "@modulz/radix-icons";
-import { useContext } from "react";
-import { createContext } from "react";
+import * as Layout from "editor/Layout";
+import * as Edges from "graph/Edges";
+import * as Node from "graph/Node";
+import * as Nodes from "graph/Nodes";
+import { onlyWarns } from "js/Arrays";
+import { createContext, useContext } from "react";
 import { useSetAppStateContext } from "./state";
 import { ButtonWithIcon } from "./ui/ButtonWithIcon";
-import * as Nodes from "graph/Nodes";
-import * as Node from "graph/Node";
-import * as Edges from "graph/Edges";
-import * as Layout from "editor/Layout";
-import { onlyThrows } from "js/Arrays";
 
 const LayoutRequestContext = createContext();
 
@@ -30,10 +29,15 @@ export function AddNodeButton({ children, onAdd }) {
   );
 }
 
+// Adds to the first selected node, but language should ensure that only
+// one node can be selected to avoid confusion
 export function addTightNode(nodeData) {
   return (appState) => {
+    const selectedNode = onlyWarns(Nodes.selected(appState));
+    if (selectedNode == null) {
+      return;
+    }
     const newNode = Nodes.newNode(appState, nodeData);
-    const selectedNode = onlyThrows(Nodes.selected(appState));
     const selectedNodeChildren = Nodes.tightChildren(appState, selectedNode);
     const selectedNodeChildEdges = Edges.tightChildren(appState, selectedNode);
     Edges.removeAll(appState, selectedNodeChildEdges);
