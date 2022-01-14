@@ -39,19 +39,19 @@ export const JoinNodeConfig = {
   Component: JoinNode,
   emptyNodeData: empty,
   hasProblem(appState, node) {
-    return false; // TODO
+    return Nodes.parents(appState, node).length !== 2;
   },
   query(appState, node) {
     const parents = Nodes.parents(appState, node);
-
+    const [a, b] = parents;
     const joined = joinedColumns(node);
     const aOtherColumns = Arrays.subtractSets(
-      getColumnNames(appState, first(parents)),
+      a != null ? getColumnNames(appState, a) : new Set(),
       // TODO: Fix this logic
       new Set(joined.map(first))
     );
     const bOtherColumns = Arrays.subtractSets(
-      getColumnNames(appState, second(parents)),
+      b != null ? getColumnNames(appState, b) : new Set(),
       // TODO: Fix this logic
       new Set(joined.map(second))
     );
@@ -67,11 +67,11 @@ export const JoinNodeConfig = {
             )
             .join(",")
         : "a.*, b.*"
-    } FROM (${getQuerySelectable(appState, parents[0])}) AS a
-    JOIN (${getQuerySelectable(appState, parents[1])}) AS b ${
+    } FROM (${a != null ? getQuerySelectable(appState, a) : null}) AS a
+    JOIN (${b != null ? getQuerySelectable(appState, b) : null}) AS b ${
       hasFilter(node) ? `ON ${nodeFilters(node)}` : ""
     }`;
-    // Nodes.parents(appState, node)
+    // validParents(appState, node)
     // return (name ?? "").length > 0 ? `SELECT * from ${name}` : null;
   },
   queryAdditionalValues(appState, node) {
@@ -79,14 +79,17 @@ export const JoinNodeConfig = {
   },
   querySelectable(appState, node) {
     const parents = Nodes.parents(appState, node);
+    const [a, b] = parents;
     const parentsColumnNames = parents.map((parent) =>
       getColumnNames(appState, parent)
     );
     return `SELECT ${selectedColumnExpressionsAliased(
       node,
       parentsColumnNames
-    ).join(",")} FROM (${getQuerySelectable(appState, parents[0])}) AS a
-    JOIN (${getQuerySelectable(appState, parents[1])}) AS b ${
+    ).join(",")} FROM (${
+      a != null ? getQuerySelectable(appState, a) : null
+    }) AS a
+    JOIN (${b != null ? getQuerySelectable(appState, b) : null}) AS b ${
       hasFilter(node) ? `ON ${nodeFilters(node)}` : ""
     }`;
   },
@@ -108,7 +111,6 @@ export const JoinNodeConfig = {
   ) {
     const joined = joinedColumns(node);
     const parents = Nodes.parents(appState, node);
-
     const aOtherColumns = Arrays.subtractSets(
       getColumnNames(appState, first(parents)),
       // TODO: Fix this logic
@@ -187,28 +189,33 @@ function JoinOnSelector({ columns, onChange }) {
   );
 }
 
-export function empty(filters = "") {
+function empty(filters = "") {
   return { filters };
 }
 
-export function hasFilter(node) {
+function hasFilter(node) {
   return nodeFilters(node).length > 0;
 }
 
-export function nodeFilters(node) {
+function validParents(appState, node) {
+  const parents = Nodes.parents(appState, node);
+  return parents.length === 2 ? parents : null;
+}
+
+function nodeFilters(node) {
   return node.data.filters;
 }
 
-export function setFilters(node, filters) {
+function setFilters(node, filters) {
   node.data.filters = filters;
 }
 
-export function addFilter(node, filter) {
+function addFilter(node, filter) {
   node.data.filters =
     nodeFilters(node) === "" ? filter : `${nodeFilters(node)} AND ${filter}`;
 }
 
-export function removeFilter(node, column) {
+function removeFilter(node, column) {
   node.data.filters = filterListToString(
     filterList(node).filter((filter) => {
       const simpleJoin = getSimpleJoin(filter);
@@ -221,7 +228,7 @@ export function removeFilter(node, column) {
   );
 }
 
-export function selectedColumnExpressionsAliased(node, parentsColumnNames) {
+function selectedColumnExpressionsAliased(node, parentsColumnNames) {
   const joined = joinedColumns(node);
   const otherParentColumns = parentsColumnNames.map(
     (columnNames, parentIndex) =>
@@ -249,7 +256,7 @@ export function selectedColumnExpressionsAliased(node, parentsColumnNames) {
     );
 }
 
-export function selectedColumnNames(node, parentsColumnNames) {
+function selectedColumnNames(node, parentsColumnNames) {
   const joined = joinedColumns(node);
   const otherParentColumns = parentsColumnNames.map(
     (columnNames, parentIndex) =>
@@ -274,15 +281,15 @@ export function selectedColumnNames(node, parentsColumnNames) {
   );
 }
 
-export function prefixed(index, columnName) {
+function prefixed(index, columnName) {
   return `${tableAlias(index)}.${columnName}`;
 }
 
-export function alias(index, columnName) {
+function alias(index, columnName) {
   return `${columnName}_${tableAlias(index)}`;
 }
 
-export function tableAlias(index) {
+function tableAlias(index) {
   return index === 0 ? "a" : "b";
 }
 
@@ -290,7 +297,7 @@ function otherParent(index) {
   return index === 0 ? 1 : 0;
 }
 
-export function joinedColumns(node) {
+function joinedColumns(node) {
   return filterList(node)
     .map(getSimpleJoin)
     .filter((column) => column != null);

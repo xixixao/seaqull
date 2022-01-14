@@ -38,14 +38,12 @@ export const SelectNodeConfig = {
   Component: SelectNode,
   emptyNodeData: empty,
   hasProblem(appState, node) {
-    return false; // TODO
+    return only(Nodes.parents(appState, node)) == null;
   },
   query(appState, node) {
     const sourceNode = only(Nodes.parents(appState, node));
-    if (sourceNode == null) {
-      return null;
-    }
-    const fromQuery = getQuerySelectable(appState, sourceNode);
+    const fromQuery =
+      sourceNode == null ? null : getQuerySelectable(appState, sourceNode);
     return `SELECT ${someOrAllColumnList(
       selectedExpressions(node)
     )} FROM (${fromQuery})`;
@@ -72,10 +70,8 @@ export const SelectNodeConfig = {
   },
   querySelectable(appState, node) {
     const sourceNode = only(Nodes.parents(appState, node));
-    if (sourceNode == null) {
-      return null;
-    }
-    const fromQuery = getQuerySelectable(appState, sourceNode);
+    const fromQuery =
+      sourceNode == null ? null : getQuerySelectable(appState, sourceNode);
     return `SELECT ${someOrAllColumnList(
       selectedExpressionsAliased(node)
     )} FROM (${fromQuery})`;

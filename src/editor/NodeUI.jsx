@@ -22,7 +22,7 @@ export default function NodeUI({
       <NodeWrapper
         isHighlighted={node.highlight}
         isSelected={node.selected}
-        hasProblem={!node.selected && hasProblem(appState, node)}
+        hasProblem={hasProblem(appState, node)}
       >
         {children}
         <Handle
@@ -157,5 +157,15 @@ const NodeWrapper = styled("div", {
       },
     },
   },
+  compoundVariants: [
+    {
+      isSelected: true,
+      hasProblem: true,
+      css: {
+        borderColor: "$pink9",
+        boxShadow: "0 0 0 0.5px $colors$pink9",
+      },
+    },
+  ],
   // margin: "0 4px 2px 0",
 });

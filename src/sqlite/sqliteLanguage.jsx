@@ -59,6 +59,7 @@ function ResultsTable({ db }) {
     }
     const oneShown = only(selected) ?? previous;
     const isEditing = selected.length === 1;
+    console.log(oneShown, selected);
     const queries = (isSelecting ? selected : [oneShown])
       .map((node) =>
         (isEditing ? getQuery : getQuerySelectable)(appState, node)

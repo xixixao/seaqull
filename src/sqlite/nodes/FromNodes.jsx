@@ -25,7 +25,7 @@ export const FromNodeConfig = {
   Component: FromNode,
   emptyNodeData: empty,
   hasProblem(appState, node) {
-    return !hasValidName(appState, node);
+    return nodeName(node) != null && !hasValidName(appState, node);
   },
   query(appState, node) {
     const name = nodeName(node);
