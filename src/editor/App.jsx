@@ -41,10 +41,9 @@ function App({ language }) {
         </NodesPane>
         <div
           style={{
-            overflowX: "scroll",
             flexGrow: 1,
             maxHeight: "50%",
-            padding: "0 8px",
+            position: "relative",
           }}
         >
           <Results />

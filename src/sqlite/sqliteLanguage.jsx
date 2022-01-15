@@ -105,7 +105,13 @@ function ResultsTable({ db }) {
     return null;
   }
   return (
-    <Column>
+    <Column
+      css={{
+        overflow: "scroll",
+        padding: "0 $8",
+        maxHeight: "100%",
+      }}
+    >
       <ResultsDisplay updated={updated} state={resultsState} />
     </Column>
   );
@@ -115,7 +121,16 @@ function ResultsDisplay({ updated, state }) {
   const [view, setView] = useState("table");
   return (
     <>
-      <Row css={{ paddingTop: "$4" }} justify="end">
+      <Row
+        css={{
+          paddingTop: "$4",
+          paddingRight: "$16",
+          top: 0,
+          right: 0,
+          position: "absolute",
+        }}
+        justify="end"
+      >
         <Button
           onClick={() => {
             setView(view === "table" ? "sql" : "table");
