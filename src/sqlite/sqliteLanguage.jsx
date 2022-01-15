@@ -165,18 +165,9 @@ const borderBlink = keyframes({
   to: { borderColor: "transparent" },
 });
 
-const TH = styled("th");
-const TD = styled("td");
-
 const ResultsTableLoaded = memo(function ResultsTableLoaded({
   state: { tables, appState },
 }) {
-  // const { selectedNodeID } = appState;
-  // const availableColumnNamesSet = getAvailableColumnNamesSet(
-  //   appState,
-  //   selectedNodeID
-  // );
-  // const columnNames = getAllColumnNames(appState, selectedNodeID);
   const setSelectedNodeState = useSetSelectedNodeState();
   const selectedNode = only(Nodes.selected(appState));
   if (tables[0] instanceof NoResultsError) {
@@ -198,73 +189,51 @@ const ResultsTableLoaded = memo(function ResultsTableLoaded({
       </Column>
     );
   }
-  const columns = tables[0].columns.concat(
-    ...tables.slice(1).map((table) => [""].concat(table.columns))
-  );
-  const values = [tables[0].values].concat(
-    ...tables.slice(1).map((table) => [[[""]], table.values])
-  );
-  const rowCount = Math.max(...values.map((rows) => rows.length));
-  const primaryColumnCount = tables[0].columns.length;
-  return (
-    <table>
-      <thead>
-        <tr>
-          {columns.map((column, i) => {
-            const isPrimary = i < primaryColumnCount;
-            return (
-              <TH
-                key={i}
-                css={{
-                  textAlign: "start",
-                  whiteSpace: "nowrap",
-                  color: isPrimary ? null : "$slate11",
-                  // color: availableColumnNamesSet.has(column) ? "black" : "#ddd",
-                }}
-              >
-                {column !== ""
-                  ? (() => {
-                      if (selectedNode == null) {
-                        return column;
-                      }
-                      const control = getColumnControl(
+  return tables.map(({ columns, values }, tableIndex) => {
+    const isPrimary = tableIndex === 0;
+    return (
+      <Table
+        css={{
+          textAlign: "start",
+          whiteSpace: "nowrap",
+          color: isPrimary ? null : "$slate11",
+        }}
+      >
+        <thead>
+          <tr>
+            {columns.map((column, i) => {
+              return (
+                <th key={i}>
+                  {selectedNode == null
+                    ? column
+                    : getColumnControl(
                         appState,
                         selectedNode,
                         column,
                         setSelectedNodeState,
                         isPrimary,
                         i
-                      );
-                      return control ?? column;
-                    })()
-                  : null}
-              </TH>
-            );
-          })}
-        </tr>
-      </thead>
-      <tbody>
-        {[...Array(rowCount)].map((_, j) => (
-          <tr key={j}>
-            {values.map((rows, tableIndex) =>
-              rows[0].map((_, i) => (
-                <TD
-                  css={{
-                    whiteSpace: "nowrap",
-                    color: tableIndex > 0 ? "$slate11" : null,
-                  }}
-                  key={i}
-                >
-                  {(rows[j] ?? [])[i] ?? ""}
-                </TD>
-              ))
-            )}
+                      ) ?? column}
+                </th>
+              );
+            })}
           </tr>
-        ))}
-      </tbody>
-    </table>
-  );
+        </thead>
+        <tbody>
+          {values.map((row, j) => (
+            <tr key={j}>
+              {row.map((value, i) => (
+                <td key={i}>{value}</td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </Table>
+    );
+  });
 });
+
+const Table = styled("table");
 
 class ResultError {
   constructor(sql, error) {
