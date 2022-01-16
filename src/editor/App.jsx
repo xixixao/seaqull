@@ -55,6 +55,15 @@ function App({ language }) {
 
 const Div = styled("div");
 
+const PAN_SETTINGS = {
+  MAC: {
+    panOnScroll: true,
+    paneMoveable: false,
+  },
+  // TODO: if desired
+  WINDOWS: {},
+};
+
 function NodesPane({ children, nodeTypes }) {
   //   const onElementsRemove = (elementsToRemove) =>
   //     setElements((els) => removeElements(elementsToRemove, els));
@@ -146,6 +155,8 @@ function NodesPane({ children, nodeTypes }) {
           nodeTypes={nodeTypes}
           edgeTypes={EDGE_COMPONENTS}
           onSelectionChange={onSelectionChange}
+          zoomOnDoubleClick={false}
+          {...PAN_SETTINGS.MAC}
           // onElementsRemove={onElementsRemove}
           // onConnect={onConnect}
           // onLoad={onLoad}
