@@ -1,5 +1,6 @@
 import * as Layout from "editor/Layout";
-import ReactFlow, { Background } from "editor/react-flow";
+import ReactFlow, { Background, ReactFlowProvider } from "editor/react-flow";
+import { useStore } from "editor/react-flow/store/hooks";
 import {
   AppStateContextProvider,
   useAppStateContext,
@@ -14,9 +15,10 @@ import * as Arrays from "js/Arrays";
 import { only } from "js/Arrays";
 import React, { useCallback, useLayoutEffect, useRef } from "react";
 import { LayoutRequestProvider } from "./AddNodeButton";
+import { positionToRendererPosition } from "./react-flow/utils/graph";
 
 function App({ language }) {
-  const { Results, TopUI, nodeTypes } = language;
+  const { Results, TopUI, nodeTypes, onDoubleClick } = language;
   return (
     <AppStateContextProvider initialState={language.initialState}>
       {/* <div style={{ padding: "0 4px 4px" }}>
@@ -36,9 +38,11 @@ function App({ language }) {
           height: "100%",
         }}
       >
-        <NodesPane nodeTypes={nodeTypes}>
-          <TopUI />
-        </NodesPane>
+        <ReactFlowProvider>
+          <NodesPane nodeTypes={nodeTypes} onDoubleClick={onDoubleClick}>
+            <TopUI />
+          </NodesPane>
+        </ReactFlowProvider>
         <div
           style={{
             flexGrow: 1,
@@ -64,7 +68,7 @@ const PAN_SETTINGS = {
   WINDOWS: {},
 };
 
-function NodesPane({ children, nodeTypes }) {
+function NodesPane({ children, nodeTypes, onDoubleClick }) {
   //   const onElementsRemove = (elementsToRemove) =>
   //     setElements((els) => removeElements(elementsToRemove, els));
   // const onConnect = (params) => setElements((els) => addEdge(params, els));
@@ -73,6 +77,7 @@ function NodesPane({ children, nodeTypes }) {
   // );
   const appState = useAppStateContext();
   const setAppState = useSetAppStateContext();
+  const store = useStore();
 
   const layoutRequestRef = useRef(null);
   useLayoutEffect(() => {
@@ -122,6 +127,19 @@ function NodesPane({ children, nodeTypes }) {
           outline: "none",
         }}
         tabIndex="-1"
+        onDoubleClick={(event) => {
+          setAppState((appState) => {
+            onRequestLayout(
+              onDoubleClick(
+                appState,
+                positionToRendererPosition(store, {
+                  x: event.clientX,
+                  y: event.clientY,
+                })
+              )
+            );
+          });
+        }}
         onKeyDown={(e) => {
           if (e.key === "Backspace") {
             setAppState((appState) => {

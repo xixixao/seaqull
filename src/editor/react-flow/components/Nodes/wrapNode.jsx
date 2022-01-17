@@ -310,6 +310,7 @@ export default function wrapNode(NodeComponent) {
     const onNodeDoubleClickHandler = useCallback(
       (event) => {
         onNodeDoubleClick?.(event, node);
+        event.stopPropagation();
       },
       [node, onNodeDoubleClick]
     );

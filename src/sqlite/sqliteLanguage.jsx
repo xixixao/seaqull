@@ -10,6 +10,7 @@ import React, { memo, useEffect, useState } from "react";
 import { database } from "./database";
 import {
   getColumnControl,
+  getEmptyNode,
   getQuery,
   getQueryAdditionalValues,
   getQuerySelectable,
@@ -19,6 +20,7 @@ import { AddFromNodeButton } from "./ui/SqliteNodeUI";
 import { format as formatSQL } from "sql-formatter";
 import { Button } from "editor/ui/Button";
 import { Row } from "editor/ui/Row";
+import { addNodeAtPosition } from "editor/AddNodeButton";
 
 export default function sqliteLanguage(tables, initialStateSnapshot) {
   const DATABASE = database(tables);
@@ -30,6 +32,7 @@ export default function sqliteLanguage(tables, initialStateSnapshot) {
     },
     TopUI: AddFromNodeButton,
     nodeTypes: Objects.map(NODE_CONFIGS, (type) => type.Component),
+    onDoubleClick: addFromNodeOnDoubleClick,
   };
 }
 
@@ -40,6 +43,10 @@ function stateFromSnapshot([nodes, positions, edges], DATABASE) {
     edges: idMap(edges),
     editorConfig: DATABASE,
   };
+}
+
+function addFromNodeOnDoubleClick(appState, position) {
+  return addNodeAtPosition(appState, getEmptyNode("from"), position);
 }
 
 function idMap(array) {
@@ -149,16 +156,21 @@ function ResultsDisplay({ updated, state }) {
         {view === "table" ? (
           <ResultsTableLoaded state={state} />
         ) : (
-          <SQL state={state} />
+          <SQL>{state.queries[0]}</SQL>
         )}
       </Box>
     </>
   );
 }
 
-function SQL({ state }) {
-  return <pre>{formatSQL(state.queries[0] ?? "")}</pre>;
-}
+const SQL = styled(
+  ({ children, ...props }) => <pre {...props}>{formatSQL(children ?? "")}</pre>,
+  {
+    lineHeight: 1,
+    fontFamily: "Menlo, Consolas, Monaco, monospace",
+    fontSize: "12px",
+  }
+);
 
 const borderBlink = keyframes({
   from: { borderColor: "$lime9" },
@@ -176,7 +188,7 @@ const ResultsTableLoaded = memo(function ResultsTableLoaded({
         css={{ background: "$amber3", padding: "$12", borderRadius: "$4" }}
       >
         <div>No results from:</div>
-        <pre>{tables[0].sql}</pre>
+        <SQL>{tables[0].sql}</SQL>
       </Column>
     );
   }
@@ -185,7 +197,7 @@ const ResultsTableLoaded = memo(function ResultsTableLoaded({
     return (
       <Column css={{ background: "$red3", padding: "$12", borderRadius: "$4" }}>
         <div>{brokenTable.error.toString()} in:</div>
-        <pre>{brokenTable.sql}</pre>
+        <SQL>{brokenTable.sql}</SQL>
       </Column>
     );
   }
@@ -193,6 +205,7 @@ const ResultsTableLoaded = memo(function ResultsTableLoaded({
     const isPrimary = tableIndex === 0;
     return (
       <Table
+        key={tableIndex}
         css={{
           textAlign: "start",
           whiteSpace: "nowrap",
@@ -201,22 +214,20 @@ const ResultsTableLoaded = memo(function ResultsTableLoaded({
       >
         <thead>
           <tr>
-            {columns.map((column, i) => {
-              return (
-                <th key={i}>
-                  {selectedNode == null
-                    ? column
-                    : getColumnControl(
-                        appState,
-                        selectedNode,
-                        column,
-                        setSelectedNodeState,
-                        isPrimary,
-                        i
-                      ) ?? column}
-                </th>
-              );
-            })}
+            {columns.map((column, i) => (
+              <th key={i}>
+                {selectedNode == null
+                  ? column
+                  : getColumnControl(
+                      appState,
+                      selectedNode,
+                      column,
+                      setSelectedNodeState,
+                      isPrimary,
+                      i
+                    ) ?? column}
+              </th>
+            ))}
           </tr>
         </thead>
         <tbody>
@@ -254,10 +265,10 @@ function execQuery(db, sql) {
   try {
     result = db.exec(sql + " LIMIT 100");
   } catch (e) {
-    return new ResultError(formatSQL(sql), e);
+    return new ResultError(sql, e);
   }
   if (result.length === 0) {
-    return new NoResultsError(formatSQL(sql));
+    return new NoResultsError(sql);
   }
   return result[0];
 }

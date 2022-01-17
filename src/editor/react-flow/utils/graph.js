@@ -89,6 +89,12 @@ export const updateEdge = (oldEdge, newConnection, elements) => {
   };
   return elements.filter((e) => e.id !== oldEdge.id).concat(edge);
 };
+
+export function positionToRendererPosition(store, position) {
+  const { transform, snapToGrid, snapGrid } = store.getState();
+  return pointToRendererPoint(position, transform, snapToGrid, snapGrid);
+}
+
 export const pointToRendererPoint = (
   { x, y },
   [tx, ty, tScale],

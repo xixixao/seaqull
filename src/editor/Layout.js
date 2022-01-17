@@ -41,3 +41,15 @@ export function layoutDetached(graph, parents, node) {
 
   Node.move(graph, node, maxX + NODE_HORIZONTAL_OFFSET, maxY);
 }
+
+export function centerAtPosition(position) {
+  return (graph, node) => {
+    const { width, height } = Nodes.positionOf(graph, node);
+    Node.move(
+      graph,
+      node,
+      Math.floor(position.x - width / 2),
+      Math.floor(position.y - height / 2)
+    );
+  };
+}

@@ -63,6 +63,13 @@ export function addStandaloneNode(nodeData) {
   };
 }
 
+export function addNodeAtPosition(appState, nodeData, position) {
+  const newNode = Nodes.newNode(appState, nodeData);
+  Nodes.add(appState, newNode);
+  Nodes.select(appState, [newNode]);
+  return [Node.id(newNode), Layout.centerAtPosition(position)];
+}
+
 export function addDetachedNode(nodeData) {
   return (appState) => {
     const selected = Nodes.selected(appState);
