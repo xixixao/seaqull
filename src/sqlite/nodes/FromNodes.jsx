@@ -1,6 +1,6 @@
-import Input from "editor/Input";
-import SqliteNodeUI from "../ui/SqliteNodeUI";
 import { useSetSelectedNodeState } from "editor/state";
+import SqliteInput from "../ui/SqliteInput";
+import SqliteNodeUI from "../ui/SqliteNodeUI";
 
 function FromNode(node) {
   const name = nodeName(node);
@@ -8,7 +8,7 @@ function FromNode(node) {
   return (
     <SqliteNodeUI node={node} showTools={name?.length > 0}>
       FROM{" "}
-      <Input
+      <SqliteInput
         node={node}
         focused={name == null}
         value={name}

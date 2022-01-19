@@ -15,10 +15,12 @@ import * as Node from "graph/Node";
 import { oneDark } from "@codemirror/theme-one-dark";
 import { useTheme } from "./theme/useTheme";
 import { useSetAppStateContext } from "./state";
+import { autocompletion } from "@codemirror/autocomplete";
 // import { defaultLightThemeOption } from './theme/light';
 
 export default function Input({
   node,
+  extensions,
   displayValue,
   focused,
   label,
@@ -97,6 +99,7 @@ export default function Input({
       {label != null ? <Label>{label}</Label> : null}
       {edited != null ? (
         <Editor
+          extensions={extensions}
           click={click}
           ref={inputRef}
           value={edited}
@@ -240,6 +243,8 @@ export function useCodeMirror(props) {
     }
   });
   let getExtensions = [
+    ...extensions,
+    autocompletion(),
     keymap.of([
       {
         key: "Mod-Enter",
