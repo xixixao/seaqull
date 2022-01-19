@@ -17,6 +17,7 @@ import { useTheme } from "./theme/useTheme";
 import { useSetAppStateContext } from "./state";
 import { autocompletion } from "@codemirror/autocomplete";
 import { tooltips } from "@codemirror/tooltip";
+import { Box } from "./ui/Box";
 // import { defaultLightThemeOption } from './theme/light';
 
 export default function Input({
@@ -49,16 +50,21 @@ export default function Input({
     setEdited(value);
   }, []);
   const handleReset = useCallback(() => {
-    if (edited === "" && value == null) {
-      if (defaultValue != null) {
-        onChange(defaultValue);
-      } else {
-        return;
-      }
+    if (edited === "") {
+      return;
     }
     setEdited(null);
     onChange(edited);
-  }, [defaultValue, edited, value, onChange]);
+  }, [edited, onChange]);
+  const handleConfirm = useCallback(
+    (value) => {
+      if (value !== "") {
+        setEdited(null);
+        onChange(value);
+      }
+    },
+    [onChange]
+  );
   const setAppState = useSetAppStateContext();
   const nodeID = node?.id;
   useEffect(() => {
@@ -107,7 +113,7 @@ export default function Input({
           onMouseLeave={handleMouseLeave}
           onChange={handleEdit}
           // onConfirm={onChange}
-          onConfirm={handleReset}
+          onConfirm={handleConfirm}
         />
       ) : (
         <div
@@ -193,7 +199,17 @@ const Editor = forwardRef(function Editor(props, ref) {
 
   // const defaultClassNames =
   //   typeof theme === "string" ? `cm-theme-${theme}` : "cm-theme";
-  return <div ref={editor} {...other}></div>;
+  return (
+    <Box
+      css={{
+        borderStyle: "solid",
+        borderWidth: "0 0 1px 0",
+        borderColor: "$blue9",
+      }}
+      ref={editor}
+      {...other}
+    ></Box>
+  );
 });
 
 export function useCodeMirror(props) {
