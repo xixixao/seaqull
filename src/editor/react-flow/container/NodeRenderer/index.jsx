@@ -74,6 +74,7 @@ const NodeRenderer = (props) => {
             xPos={position.x}
             yPos={position.y}
             isDragging={position.isDragging}
+            edited={position.edited}
             isInitialized={position.width !== null && position.height !== null}
             snapGrid={props.snapGrid}
             snapToGrid={props.snapToGrid}

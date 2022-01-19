@@ -9,12 +9,16 @@ import {
 import { forwardRef } from "react";
 import { useImperativeHandle } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import * as Nodes from "graph/Nodes";
+import * as Node from "graph/Node";
 
 import { oneDark } from "@codemirror/theme-one-dark";
 import { useTheme } from "./theme/useTheme";
+import { useSetAppStateContext } from "./state";
 // import { defaultLightThemeOption } from './theme/light';
 
 export default function Input({
+  node,
   displayValue,
   focused,
   label,
@@ -22,6 +26,7 @@ export default function Input({
   onChange,
 }) {
   const [click, setClick] = useState(null);
+  const [shouldStopEditing, setShouldStopEditing] = useState(false);
   const [edited, setEdited] = useState(focused ?? false ? "" : null);
   const [defaultValue] = useState(value);
   const inputRef = useRef();
@@ -33,6 +38,13 @@ export default function Input({
   //     // inputRef.current.select();
   //   }
   // }, [isEditing]);
+  const handleMouseLeave = useCallback(() => {
+    setShouldStopEditing(true);
+  }, []);
+  const handleEdit = useCallback((value) => {
+    setShouldStopEditing(false);
+    setEdited(value);
+  }, []);
   const handleReset = useCallback(() => {
     if (edited === "" && value == null) {
       if (defaultValue != null) {
@@ -44,17 +56,37 @@ export default function Input({
     setEdited(null);
     onChange(edited);
   }, [defaultValue, edited, value, onChange]);
-  // useEffect(() => {
-  //   const handleClickOutside = (event) => {
-  //     if (edited != null && !inputRef.current.contains(event.target)) {
-  //       handleReset();
-  //     }
-  //   };
-  //   document.addEventListener("mouseup", handleClickOutside);
-  //   return () => {
-  //     document.removeEventListener("mouseup", handleClickOutside);
-  //   };
-  // }, [edited, handleReset]);
+  const setAppState = useSetAppStateContext();
+  const nodeID = node?.id;
+  useEffect(() => {
+    if (nodeID != null) {
+      setAppState((appState) => {
+        Nodes.positionOf(appState, Node.fake(nodeID)).edited = edited;
+      });
+    }
+  }, [edited, nodeID, setAppState]);
+  useEffect(() => {
+    // const handleClickOutside = (event) => {
+    //   if (edited != null && !inputRef.current.contains(event.target)) {
+    //     handleReset();
+    //   }
+    // };
+    // document.addEventListener("mouseup", handleClickOutside);
+    // return () => {
+    //   document.removeEventListener("mouseup", handleClickOutside);
+    // };
+    const handleMouseMove = (event) => {
+      if (shouldStopEditing) {
+        setShouldStopEditing(false);
+        handleReset();
+      }
+    };
+
+    document.addEventListener("mousemove", handleMouseMove);
+    return () => {
+      document.removeEventListener("mousemove", handleMouseMove);
+    };
+  }, [handleReset, shouldStopEditing]);
   return (
     <div
       style={{ display: "inline-block" }}
@@ -68,9 +100,10 @@ export default function Input({
           click={click}
           ref={inputRef}
           value={edited}
-          onMouseLeave={handleReset}
-          onChange={setEdited}
-          onConfirm={onChange}
+          onMouseLeave={handleMouseLeave}
+          onChange={handleEdit}
+          // onConfirm={onChange}
+          onConfirm={handleReset}
         />
       ) : (
         <div
@@ -192,6 +225,7 @@ export function useCodeMirror(props) {
       width,
       minWidth: "100px",
       maxWidth,
+      cursor: "text",
     },
     "&.cm-editor.cm-focused": { outline: "none" },
     "& .cm-scroller": { fontFamily: "inherit" },
@@ -313,13 +347,14 @@ export function useCodeMirror(props) {
 }
 
 function focusAndPlaceCursor(view, click) {
+  const at = posAtClick(view, click) ?? 0;
+  view.focus();
+  view.dispatch({ selection: EditorSelection.cursor(at) });
+}
+
+function posAtClick(view, click) {
   if (click == null) {
     return;
   }
-  const at = view.posAtCoords(click);
-  if (at == null) {
-    return;
-  }
-  view.focus();
-  view.dispatch({ selection: EditorSelection.cursor(at) });
+  return view.posAtCoords(click);
 }

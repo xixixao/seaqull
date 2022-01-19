@@ -44,6 +44,7 @@ export default function wrapNode(NodeComponent) {
     onNodeDragStop,
     style,
     className,
+    edited,
     isDraggable,
     isSelectable,
     isConnectable,
@@ -377,6 +378,7 @@ export default function wrapNode(NodeComponent) {
             sourcePosition={sourcePosition}
             targetPosition={targetPosition}
             isDragging={isDragging}
+            edited={edited}
             dragHandle={dragHandle}
           />
         </div>

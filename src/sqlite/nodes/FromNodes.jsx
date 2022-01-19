@@ -9,6 +9,7 @@ function FromNode(node) {
     <SqliteNodeUI node={node} showTools={name?.length > 0}>
       FROM{" "}
       <Input
+        node={node}
         focused={name == null}
         value={name}
         onChange={(name) => {

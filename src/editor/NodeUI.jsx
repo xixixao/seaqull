@@ -85,7 +85,7 @@ function visibleIf(bool) {
 function NodeUIAddButtons({ node, showTools, useAddButtons }) {
   const appState = useAppStateContext();
   const buttons = useAddButtons(node);
-  if (buttons == null) {
+  if (buttons == null || node.edited) {
     return null;
   }
 
