@@ -258,7 +258,7 @@ export function useCodeMirror(props) {
     ]),
     updateListener,
     defaultTheme,
-    theme === "dark" ? oneDark : null,
+    theme === "dark" ? oneDark : [],
   ];
   // if (basicSetup) {
   //   getExtensions.unshift(defaultBasicSetup);
