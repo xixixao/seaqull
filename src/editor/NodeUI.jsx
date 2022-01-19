@@ -23,6 +23,8 @@ export default function NodeUI({
         isHighlighted={node.highlight}
         isSelected={node.selected}
         hasProblem={hasProblem(appState, node)}
+        // hasTightChild={Nodes.hasTightChild(appState, node)}
+        // hasTightParent={Nodes.hasTightParent(appState, node)}
       >
         {children}
         <Handle
@@ -90,7 +92,7 @@ function NodeUIAddButtons({ node, showTools, useAddButtons }) {
   }
 
   const isSelected = node.selected;
-  const isLast = !Nodes.hasTightChildren(appState, node);
+  const isLast = !Nodes.hasTightChild(appState, node);
 
   const addChildrenButtonsPositioned = (
     <div
@@ -156,6 +158,16 @@ const NodeWrapper = styled("div", {
         boxShadow: "0 0 0 0.5px $colors$red9",
       },
     },
+    // hasTightParent: {
+    //   true: {
+    //     borderTopLeftRadius: 0,
+    //   },
+    // },
+    // hasTightChild: {
+    //   true: {
+    //     borderBottomLeftRadius: 0,
+    //   },
+    // },
   },
   compoundVariants: [
     {

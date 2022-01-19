@@ -92,7 +92,11 @@ export function hasChildren(graph, node) {
   return Edges.children(graph, node).length > 0;
 }
 
-export function hasTightChildren(graph, node) {
+export function hasTightParent(graph, node) {
+  return Edges.tightParent(graph, node) != null;
+}
+
+export function hasTightChild(graph, node) {
   return Edges.tightChildren(graph, node).length > 0;
 }
 
