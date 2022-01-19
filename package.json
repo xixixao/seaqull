@@ -7,6 +7,10 @@
     "serve": "vite preview"
   },
   "dependencies": {
+    "@codemirror/commands": "^0.19.7",
+    "@codemirror/state": "^0.19.6",
+    "@codemirror/theme-one-dark": "^0.19.1",
+    "@codemirror/view": "^0.19.39",
     "@modulz/radix-icons": "^4.0.0",
     "@radix-ui/colors": "^0.1.8",
     "@radix-ui/react-tooltip": "^0.1.2",
