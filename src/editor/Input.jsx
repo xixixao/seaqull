@@ -16,6 +16,7 @@ import { oneDark } from "@codemirror/theme-one-dark";
 import { useTheme } from "./theme/useTheme";
 import { useSetAppStateContext } from "./state";
 import { autocompletion } from "@codemirror/autocomplete";
+import { tooltips } from "@codemirror/tooltip";
 // import { defaultLightThemeOption } from './theme/light';
 
 export default function Input({
@@ -244,6 +245,7 @@ export function useCodeMirror(props) {
   });
   let getExtensions = [
     ...extensions,
+    tooltips({ position: "absolute" }),
     autocompletion(),
     keymap.of([
       {
