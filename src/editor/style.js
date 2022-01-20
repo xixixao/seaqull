@@ -399,7 +399,7 @@ globalCss({
     "-moz-osx-font-smoothing": "grayscale",
     fontFamily: "$os",
     font: "$body",
-    background: "$panel",
+    background: "$panel !important",
   },
   table: {
     borderCollapse: "collapse",
