@@ -6,13 +6,17 @@
     "build": "vite build",
     "serve": "vite preview"
   },
+  "overrides": {
+    "@codemirror/tooltip": "$@codemirror/tooltip"
+  },
   "dependencies": {
     "@codemirror/autocomplete": "^0.19.12",
     "@codemirror/commands": "^0.19.7",
     "@codemirror/lang-sql": "^0.19.4",
+    "@codemirror/language": "^0.19.7",
     "@codemirror/state": "^0.19.6",
     "@codemirror/theme-one-dark": "^0.19.1",
-    "@codemirror/tooltip": "^0.19.13",
+    "@codemirror/tooltip": "xixixao/tooltip#patch-1",
     "@codemirror/view": "^0.19.39",
     "@modulz/radix-icons": "^4.0.0",
     "@radix-ui/colors": "^0.1.8",

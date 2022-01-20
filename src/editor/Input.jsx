@@ -105,12 +105,12 @@ export default function Input({
     >
       {label != null ? <Label>{label}</Label> : null}
       {edited != null ? (
-        <Editor
+        <CodeEditor
           extensions={extensions}
           click={click}
           ref={inputRef}
           value={edited}
-          onMouseLeave={handleMouseLeave}
+          // onMouseLeave={handleMouseLeave}
           onChange={handleEdit}
           // onConfirm={onChange}
           onConfirm={handleConfirm}
@@ -134,7 +134,7 @@ function Label(props) {
   return <span style={{ fontSize: 12 }}>{props.children}</span>;
 }
 
-const Editor = forwardRef(function Editor(props, ref) {
+const CodeEditor = forwardRef(function CodeEditor(props, ref) {
   const {
     className,
     value = "",
