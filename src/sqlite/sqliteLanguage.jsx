@@ -14,6 +14,7 @@ import {
   getQuery,
   getQueryAdditionalValues,
   getQuerySelectable,
+  getResults,
   NODE_CONFIGS,
 } from "./sqliteNodes";
 import { AddFromNodeButton } from "./ui/SqliteNodeUI";
@@ -21,15 +22,14 @@ import { format as formatSQL } from "sql-formatter";
 import { Button } from "editor/ui/Button";
 import { Row } from "editor/ui/Row";
 import { addNodeAtPosition } from "editor/AddNodeButton";
+import * as Promises from "js/Promises";
 
 export default function sqliteLanguage(tables, initialStateSnapshot) {
   const DATABASE = database(tables);
 
   return {
     initialState: stateFromSnapshot(initialStateSnapshot, DATABASE),
-    Results() {
-      return <ResultsTable db={DATABASE.db} />;
-    },
+    Results,
     TopUI: AddFromNodeButton,
     nodeTypes: Objects.map(NODE_CONFIGS, (type) => type.Component),
     onDoubleClick: addFromNodeOnDoubleClick,
@@ -53,7 +53,26 @@ function idMap(array) {
   return new Map(array.map((element) => [element.id, element]));
 }
 
-function ResultsTable({ db }) {
+function Results() {
+  const appState = useAppStateDataContext();
+  const selected = Nodes.selected(appState);
+  const singleSelectedNode = only(selected);
+  return (
+    <Column
+      css={{
+        overflow: "scroll",
+        padding: "0 $8",
+        maxHeight: "100%",
+      }}
+    >
+      {(singleSelectedNode != null
+        ? getResults(appState, singleSelectedNode)
+        : null) ?? <ResultsTable />}
+    </Column>
+  );
+}
+
+function ResultsTable() {
   const appState = useAppStateDataContext();
   const [resultsState, setResultsState] = useState(null);
   const [lastShownNode, setLastShownNode] = useState(null);
@@ -82,9 +101,10 @@ function ResultsTable({ db }) {
     if (queries.length > 0) {
       setIsLoading(true);
     }
-    const ARTIFICIAL_DELAY = 300;
-    db.then((database) =>
-      setTimeout(() => {
+    let queriesPromise = Promises.cancelable(
+      // const ARTIFICIAL_DELAY = 300;
+      appState.editorConfig.db.then((database) => {
+        // setTimeout(() => {
         setIsLoading(false);
         if (queries.length > 0) {
           setResultsState({
@@ -100,9 +120,13 @@ function ResultsTable({ db }) {
           setLastShownNode(oneShown);
         }
         const NEW_RESULTS_INDICATOR_DURATION = 1000;
-        setTimeout(() => setUpdated(false), NEW_RESULTS_INDICATOR_DURATION);
-      }, ARTIFICIAL_DELAY)
+        return Promises.delay(NEW_RESULTS_INDICATOR_DURATION).then(() => {
+          setUpdated(false);
+        });
+        // }, ARTIFICIAL_DELAY)
+      })
     );
+    return queriesPromise.cancel;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [appState]);
 
@@ -111,17 +135,7 @@ function ResultsTable({ db }) {
   } else if (resultsState == null) {
     return null;
   }
-  return (
-    <Column
-      css={{
-        overflow: "scroll",
-        padding: "0 $8",
-        maxHeight: "100%",
-      }}
-    >
-      <ResultsDisplay updated={updated} state={resultsState} />
-    </Column>
-  );
+  return <ResultsDisplay updated={updated} state={resultsState} />;
 }
 
 function ResultsDisplay({ updated, state }) {

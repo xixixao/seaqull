@@ -1,4 +1,11 @@
-import { useSetSelectedNodeState } from "editor/state";
+import {
+  AppStateContext,
+  useAppStateContext,
+  useSetSelectedNodeState,
+} from "editor/state";
+import { Button } from "editor/ui/Button";
+import { Row } from "editor/ui/Row";
+import { useContext } from "react";
 import SqliteInput from "../ui/SqliteInput";
 import SqliteNodeUI from "../ui/SqliteNodeUI";
 
@@ -10,7 +17,7 @@ function FromNode(node) {
       FROM{" "}
       <SqliteInput
         node={node}
-        focused={name == null}
+        autoFocus={true}
         value={name}
         onChange={(name) => {
           setSelectedNodeState((node) => {
@@ -25,12 +32,15 @@ function FromNode(node) {
 export const FromNodeConfig = {
   Component: FromNode,
   emptyNodeData: empty,
+  results(appState, node) {
+    return nodeName(node) === "" ? <SelectTable node={node} /> : null;
+  },
   hasProblem(appState, node) {
-    return nodeName(node) != null && !hasValidName(appState, node);
+    return nodeName(node) !== "" && !hasValidName(appState, node);
   },
   query(appState, node) {
     const name = nodeName(node);
-    return (name ?? "").length > 0 ? `SELECT * from ${name}` : null;
+    return name.length > 0 ? `SELECT * from ${name}` : null;
   },
   queryAdditionalValues(appState, node) {
     return null;
@@ -47,7 +57,7 @@ export const FromNodeConfig = {
 };
 
 function empty() {
-  return { name: null };
+  return { name: "" };
 }
 
 function nodeName(node) {
@@ -55,9 +65,42 @@ function nodeName(node) {
 }
 
 function hasValidName(appState, node) {
-  return appState.editorConfig.table(nodeName(node) ?? "") != null;
+  return appState.editorConfig.table(nodeName(node)) != null;
 }
 
 function setName(node, name) {
   node.data.name = name;
+}
+
+function SelectTable() {
+  const { schema } = useContext(AppStateContext.editorConfig);
+  const setSelectedNodeState = useSetSelectedNodeState();
+  const tableNames = Object.keys(schema);
+  tableNames.sort();
+  return (
+    <table>
+      <thead>
+        <th>Table</th>
+        <th>Columns</th>
+      </thead>
+      <tbody>
+        {tableNames.map((tableName) => (
+          <tr key={tableName}>
+            <td>
+              <Button
+                onClick={() => {
+                  setSelectedNodeState((node) => {
+                    setName(node, tableName);
+                  });
+                }}
+              >
+                {tableName}
+              </Button>
+            </td>
+            <td>{schema[tableName].join(", ")}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
 }

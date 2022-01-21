@@ -25,14 +25,16 @@ export function database(tables) {
       const [, columns] = maybeTable;
       return columnDefinitionToNames(columns);
     },
-    schema() {
-      const schema = {};
-      for (const [table, columns] of tables) {
-        schema[table] = columnDefinitionToNames(columns);
-      }
-      return schema;
-    },
+    schema: schema(tables),
   };
+}
+
+function schema(tables) {
+  const schema = {};
+  for (const [table, columns] of tables) {
+    schema[table] = columnDefinitionToNames(columns);
+  }
+  return schema;
 }
 
 function columnDefinitionToNames(definition) {

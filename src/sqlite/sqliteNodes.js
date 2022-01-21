@@ -39,6 +39,14 @@ function getNodeConfig(node) {
   return getConfig(node.type);
 }
 
+export function getResults(appState, node) {
+  const fn = getNodeConfig(node).results;
+  if (fn == null) {
+    return null;
+  }
+  return fn(appState, node);
+}
+
 export function getHasProblem(appState, node) {
   return getNodeConfig(node).hasProblem(appState, node);
 }

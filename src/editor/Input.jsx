@@ -29,31 +29,17 @@ export default function Input({
   node,
   extensions,
   displayValue,
-  focused,
+  autoFocus,
   label,
   value,
   onChange,
 }) {
   const [click, setClick] = useState(null);
-  const [shouldStopEditing, setShouldStopEditing] = useState(false);
-  const [edited, setEdited] = useState(focused ?? false ? "" : null);
-  const [defaultValue] = useState(value);
-  const inputRef = useRef();
-  // const isEditing = edited != null;
-  // useEffect(() => {
-  //   if (isEditing && !inputRef.current.focused) {
-  //     console.log(inputRef.current);
-  //     // inputRef.current.focus();
-  //     // inputRef.current.select();
-  //   }
-  // }, [isEditing]);
-  const handleMouseLeave = useCallback(() => {
-    setShouldStopEditing(true);
-  }, []);
-  const handleEdit = useCallback((value) => {
-    setShouldStopEditing(false);
-    setEdited(value);
-  }, []);
+  const [edited, setEdited] = useState(
+    autoFocus ?? false ? (value === "" ? "" : null) : null
+  );
+
+  const editorRef = useRef();
   const handleReset = useCallback(() => {
     if (edited === "") {
       return;
@@ -61,46 +47,28 @@ export default function Input({
     setEdited(null);
     onChange(edited);
   }, [edited, onChange]);
+  const [setShouldStopEditingNext, resetShouldStopEditing] =
+    useShouldStopEditingOnMouseMoveOutside(handleReset);
+  const handleEdit = useCallback(
+    (value) => {
+      resetShouldStopEditing();
+      setEdited(value);
+    },
+    [resetShouldStopEditing]
+  );
   const handleConfirm = useCallback(
     (value) => {
       if (value !== "") {
         setEdited(null);
-        onChange(value);
       }
+      onChange(value);
     },
     [onChange]
   );
-  const setAppState = useSetAppStateContext();
-  const nodeID = node?.id;
-  useEffect(() => {
-    if (nodeID != null) {
-      setAppState((appState) => {
-        Nodes.positionOf(appState, Node.fake(nodeID)).edited = edited;
-      });
-    }
-  }, [edited, nodeID, setAppState]);
-  useEffect(() => {
-    // const handleClickOutside = (event) => {
-    //   if (edited != null && !inputRef.current.contains(event.target)) {
-    //     handleReset();
-    //   }
-    // };
-    // document.addEventListener("mouseup", handleClickOutside);
-    // return () => {
-    //   document.removeEventListener("mouseup", handleClickOutside);
-    // };
-    const handleMouseMove = (event) => {
-      if (shouldStopEditing) {
-        setShouldStopEditing(false);
-        handleReset();
-      }
-    };
+  useEffectUpdateNodeEdited(node?.id, edited);
+  useEffectConfirmOnClickOutside(editorRef, edited, handleConfirm);
+  useSyncGivenValue(value, edited, setEdited);
 
-    document.addEventListener("mousemove", handleMouseMove);
-    return () => {
-      document.removeEventListener("mousemove", handleMouseMove);
-    };
-  }, [handleReset, shouldStopEditing]);
   return (
     <div
       style={{ display: "inline-block" }}
@@ -113,9 +81,9 @@ export default function Input({
         <CodeEditor
           extensions={extensions}
           click={click}
-          ref={inputRef}
+          ref={editorRef}
           value={edited}
-          // onMouseLeave={handleMouseLeave}
+          onMouseLeave={setShouldStopEditingNext}
           onChange={handleEdit}
           // onConfirm={onChange}
           onConfirm={handleConfirm}
@@ -133,6 +101,67 @@ export default function Input({
       )}
     </div>
   );
+}
+
+function useSyncGivenValue(value, edited, setEdited) {
+  const [givenValue, updateGivenValue] = useState(value);
+
+  if (value !== givenValue) {
+    if (value !== "" && edited != null) {
+      setEdited(null);
+    }
+    updateGivenValue(value);
+  }
+}
+
+function useEffectUpdateNodeEdited(nodeID, edited) {
+  const setAppState = useSetAppStateContext();
+  useEffect(() => {
+    if (nodeID != null) {
+      setAppState((appState) => {
+        Nodes.positionOf(appState, Node.fake(nodeID)).edited = edited;
+      });
+    }
+  }, [edited, nodeID, setAppState]);
+}
+
+function useEffectConfirmOnClickOutside(editorRef, edited, handleConfirm) {
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      const editor = editorRef.current;
+      if (edited != null && !editor.container.contains(event.target)) {
+        handleConfirm(edited);
+      }
+    };
+    document.addEventListener("mouseup", handleClickOutside);
+    return () => {
+      document.removeEventListener("mouseup", handleClickOutside);
+    };
+  }, [editorRef, edited, handleConfirm]);
+}
+
+function useShouldStopEditingOnMouseMoveOutside(handleReset) {
+  const [shouldStopEditing, setShouldStopEditing] = useState(false);
+  const setShouldStopEditingNext = useCallback(() => {
+    setShouldStopEditing(true);
+  }, []);
+  const resetShouldStopEditing = useCallback(() => {
+    setShouldStopEditing(false);
+  }, []);
+  useEffect(() => {
+    const handleMouseMove = (event) => {
+      if (shouldStopEditing) {
+        setShouldStopEditing(false);
+        handleReset();
+      }
+    };
+
+    document.addEventListener("mousemove", handleMouseMove);
+    return () => {
+      document.removeEventListener("mousemove", handleMouseMove);
+    };
+  }, [handleReset, shouldStopEditing]);
+  return [setShouldStopEditingNext, resetShouldStopEditing];
 }
 
 function Label(props) {
@@ -182,7 +211,7 @@ const CodeEditor = forwardRef(function CodeEditor(props, ref) {
     click,
     onConfirm,
   });
-  useImperativeHandle(ref, () => ({ editor: container, state, view }), [
+  useImperativeHandle(ref, () => ({ container, state, view }), [
     container,
     state,
     view,
@@ -267,7 +296,7 @@ export function useCodeMirror(props) {
   let getExtensions = [
     ...extensions,
     tooltips({ position: "absolute" }),
-    autocompletion({ getEventFromTransaction }),
+    autocompletion(),
     keymap.of([
       {
         key: "Mod-Enter",
@@ -386,17 +415,4 @@ function posAtClick(view, click) {
     return;
   }
   return view.posAtCoords(click);
-}
-
-function getEventFromTransaction(tr) {
-  const isCursorPlacement =
-    (tr.isUserEvent("select") ||
-      tr.annotation(Transaction.userEvent) == null) &&
-    tr.selection?.ranges.length === 1 &&
-    tr.selection?.ranges[0].empty;
-  return isCursorPlacement ||
-    tr.isUserEvent("delete") ||
-    tr.isUserEvent("input.type")
-    ? "input"
-    : null;
 }
