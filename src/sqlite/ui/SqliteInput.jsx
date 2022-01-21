@@ -49,10 +49,14 @@ function completeFromSchema(schema, tables, defaultTable) {
   //   Object.keys(byTable).map((name) => ({ label: name, type: "type" }))
   // ).concat((defaultTable && byTable[defaultTable]) || []);
   return (context) => {
-    let { parent, from, quoted, empty } = sourceContext(
+    let { parent, middle, from, quoted, emptyAfter } = sourceContext(
       context.state,
       context.pos
     );
+    console.log("eaf?", emptyAfter);
+    if (middle || !emptyAfter) {
+      return;
+    }
     // console.log("emtpyt", empty);
     // if (empty && !context.explicit) return null;
     // let options = topOptions;
@@ -65,11 +69,12 @@ function completeFromSchema(schema, tables, defaultTable) {
     // }
     let quoteAfter =
       quoted && context.state.sliceDoc(context.pos, context.pos + 1) == quoted;
+    console.log("complete from", from);
     return {
       from,
       // to: quoteAfter ? context.pos + 1 : undefined,
       options: maybeQuoteCompletions(quoted, options),
-      // span: quoted ? QuotedSpan : Span,
+      span: quoted ? QuotedSpan : Span,
     };
   };
 }
@@ -77,13 +82,14 @@ const Span = /^\w*$/,
   QuotedSpan = /^[`'"]?\w*[`'"]?$/;
 
 function sourceContext(state, startPos) {
-  let pos = syntaxTree(state).resolveInner(startPos, -1);
-  let empty = false;
-  // console.log(pos, pos.name);
-  if (pos.name == "Identifier" || pos.name == "QuotedIdentifier") {
-    empty = false;
+  const preceding = syntaxTree(state).resolveInner(startPos, -1);
+  const following = state.doc.sliceString(startPos, startPos + 1, "\n");
+  const emptyAfter = /^\s?$/.test(following);
+  // console.log(preceding, preceding.name);
+  console.log("preceding", preceding.name);
+  if (preceding.name == "Identifier" || preceding.name == "QuotedIdentifier") {
     let parent = null;
-    let dot = tokenBefore(pos);
+    let dot = tokenBefore(preceding);
     if (dot && dot.name == ".") {
       let before = tokenBefore(dot);
       if (
@@ -95,30 +101,31 @@ function sourceContext(state, startPos) {
         );
     }
     return {
+      emptyAfter,
+      middle: startPos < preceding.to,
       parent,
-      from: pos.from,
+      from: preceding.from,
       quoted:
-        pos.name == "QuotedIdentifier"
-          ? state.sliceDoc(pos.from, pos.from + 1)
+        preceding.name == "QuotedIdentifier"
+          ? state.sliceDoc(preceding.from, preceding.from + 1)
           : null,
     };
-  } else if (pos.name == ".") {
-    let before = tokenBefore(pos);
+  } else if (preceding.name == ".") {
+    let before = tokenBefore(preceding);
     if (
       (before && before.name == "Identifier") ||
       before.name == "QuotedIdentifier"
     )
       return {
+        emptyAfter,
         parent: stripQuotes(
           state.sliceDoc(before.from, before.to).toLowerCase()
         ),
         from: startPos,
         quoted: null,
       };
-  } else {
-    empty = true;
   }
-  return { parent: null, from: startPos, quoted: null, empty };
+  return { parent: null, from: startPos, quoted: null, emptyAfter };
 }
 
 function tokenBefore(tree) {

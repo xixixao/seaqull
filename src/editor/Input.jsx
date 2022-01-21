@@ -1,5 +1,10 @@
 import { defaultKeymap } from "@codemirror/commands";
-import { EditorSelection, EditorState, StateEffect } from "@codemirror/state";
+import {
+  EditorSelection,
+  EditorState,
+  StateEffect,
+  Transaction,
+} from "@codemirror/state";
 import {
   EditorView,
   keymap,
@@ -15,7 +20,7 @@ import * as Node from "graph/Node";
 import { oneDark } from "@codemirror/theme-one-dark";
 import { useTheme } from "./theme/useTheme";
 import { useSetAppStateContext } from "./state";
-import { autocompletion } from "@codemirror/autocomplete";
+import { acceptCompletion, autocompletion } from "@codemirror/autocomplete";
 import { tooltips } from "@codemirror/tooltip";
 import { Box } from "./ui/Box";
 // import { defaultLightThemeOption } from './theme/light';
@@ -252,22 +257,23 @@ export function useCodeMirror(props) {
     "& .cm-content": { padding: 0 },
     "& .cm-line": { padding: 0 },
   });
-  const updateListener = EditorView.updateListener.of((vu) => {
-    if (vu.docChanged && typeof onChange === "function") {
-      const doc = vu.state.doc;
+  const updateListener = EditorView.updateListener.of((view) => {
+    if (view.docChanged && typeof onChange === "function") {
+      const doc = view.state.doc;
       const value = doc.toString();
-      onChange(value, vu);
+      onChange(value, view);
     }
   });
   let getExtensions = [
     ...extensions,
     tooltips({ position: "absolute" }),
-    autocompletion(),
+    autocompletion({ getEventFromTransaction }),
     keymap.of([
       {
         key: "Mod-Enter",
-        run: (vu) => {
-          const doc = vu.state.doc;
+        run: (view) => {
+          acceptCompletion(view);
+          const doc = view.state.doc;
           const value = doc.toString();
           onConfirm(value);
         },
@@ -380,4 +386,17 @@ function posAtClick(view, click) {
     return;
   }
   return view.posAtCoords(click);
+}
+
+function getEventFromTransaction(tr) {
+  const isCursorPlacement =
+    (tr.isUserEvent("select") ||
+      tr.annotation(Transaction.userEvent) == null) &&
+    tr.selection?.ranges.length === 1 &&
+    tr.selection?.ranges[0].empty;
+  return isCursorPlacement ||
+    tr.isUserEvent("delete") ||
+    tr.isUserEvent("input.type")
+    ? "input"
+    : null;
 }
