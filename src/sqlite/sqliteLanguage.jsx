@@ -101,32 +101,39 @@ function ResultsTable() {
     if (queries.length > 0) {
       setIsLoading(true);
     }
-    let queriesPromise = Promises.cancelable(
+    let canceled = false;
+    appState.editorConfig.db.then((database) => {
+      if (canceled) {
+        return;
+      }
       // const ARTIFICIAL_DELAY = 300;
-      appState.editorConfig.db.then((database) => {
-        // setTimeout(() => {
-        setIsLoading(false);
-        if (queries.length > 0) {
-          setResultsState({
-            queries,
-            tables: queries.map((query) => execQuery(database, query)),
-            appState: appState,
-          });
-          setUpdated(
-            lastShownNode != null &&
-              oneShown != null &&
-              !Node.is(oneShown, lastShownNode)
-          );
-          setLastShownNode(oneShown);
-        }
-        const NEW_RESULTS_INDICATOR_DURATION = 1000;
-        return Promises.delay(NEW_RESULTS_INDICATOR_DURATION).then(() => {
-          setUpdated(false);
+      // setTimeout(() => {
+      setIsLoading(false);
+      if (queries.length > 0) {
+        setResultsState({
+          queries,
+          tables: queries.map((query) => execQuery(database, query)),
+          appState: appState,
         });
-        // }, ARTIFICIAL_DELAY)
-      })
-    );
-    return queriesPromise.cancel;
+        setUpdated(
+          lastShownNode != null &&
+            oneShown != null &&
+            !Node.is(oneShown, lastShownNode)
+        );
+        setLastShownNode(oneShown);
+      }
+      const NEW_RESULTS_INDICATOR_DURATION = 1000;
+      Promises.delay(NEW_RESULTS_INDICATOR_DURATION).then(() => {
+        if (canceled) {
+          return;
+        }
+        setUpdated(false);
+      });
+      // }, ARTIFICIAL_DELAY)
+    });
+    return () => {
+      canceled = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [appState]);
 

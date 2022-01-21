@@ -1,5 +1,3 @@
-import Input from "editor/Input";
-import SqliteNodeUI from "../ui/SqliteNodeUI";
 import { useSetSelectedNodeState } from "editor/state";
 import HorizontalSpace from "editor/ui/HorizontalSpace";
 import { Row } from "editor/ui/Row";
@@ -13,13 +11,15 @@ import {
   someOrAllColumnList,
 } from "../sqliteNodes";
 import ColumnCheckbox from "../ui/ColumnCheckbox";
+import SqliteInput from "../ui/SqliteInput";
+import SqliteNodeUI from "../ui/SqliteNodeUI";
 
 function SelectNode(node) {
   const setSelectedNodeState = useSetSelectedNodeState();
   return (
     <SqliteNodeUI node={node}>
       SELECT{" "}
-      <Input
+      <SqliteInput
         value={someOrAllColumnList(selectedExpressions(node))}
         onChange={(expressions) => {
           setSelectedNodeState((node) => {

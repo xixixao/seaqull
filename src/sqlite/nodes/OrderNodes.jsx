@@ -1,5 +1,3 @@
-import Input from "editor/Input";
-import SqliteNodeUI from "../ui/SqliteNodeUI";
 import { useSetSelectedNodeState } from "editor/state";
 import { Button } from "editor/ui/Button";
 import HorizontalSpace from "editor/ui/HorizontalSpace";
@@ -9,13 +7,15 @@ import { only } from "js/Arrays";
 import { produce } from "js/immer";
 import React from "react";
 import { getColumnNames, getQuerySelectable } from "../sqliteNodes";
+import SqliteInput from "../ui/SqliteInput";
+import SqliteNodeUI from "../ui/SqliteNodeUI";
 
 function OrderNode(node) {
   const setSelectedNodeState = useSetSelectedNodeState();
   return (
     <SqliteNodeUI node={node}>
       ORDER BY{" "}
-      <Input
+      <SqliteInput
         value={!hasOrdered(node) ? "∅" : orderClause(node)}
         onChange={(orderClause) => {
           setSelectedNodeState((node) => {

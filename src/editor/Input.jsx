@@ -1,29 +1,22 @@
-import { defaultKeymap } from "@codemirror/commands";
-import {
-  EditorSelection,
-  EditorState,
-  StateEffect,
-  Transaction,
-} from "@codemirror/state";
-import {
-  EditorView,
-  keymap,
-  placeholder as extendPlaceholder,
-  ViewUpdate,
-} from "@codemirror/view";
-import { forwardRef } from "react";
-import { useImperativeHandle } from "react";
-import { useCallback, useEffect, useRef, useState } from "react";
-import * as Nodes from "graph/Nodes";
-import * as Node from "graph/Node";
-
-import { oneDark } from "@codemirror/theme-one-dark";
-import { useTheme } from "./theme/useTheme";
-import { useSetAppStateContext } from "./state";
 import { acceptCompletion, autocompletion } from "@codemirror/autocomplete";
+import { defaultKeymap } from "@codemirror/commands";
+import { classHighlightStyle } from "@codemirror/highlight";
+import { EditorSelection, EditorState, StateEffect } from "@codemirror/state";
 import { tooltips } from "@codemirror/tooltip";
+import { EditorView, keymap } from "@codemirror/view";
+import * as Node from "graph/Node";
+import * as Nodes from "graph/Nodes";
+import {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from "react";
+import { useSetAppStateContext } from "./state";
 import { Box } from "./ui/Box";
-// import { defaultLightThemeOption } from './theme/light';
+import { codeMirrorStyles } from "./ui/codeMirrorStyles";
 
 export default function Input({
   node,
@@ -83,6 +76,8 @@ export default function Input({
           click={click}
           ref={editorRef}
           value={edited}
+          onMouseDown={stopEventPropagation}
+          onTouchStart={stopEventPropagation}
           onMouseLeave={setShouldStopEditingNext}
           onChange={handleEdit}
           // onConfirm={onChange}
@@ -101,6 +96,10 @@ export default function Input({
       )}
     </div>
   );
+}
+
+function stopEventPropagation(event) {
+  event.stopPropagation();
 }
 
 function useSyncGivenValue(value, edited, setEdited) {
@@ -176,7 +175,6 @@ const CodeEditor = forwardRef(function CodeEditor(props, ref) {
     extensions = [],
     onChange,
     autoFocus,
-    theme = "light",
     maxHeight,
     width,
     minWidth,
@@ -196,7 +194,6 @@ const CodeEditor = forwardRef(function CodeEditor(props, ref) {
     root,
     value,
     autoFocus,
-    theme,
     maxHeight,
     width,
     minWidth,
@@ -239,6 +236,7 @@ const CodeEditor = forwardRef(function CodeEditor(props, ref) {
         borderStyle: "solid",
         borderWidth: "0 0 1px 0",
         borderColor: "$blue9",
+        ...codeMirrorStyles,
       }}
       ref={editor}
       {...other}
@@ -270,8 +268,7 @@ export function useCodeMirror(props) {
   const [container, setContainer] = useState(props.container);
   const [view, setView] = useState();
   const [state, setState] = useState();
-  const [theme] = useTheme();
-  const defaultTheme = EditorView.theme({
+  const resetStyles = EditorView.theme({
     "&": {
       height,
       minHeight,
@@ -293,10 +290,11 @@ export function useCodeMirror(props) {
       onChange(value, view);
     }
   });
+  const autocomplete = autocompletion();
   let getExtensions = [
     ...extensions,
     tooltips({ position: "absolute" }),
-    autocompletion(),
+    autocomplete.slice(0, -1 /*remove theme*/),
     keymap.of([
       {
         key: "Mod-Enter",
@@ -310,16 +308,16 @@ export function useCodeMirror(props) {
       ...defaultKeymap.filter(({ key }) => key !== "Mod-Enter"),
     ]),
     updateListener,
-    defaultTheme,
-    theme === "dark" ? oneDark : [],
+    resetStyles,
+    classHighlightStyle,
   ];
   // if (basicSetup) {
   //   getExtensions.unshift(defaultBasicSetup);
   // }
 
-  if (placeholder) {
-    getExtensions.unshift(extendPlaceholder(placeholder));
-  }
+  // if (placeholder) {
+  //   getExtensions.unshift(extendPlaceholder(placeholder));
+  // }
 
   // switch (theme) {
   //   case 'light':
@@ -333,7 +331,7 @@ export function useCodeMirror(props) {
   //     break;
   // }
 
-  getExtensions = getExtensions.concat(extensions);
+  // getExtensions = getExtensions.concat(extensions);
 
   useEffect(() => {
     if (container && !state) {
@@ -381,7 +379,6 @@ export function useCodeMirror(props) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
-    theme,
     extensions,
     placeholder,
     height,

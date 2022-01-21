@@ -1,6 +1,4 @@
 import { DropdownMenuIcon } from "@modulz/radix-icons";
-import Input from "editor/Input";
-import SqliteNodeUI from "../ui/SqliteNodeUI";
 import { useSetSelectedNodeState } from "editor/state";
 import { Button } from "editor/ui/Button";
 import { Column } from "editor/ui/Column";
@@ -8,12 +6,14 @@ import HorizontalSpace from "editor/ui/HorizontalSpace";
 import { IconButton } from "editor/ui/IconButton";
 import { Row } from "editor/ui/Row";
 import ShowOnClick from "editor/ui/ShowOnClick";
+import * as Nodes from "graph/Nodes";
 import * as Arrays from "js/Arrays";
 import { first, second } from "js/Arrays";
-import * as Nodes from "graph/Nodes";
 import * as Sets from "js/Sets";
 import { getColumnNames, getQuerySelectable } from "../sqliteNodes";
 import ColumnCheckbox from "../ui/ColumnCheckbox";
+import SqliteInput from "../ui/SqliteInput";
+import SqliteNodeUI from "../ui/SqliteNodeUI";
 
 function JoinNode(node) {
   const filters = nodeFilters(node);
@@ -22,7 +22,7 @@ function JoinNode(node) {
     <SqliteNodeUI node={node}>
       {/* todo type of join */}
       JOIN ON{" "}
-      <Input
+      <SqliteInput
         displayValue={!hasFilter(node) ? "∅" : null}
         value={filters}
         onChange={(filters) => {

@@ -1,10 +1,5 @@
-import {
-  AppStateContext,
-  useAppStateContext,
-  useSetSelectedNodeState,
-} from "editor/state";
+import { AppStateContext, useSetSelectedNodeState } from "editor/state";
 import { Button } from "editor/ui/Button";
-import { Row } from "editor/ui/Row";
 import { useContext } from "react";
 import SqliteInput from "../ui/SqliteInput";
 import SqliteNodeUI from "../ui/SqliteNodeUI";
@@ -80,14 +75,17 @@ function SelectTable() {
   return (
     <table>
       <thead>
-        <th>Table</th>
-        <th>Columns</th>
+        <tr>
+          <th>Table</th>
+          <th>Columns</th>
+        </tr>
       </thead>
       <tbody>
         {tableNames.map((tableName) => (
           <tr key={tableName}>
             <td>
               <Button
+                css={{ marginVert: "2px" }}
                 onClick={() => {
                   setSelectedNodeState((node) => {
                     setName(node, tableName);

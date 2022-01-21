@@ -1,9 +1,9 @@
-import Input from "editor/Input";
 import { useSetSelectedNodeState } from "editor/state";
 import * as Nodes from "graph/Nodes";
 import { only } from "js/Arrays";
 import React from "react";
 import { getColumnNames, getQuerySelectable } from "../sqliteNodes";
+import SqliteInput from "../ui/SqliteInput";
 import SqliteNodeUI from "../ui/SqliteNodeUI";
 
 function WhereNode(node) {
@@ -12,7 +12,7 @@ function WhereNode(node) {
   return (
     <SqliteNodeUI node={node}>
       WHERE{" "}
-      <Input
+      <SqliteInput
         displayValue={!hasFilter(node) ? "∅" : null}
         value={filters}
         onChange={(filters) => {
