@@ -25,17 +25,17 @@ export const NODE_CONFIGS = {
 };
 
 export const TIGHT_CHILD_NODES = Maps.from({
-  select: {
-    label: "SELECT",
-    key: "s",
+  where: {
+    label: "WHERE",
+    key: "w",
   },
   group: {
     label: "GROUP BY",
     key: "g",
   },
-  where: {
-    label: "WHERE",
-    key: "w",
+  select: {
+    label: "SELECT",
+    key: "s",
   },
   order: {
     label: "ORDER BY",
