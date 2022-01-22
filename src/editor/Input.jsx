@@ -235,8 +235,15 @@ export function useCodeMirror(props) {
   const [container, setContainer] = useState(props.container);
   const [view, setView] = useState();
   const [state, setState] = useState();
+  // Prevent the updateListener from firing after the Editor turned uneditable
+  const currentlyEditable = useRef();
+  currentlyEditable.current = editable;
   const updateListener = EditorView.updateListener.of((view) => {
-    if (view.docChanged && typeof onChange === "function") {
+    if (
+      view.docChanged &&
+      typeof onChange === "function" &&
+      currentlyEditable.current
+    ) {
       const doc = view.state.doc;
       const value = doc.toString();
       onChange(value, view);
@@ -310,26 +317,23 @@ export function useCodeMirror(props) {
   }, [extensions, editable]);
 
   useEffect(() => {
-    if (click != null && view != null) {
+    if (editable && view != null) {
       focusAndPlaceCursor(view, click);
     }
-  }, [view, click]);
+  }, [editable, view, click]);
 
   return { state, setState, view, setView, container, setContainer };
 }
 
 function focusAndPlaceCursor(view, click) {
-  const at = posAtClick(view, click);
-  if (at == null) {
-    return;
-  }
+  const at = posAtClick(view, click) ?? 0;
   view.focus();
   view.dispatch({ selection: EditorSelection.cursor(at) });
 }
 
 function posAtClick(view, click) {
   if (click == null) {
-    return;
+    return null;
   }
   return view.posAtCoords(click);
 }
