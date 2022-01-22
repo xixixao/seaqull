@@ -1,12 +1,9 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import { Editor } from "./Editor";
 
-export default function renderEditor(language) {
+export default function render(app) {
   ReactDOM.render(
-    <React.StrictMode>
-      <Editor language={language} />
-    </React.StrictMode>,
+    <React.StrictMode>{app}</React.StrictMode>,
     document.getElementById("root")
   );
 }

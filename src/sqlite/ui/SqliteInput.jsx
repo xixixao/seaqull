@@ -1,19 +1,19 @@
 import { schemaCompletion, SQLite } from "@codemirror/lang-sql";
 import { LanguageSupport } from "@codemirror/language";
 import Input from "editor/Input";
-import { useAppStateDataContext } from "editor/state";
 import { useMemo } from "react";
+import { useEditorConfig } from "../sqliteState";
 
 export default function SqliteInput(props) {
-  const { editorConfig } = useAppStateDataContext();
+  const { schema } = useEditorConfig();
   const extensions = useMemo(() => {
     return [
       sql({
         dialect: SQLite,
-        schema: editorConfig.schema,
+        schema,
       }),
     ];
-  }, [editorConfig]);
+  }, [schema]);
   return <Input {...props} extensions={extensions} />;
 }
 

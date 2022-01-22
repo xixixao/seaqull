@@ -12,6 +12,7 @@ import * as Nodes from "graph/Nodes";
 import * as Arrays from "js/Arrays";
 import { Fragment } from "react";
 import { getEmptyNode, getHasProblem, TIGHT_CHILD_NODES } from "../sqliteNodes";
+import { useEditorConfig } from "../sqliteState";
 
 export default function SqliteNodeUI({ hideControls, children }) {
   return (
@@ -53,8 +54,9 @@ function useControls() {
 
 function useHasProblem() {
   const appState = useAppStateDataContext();
+  const editorConfig = useEditorConfig();
   const node = useNode();
-  return getHasProblem(appState, node);
+  return getHasProblem(appState, node, { editorConfig });
 }
 
 function AddTightChildStepButtons() {

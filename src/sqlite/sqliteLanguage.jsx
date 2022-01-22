@@ -25,26 +25,31 @@ import { Row } from "editor/ui/Row";
 import { addNodeAtPosition } from "editor/AddNodeButton";
 import * as Promises from "js/Promises";
 import * as Arrays from "js/Arrays";
+import { Editor } from "editor/Editor";
+import { SQLiteStateProvider, useEditorConfig } from "./sqliteState";
 
-export default function sqliteLanguage(tables, initialStateSnapshot) {
+export default function SQLiteLanguage({ tables, snapshot }) {
   const DATABASE = database(tables);
-
-  return {
-    initialState: stateFromSnapshot(initialStateSnapshot, DATABASE),
-    Results,
-    TopUI: AddFromNodeButton,
-    nodeTypes: Objects.map(NODE_CONFIGS, (type) => type.Component),
-    onDoubleClick: addFromNodeOnDoubleClick,
-    onKeyDown: addNodeFromKey,
-  };
+  return (
+    <SQLiteStateProvider initialState={{ editorConfig: DATABASE }}>
+      <Editor
+        initialState={stateFromSnapshot(snapshot, DATABASE)}
+        topUI={<AddFromNodeButton />}
+        nodeTypes={Objects.map(NODE_CONFIGS, (type) => type.Component)}
+        onDoubleClick={addFromNodeOnDoubleClick}
+        onKeyDown={addNodeFromKey}
+      >
+        <Results />
+      </Editor>
+    </SQLiteStateProvider>
+  );
 }
 
-function stateFromSnapshot([nodes, positions, edges], DATABASE) {
+function stateFromSnapshot([nodes, positions, edges]) {
   return {
     nodes: idMap(nodes),
     positions: new Map(nodes.map((element, i) => [element.id, positions[i]])),
     edges: idMap(edges),
-    editorConfig: DATABASE,
   };
 }
 
@@ -93,6 +98,7 @@ function Results() {
 
 function ResultsTable() {
   const appState = useAppStateDataContext();
+  const editorConfig = useEditorConfig();
   const [resultsState, setResultsState] = useState(null);
   const [lastShownNode, setLastShownNode] = useState(null);
   const [updated, setUpdated] = useState();
@@ -121,7 +127,7 @@ function ResultsTable() {
       setIsLoading(true);
     }
     let canceled = false;
-    appState.editorConfig.db.then((database) => {
+    editorConfig.db.then((database) => {
       if (canceled) {
         return;
       }

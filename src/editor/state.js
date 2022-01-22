@@ -1,31 +1,19 @@
-import { produce } from "js/immer";
-import { onlyWarns } from "js/Arrays";
-import { useCallback, useContext } from "react";
-import { createContextState, useCombinedContext } from "../react/contextState";
 import * as Nodes from "graph/Nodes";
+import { onlyWarns } from "js/Arrays";
+import { useCallback } from "react";
+import { createContextState, useCombinedContext } from "../react/contextState";
 
-const { state, setter, provider } = createContextState({
+export const {
+  state: AppStateContext,
+  useSetState: useSetAppStateContext,
+  provider: AppStateContextProvider,
+} = createContextState({
   nodes: new Map(),
   positions: new Map(),
   selectedNodeIDs: new Set(),
   highlightedNodeIDs: new Set(),
   edges: new Map(),
-  editorConfig: null,
 });
-
-export const AppStateContextProvider = provider;
-
-export const AppStateContext = state;
-
-export function useSetAppStateContext() {
-  const setState = useContext(setter);
-  return useCallback(
-    (updater) => {
-      setState((value) => produce(value, updater));
-    },
-    [setState]
-  );
-}
 
 export function useSetAppStateCallback(callbackToUpdater) {
   const setAppState = useSetAppStateContext();

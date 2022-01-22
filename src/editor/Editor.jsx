@@ -4,13 +4,13 @@ import { ThemeProvider } from "./theme/useTheme";
 import App from "./App";
 import { ThemeToggle } from "./theme/ThemeToggle";
 
-export function Editor({ language }) {
+export function Editor(props) {
   return (
     <ThemeProvider>
       <ThemeToggle
         css={{ position: "absolute", top: "$20", right: "$20", zIndex: 100 }}
       />
-      <App language={language} />
+      <App {...props} />
     </ThemeProvider>
   );
 }

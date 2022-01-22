@@ -1,5 +1,7 @@
 import { createContext, useContext, useMemo, useState } from "react";
 import * as Objects from "js/Objects";
+import { useCallback } from "react";
+import { produce } from "js/immer";
 
 export function createContextState(defaults) {
   const stateContextMap = Objects.map(defaults, (value) =>
@@ -24,9 +26,19 @@ export function createContextState(defaults) {
     );
   }
 
+  function useSetState() {
+    const setState = useContext(SetterContext);
+    return useCallback(
+      (updater) => {
+        setState((value) => produce(value, updater));
+      },
+      [setState]
+    );
+  }
+
   return {
     state: stateContextMap,
-    setter: SetterContext,
+    useSetState,
     provider: ContextStateProvider,
   };
 }

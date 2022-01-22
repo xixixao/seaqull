@@ -17,20 +17,16 @@ import React, { useCallback, useLayoutEffect, useRef } from "react";
 import { LayoutRequestProvider } from "./AddNodeButton";
 import { positionToRendererPosition } from "./react-flow/utils/graph";
 
-function App({ language }) {
-  const { Results, TopUI, nodeTypes, onDoubleClick, onKeyDown } = language;
+function App({
+  initialState,
+  topUI,
+  children,
+  nodeTypes,
+  onDoubleClick,
+  onKeyDown,
+}) {
   return (
-    <AppStateContextProvider initialState={language.initialState}>
-      {/* <div style={{ padding: "0 4px 4px" }}>
-        <Input label="namespace" value={namespace} onChange={setNamespace} />
-        <HorizontalSpace />
-        <Input
-          label="notebook name"
-          value={notebookName}
-          onChange={setNotebookName}
-        />
-        <HorizontalSpace />
-      </div> */}
+    <AppStateContextProvider initialState={initialState}>
       <div
         style={{
           display: "flex",
@@ -44,7 +40,7 @@ function App({ language }) {
             onDoubleClick={onDoubleClick}
             onKeyDown={onKeyDown}
           >
-            <TopUI />
+            {topUI}
           </NodesPane>
         </ReactFlowProvider>
         <div
@@ -54,7 +50,7 @@ function App({ language }) {
             position: "relative",
           }}
         >
-          <Results />
+          {children}
         </div>
       </div>
     </AppStateContextProvider>
