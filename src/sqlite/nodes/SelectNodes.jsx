@@ -20,6 +20,7 @@ function SelectNode(node) {
     <SqliteNodeUI node={node}>
       SELECT{" "}
       <SqliteInput
+        node={node}
         value={someOrAllColumnList(selectedExpressions(node))}
         onChange={(expressions) => {
           setSelectedNodeState((node) => {

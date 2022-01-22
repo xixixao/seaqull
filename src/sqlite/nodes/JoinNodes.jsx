@@ -23,6 +23,7 @@ function JoinNode(node) {
       {/* todo type of join */}
       JOIN ON{" "}
       <SqliteInput
+        node={node}
         displayValue={!hasFilter(node) ? "∅" : null}
         value={filters}
         onChange={(filters) => {

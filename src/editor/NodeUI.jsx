@@ -1,8 +1,8 @@
 import { PlusIcon } from "@modulz/radix-icons";
-import * as Nodes from "graph/Nodes";
 import * as Node from "graph/Node";
+import * as Nodes from "graph/Nodes";
 import { Handle } from "./react-flow";
-import { useAppStateContext } from "./state";
+import { useAppStateDataContext } from "./state";
 import { styled } from "./style";
 import { Box } from "./ui/Box";
 import FloatOnHover from "./ui/FloatOnHover";
@@ -16,7 +16,7 @@ export default function NodeUI({
   useAddButtons,
   hasProblem,
 }) {
-  const appState = useAppStateContext();
+  const appState = useAppStateDataContext();
   return (
     <div>
       <NodeWrapper
@@ -85,7 +85,7 @@ function visibleIf(bool) {
 }
 
 function NodeUIAddButtons({ node, showTools, useAddButtons }) {
-  const appState = useAppStateContext();
+  const appState = useAppStateDataContext();
   const buttons = useAddButtons(node);
   if (buttons == null || node.edited) {
     return null;

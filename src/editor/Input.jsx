@@ -61,21 +61,28 @@ export default function Input({
   useEffectUpdateNodeEdited(node?.id, edited);
   useEffectConfirmOnClickOutside(editorRef, edited, handleConfirm);
   useSyncGivenValue(value, edited, setEdited);
-
+  const startEditing = useCallback(
+    (event) => {
+      setClick({ x: event.clientX, y: event.clientY });
+      setEdited(value ?? "");
+    },
+    [value]
+  );
   return (
-    <div
-      style={{ display: "inline-block" }}
-      onKeyDown={(event) => {
-        event.stopPropagation();
-      }}
-    >
+    <div style={{ display: "inline-block" }} onKeyDown={stopEventPropagation}>
       {label != null ? <Label>{label}</Label> : null}
       {edited != null ? (
         <CodeEditor
+          css={{
+            borderWidth: "0 0 1px 0",
+            minWidth: "100px",
+            cursor: "text",
+          }}
           extensions={extensions}
           click={click}
           ref={editorRef}
           value={edited}
+          editable={true}
           onMouseDown={stopEventPropagation}
           onTouchStart={stopEventPropagation}
           onMouseLeave={setShouldStopEditingNext}
@@ -84,15 +91,13 @@ export default function Input({
           onConfirm={handleConfirm}
         />
       ) : (
-        <div
-          style={{ cursor: "pointer" }}
-          onClick={(event) => {
-            setClick({ x: event.clientX, y: event.clientY });
-            setEdited(value ?? "");
-          }}
-        >
-          {displayValue ?? value}
-        </div>
+        <CodeEditor
+          css={{ cursor: "pointer" }}
+          extensions={extensions}
+          editable={false}
+          value={displayValue ?? value}
+          onClick={startEditing}
+        />
       )}
     </div>
   );
@@ -169,44 +174,24 @@ function Label(props) {
 
 const CodeEditor = forwardRef(function CodeEditor(props, ref) {
   const {
-    className,
-    value = "",
-    selection,
-    extensions = [],
+    css,
+    value,
+    extensions,
     onChange,
-    autoFocus,
-    maxHeight,
-    width,
-    minWidth,
-    maxWidth,
-    basicSetup,
-    placeholder,
-    indentWithTab,
-    editable,
-    root,
-    click,
     onConfirm,
+    editable,
+    click,
     ...other
   } = props;
   const editor = useRef(null);
   const { state, view, container, setContainer } = useCodeMirror({
     container: editor.current,
-    root,
     value,
-    autoFocus,
-    maxHeight,
-    width,
-    minWidth,
-    maxWidth,
-    basicSetup,
-    placeholder,
-    indentWithTab,
-    editable,
-    selection,
-    onChange,
     extensions,
-    click,
+    onChange,
     onConfirm,
+    editable,
+    click,
   });
   useImperativeHandle(ref, () => ({ container, state, view }), [
     container,
@@ -233,8 +218,9 @@ const CodeEditor = forwardRef(function CodeEditor(props, ref) {
   return (
     <Box
       css={{
+        borderWidth: 0,
+        ...css,
         borderStyle: "solid",
-        borderWidth: "0 0 1px 0",
         borderColor: "$blue9",
         ...codeMirrorStyles,
       }}
@@ -245,44 +231,10 @@ const CodeEditor = forwardRef(function CodeEditor(props, ref) {
 });
 
 export function useCodeMirror(props) {
-  const {
-    value,
-    click,
-    selection,
-    onChange,
-    extensions = [],
-    autoFocus,
-    height = "",
-    minHeight = "",
-    maxHeight = "",
-    placeholder = "",
-    width = "",
-    minWidth = "",
-    maxWidth = "",
-    editable = true,
-    indentWithTab = true,
-    basicSetup = true,
-    onConfirm,
-    root,
-  } = props;
+  const { value, extensions, onChange, onConfirm, editable, click } = props;
   const [container, setContainer] = useState(props.container);
   const [view, setView] = useState();
   const [state, setState] = useState();
-  const resetStyles = EditorView.theme({
-    "&": {
-      height,
-      minHeight,
-      maxHeight,
-      width,
-      minWidth: "100px",
-      maxWidth,
-      cursor: "text",
-    },
-    "&.cm-editor.cm-focused": { outline: "none" },
-    "& .cm-scroller": { fontFamily: "inherit" },
-    "& .cm-content": { padding: 0 },
-    "& .cm-line": { padding: 0 },
-  });
   const updateListener = EditorView.updateListener.of((view) => {
     if (view.docChanged && typeof onChange === "function") {
       const doc = view.state.doc;
@@ -308,36 +260,15 @@ export function useCodeMirror(props) {
       ...defaultKeymap.filter(({ key }) => key !== "Mod-Enter"),
     ]),
     updateListener,
-    resetStyles,
+    ResetStyles,
     classHighlightStyle,
+    EditorView.editable.of(editable),
   ];
-  // if (basicSetup) {
-  //   getExtensions.unshift(defaultBasicSetup);
-  // }
-
-  // if (placeholder) {
-  //   getExtensions.unshift(extendPlaceholder(placeholder));
-  // }
-
-  // switch (theme) {
-  //   case 'light':
-  //     getExtensions.push(defaultLightThemeOption);
-  //     break;
-  //   case 'dark':
-  //     getExtensions.push(oneDark);
-  //     break;
-  //   default:
-  //     getExtensions.push(theme);
-  //     break;
-  // }
-
-  // getExtensions = getExtensions.concat(extensions);
 
   useEffect(() => {
     if (container && !state) {
       const stateCurrent = EditorState.create({
         doc: value,
-        selection,
         extensions: getExtensions,
       });
       setState(stateCurrent);
@@ -345,10 +276,8 @@ export function useCodeMirror(props) {
         const viewCurrent = new EditorView({
           state: stateCurrent,
           parent: container,
-          root,
         });
         setView(viewCurrent);
-        focusAndPlaceCursor(viewCurrent, click);
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -378,31 +307,22 @@ export function useCodeMirror(props) {
       view.dispatch({ effects: StateEffect.reconfigure.of(getExtensions) });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    extensions,
-    placeholder,
-    height,
-    minHeight,
-    maxHeight,
-    width,
-    minWidth,
-    maxWidth,
-    editable,
-    indentWithTab,
-    basicSetup,
-  ]);
+  }, [extensions, editable]);
 
   useEffect(() => {
-    if (autoFocus && view) {
-      view.focus();
+    if (click != null && view != null) {
+      focusAndPlaceCursor(view, click);
     }
-  }, [autoFocus, view]);
+  }, [view, click]);
 
   return { state, setState, view, setView, container, setContainer };
 }
 
 function focusAndPlaceCursor(view, click) {
-  const at = posAtClick(view, click) ?? 0;
+  const at = posAtClick(view, click);
+  if (at == null) {
+    return;
+  }
   view.focus();
   view.dispatch({ selection: EditorSelection.cursor(at) });
 }
@@ -413,3 +333,10 @@ function posAtClick(view, click) {
   }
   return view.posAtCoords(click);
 }
+
+const ResetStyles = EditorView.theme({
+  "&.cm-editor.cm-focused": { outline: "none" },
+  "& .cm-scroller": { fontFamily: "inherit" },
+  "& .cm-content": { padding: 0 },
+  "& .cm-line": { padding: 0 },
+});

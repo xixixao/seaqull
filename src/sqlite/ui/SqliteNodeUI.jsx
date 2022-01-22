@@ -1,12 +1,14 @@
+import {
+  addDetachedNode,
+  AddNodeButton,
+  addStandaloneNode,
+  addTightNode,
+} from "editor/AddNodeButton";
 import NodeUI from "editor/NodeUI";
-import * as Nodes from "graph/Nodes";
-import { useAppStateContext } from "editor/state";
-import { AddNodeButton } from "editor/AddNodeButton";
-import { addTightNode } from "editor/AddNodeButton";
-import { getEmptyNode, getHasProblem } from "../sqliteNodes";
+import { useAppStateDataContext } from "editor/state";
 import HorizontalSpace from "editor/ui/HorizontalSpace";
-import { addDetachedNode } from "editor/AddNodeButton";
-import { addStandaloneNode } from "editor/AddNodeButton";
+import * as Nodes from "graph/Nodes";
+import { getEmptyNode, getHasProblem } from "../sqliteNodes";
 
 export default function SqliteNodeUI({ node, showTools, children }) {
   return (
@@ -22,7 +24,7 @@ export default function SqliteNodeUI({ node, showTools, children }) {
 }
 
 function useAddButtons({ node, showTools }) {
-  const appState = useAppStateContext();
+  const appState = useAppStateDataContext();
   if (Nodes.countSelected(appState) > 2) {
     return null;
   }

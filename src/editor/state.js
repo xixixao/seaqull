@@ -43,7 +43,7 @@ export function useAppStateContext() {
   return useCombinedContext(AppStateContext);
 }
 
-const { positions, ...DataContext } = AppStateContext;
+const { positions, highlightedNodeIDs, ...DataContext } = AppStateContext;
 
 export function useAppStateDataContext() {
   return useCombinedContext(DataContext);
