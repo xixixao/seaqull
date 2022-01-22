@@ -5,6 +5,7 @@ import {
   addTightNode,
 } from "editor/AddNodeButton";
 import NodeUI from "editor/NodeUI";
+import { useNode } from "editor/react-flow/components/Nodes/wrapNode";
 import { useAppStateDataContext } from "editor/state";
 import HorizontalSpace from "editor/ui/HorizontalSpace";
 import * as Nodes from "graph/Nodes";
@@ -12,19 +13,19 @@ import * as Arrays from "js/Arrays";
 import { Fragment } from "react";
 import { getEmptyNode, getHasProblem, TIGHT_CHILD_NODES } from "../sqliteNodes";
 
-export default function SqliteNodeUI({ node, showTools, children }) {
+export default function SqliteNodeUI({ hideControls, children }) {
   return (
     <NodeUI
-      showTools={showTools}
-      useAddButtons={useAddButtons}
-      hasProblem={hasProblem}
+      hideControls={hideControls}
+      useControls={useControls}
+      useHasProblem={useHasProblem}
     >
       {children}
     </NodeUI>
   );
 }
 
-function useAddButtons({ node, showTools }) {
+function useControls() {
   const appState = useAppStateDataContext();
   if (Nodes.countSelected(appState) > 2) {
     return null;
@@ -50,7 +51,9 @@ function useAddButtons({ node, showTools }) {
   );
 }
 
-function hasProblem(appState, node) {
+function useHasProblem() {
+  const appState = useAppStateDataContext();
+  const node = useNode();
   return getHasProblem(appState, node);
 }
 

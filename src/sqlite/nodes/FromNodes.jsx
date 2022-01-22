@@ -10,7 +10,7 @@ function FromNode() {
   const name = nodeName(node);
   const setSelectedNodeState = useSetSelectedNodeState();
   return (
-    <SqliteNodeUI showTools={name?.length > 0}>
+    <SqliteNodeUI hideControls={name.length === 0}>
       FROM{" "}
       <SqliteInput
         autoFocus={true}

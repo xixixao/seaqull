@@ -11,19 +11,20 @@ import { IconButton } from "./ui/IconButton";
 import { Row } from "./ui/Row";
 
 export default function NodeUI({
-  showTools,
+  hideControls,
   children,
-  useAddButtons,
-  hasProblem,
+  useControls,
+  useHasProblem,
 }) {
   const node = useNode();
+  const hasProblem = useHasProblem();
   const appState = useAppStateDataContext();
   return (
     <div>
       <NodeWrapper
         isHighlighted={node.highlight}
         isSelected={node.selected}
-        hasProblem={hasProblem(appState, node)}
+        hasProblem={hasProblem}
         // hasTightChild={Nodes.hasTightChild(appState, node)}
         // hasTightParent={Nodes.hasTightParent(appState, node)}
       >
@@ -49,13 +50,10 @@ export default function NodeUI({
       >
         {Node.label(node)}
       </Box>
-      {node.isDragging ? null : (
-        <NodeUIAddButtons showTools={showTools} useAddButtons={useAddButtons} />
-      )}
-
+      <NodeUIControls hideControls={hideControls} useControls={useControls} />
       {/* <HorizontalSpace /> */}
       {/* todo: use right click menu instead <DeleteNodeButton node={node} /> */}
-      {/* {isSelected && showTools ? (
+      {/* {isSelected && hideControls ? (
         <>
           <div
             style={{
@@ -81,18 +79,18 @@ function visibleIf(bool) {
   return { visibility: bool ? "visible" : "hidden" };
 }
 
-function NodeUIAddButtons({ showTools, useAddButtons }) {
+function NodeUIControls({ hideControls, useControls }) {
   const node = useNode();
   const appState = useAppStateDataContext();
-  const buttons = useAddButtons(node);
-  if (buttons == null || node.edited) {
+  const controls = useControls(node);
+  if (controls == null || node.edited || node.isDragging) {
     return null;
   }
 
   const isSelected = node.selected;
   const isLast = !Nodes.hasTightChild(appState, node);
 
-  const addChildrenButtonsPositioned = (
+  const controlsPositioned = (
     <div
       style={{
         position: "absolute",
@@ -102,11 +100,11 @@ function NodeUIAddButtons({ showTools, useAddButtons }) {
         // width: 340,
       }}
     >
-      <Row>{buttons}</Row>
+      <Row>{controls}</Row>
     </div>
   );
-  return !(showTools ?? true) || !isSelected ? null : isLast ? (
-    addChildrenButtonsPositioned
+  return (hideControls ?? false) || !isSelected ? null : isLast ? (
+    controlsPositioned
   ) : (
     <FloatOnHover
       style={{
@@ -121,7 +119,7 @@ function NodeUIAddButtons({ showTools, useAddButtons }) {
         </IconButton>
       }
     >
-      {addChildrenButtonsPositioned}
+      {controlsPositioned}
     </FloatOnHover>
   );
 }
