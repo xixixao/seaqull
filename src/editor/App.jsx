@@ -18,7 +18,7 @@ import { LayoutRequestProvider } from "./AddNodeButton";
 import { positionToRendererPosition } from "./react-flow/utils/graph";
 
 function App({ language }) {
-  const { Results, TopUI, nodeTypes, onDoubleClick } = language;
+  const { Results, TopUI, nodeTypes, onDoubleClick, onKeyDown } = language;
   return (
     <AppStateContextProvider initialState={language.initialState}>
       {/* <div style={{ padding: "0 4px 4px" }}>
@@ -39,7 +39,11 @@ function App({ language }) {
         }}
       >
         <ReactFlowProvider>
-          <NodesPane nodeTypes={nodeTypes} onDoubleClick={onDoubleClick}>
+          <NodesPane
+            nodeTypes={nodeTypes}
+            onDoubleClick={onDoubleClick}
+            onKeyDown={onKeyDown}
+          >
             <TopUI />
           </NodesPane>
         </ReactFlowProvider>
@@ -68,7 +72,7 @@ const PAN_SETTINGS = {
   WINDOWS: {},
 };
 
-function NodesPane({ children, nodeTypes, onDoubleClick }) {
+function NodesPane({ children, nodeTypes, onDoubleClick, onKeyDown }) {
   //   const onElementsRemove = (elementsToRemove) =>
   //     setElements((els) => removeElements(elementsToRemove, els));
   // const onConnect = (params) => setElements((els) => addEdge(params, els));
@@ -95,6 +99,9 @@ function NodesPane({ children, nodeTypes, onDoubleClick }) {
   }, [appState, setAppState]);
 
   const onRequestLayout = useCallback((request) => {
+    if (request == null) {
+      return;
+    }
     layoutRequestRef.current = request;
   }, []);
 
@@ -140,9 +147,9 @@ function NodesPane({ children, nodeTypes, onDoubleClick }) {
             );
           });
         }}
-        onKeyDown={(e) => {
-          if (e.key === "Backspace") {
-            setAppState((appState) => {
+        onKeyDown={(event) => {
+          setAppState((appState) => {
+            if (event.key === "Backspace") {
               if (Nodes.countSelected(appState) === 0) {
                 return;
               }
@@ -165,8 +172,10 @@ function NodesPane({ children, nodeTypes, onDoubleClick }) {
                 appState,
                 parentToSelect != null ? [parentToSelect] : []
               );
-            });
-          }
+            } else {
+              onRequestLayout(onKeyDown(appState, event));
+            }
+          });
         }}
       >
         <ReactFlow

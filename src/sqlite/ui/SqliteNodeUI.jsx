@@ -8,7 +8,9 @@ import NodeUI from "editor/NodeUI";
 import { useAppStateDataContext } from "editor/state";
 import HorizontalSpace from "editor/ui/HorizontalSpace";
 import * as Nodes from "graph/Nodes";
-import { getEmptyNode, getHasProblem } from "../sqliteNodes";
+import * as Arrays from "js/Arrays";
+import { Fragment } from "react";
+import { getEmptyNode, getHasProblem, TIGHT_CHILD_NODES } from "../sqliteNodes";
 
 export default function SqliteNodeUI({ node, showTools, children }) {
   return (
@@ -56,18 +58,17 @@ function hasProblem(appState, node) {
 function AddTightChildStepButtons() {
   return (
     <>
-      <AddNodeButton onAdd={addQueryStep("where")}>WHERE</AddNodeButton>
-      <HorizontalSpace />
-      <AddNodeButton onAdd={addQueryStep("group")}>GROUP BY</AddNodeButton>
-      <HorizontalSpace />
-      <AddNodeButton onAdd={addQueryStep("select")}>SELECT</AddNodeButton>
-      <HorizontalSpace />
-      <AddNodeButton onAdd={addQueryStep("order")}>ORDER BY</AddNodeButton>
+      {Arrays.map(TIGHT_CHILD_NODES, ({ label }, type) => (
+        <Fragment key={type}>
+          <AddNodeButton onAdd={addQueryStep(type)}>{label}</AddNodeButton>
+          <HorizontalSpace />
+        </Fragment>
+      ))}
     </>
   );
 }
 
-function addQueryStep(type) {
+export function addQueryStep(type) {
   return addTightNode(getEmptyNode(type));
 }
 

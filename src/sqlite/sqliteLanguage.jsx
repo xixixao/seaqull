@@ -16,13 +16,15 @@ import {
   getQuerySelectable,
   getResults,
   NODE_CONFIGS,
+  TIGHT_CHILD_NODES,
 } from "./sqliteNodes";
-import { AddFromNodeButton } from "./ui/SqliteNodeUI";
+import { AddFromNodeButton, addQueryStep } from "./ui/SqliteNodeUI";
 import { format as formatSQL } from "sql-formatter";
 import { Button } from "editor/ui/Button";
 import { Row } from "editor/ui/Row";
 import { addNodeAtPosition } from "editor/AddNodeButton";
 import * as Promises from "js/Promises";
+import * as Arrays from "js/Arrays";
 
 export default function sqliteLanguage(tables, initialStateSnapshot) {
   const DATABASE = database(tables);
@@ -33,6 +35,7 @@ export default function sqliteLanguage(tables, initialStateSnapshot) {
     TopUI: AddFromNodeButton,
     nodeTypes: Objects.map(NODE_CONFIGS, (type) => type.Component),
     onDoubleClick: addFromNodeOnDoubleClick,
+    onKeyDown: addNodeFromKey,
   };
 }
 
@@ -47,6 +50,22 @@ function stateFromSnapshot([nodes, positions, edges], DATABASE) {
 
 function addFromNodeOnDoubleClick(appState, position) {
   return addNodeAtPosition(appState, getEmptyNode("from"), position);
+}
+
+const KEY_LOOKUP = new Map(
+  Arrays.map(TIGHT_CHILD_NODES, ({ key }, type) => [key, type])
+);
+
+function addNodeFromKey(appState, event) {
+  const selectedNode = only(Nodes.selected(appState));
+  if (selectedNode == null) {
+    return;
+  }
+  const type = KEY_LOOKUP.get(event.key);
+  if (type == null) {
+    return;
+  }
+  return addQueryStep(type)(appState);
 }
 
 function idMap(array) {

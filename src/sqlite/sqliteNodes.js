@@ -1,4 +1,5 @@
 import { invariant } from "js/invariant";
+import * as Maps from "js/Maps";
 import { FromNodeConfig } from "./nodes/FromNodes";
 import { GroupNodeConfig } from "./nodes/GroupNodes";
 import { JoinNodeConfig } from "./nodes/JoinNodes";
@@ -22,6 +23,25 @@ export const NODE_CONFIGS = {
   group: GroupNodeConfig,
   order: OrderNodeConfig,
 };
+
+export const TIGHT_CHILD_NODES = Maps.from({
+  select: {
+    label: "SELECT",
+    key: "s",
+  },
+  group: {
+    label: "GROUP BY",
+    key: "g",
+  },
+  where: {
+    label: "WHERE",
+    key: "w",
+  },
+  order: {
+    label: "ORDER BY",
+    key: "o",
+  },
+});
 
 function getConfig(type) {
   const config = NODE_CONFIGS[type];
