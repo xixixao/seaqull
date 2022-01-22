@@ -206,7 +206,7 @@ const ResultsTableLoaded = memo(function ResultsTableLoaded({
   if (tables[0] instanceof NoResultsError) {
     return (
       <Column
-        css={{ background: "$amber3", padding: "$12", borderRadius: "$4" }}
+        css={{ background: "$yellow3", padding: "$12", borderRadius: "$4" }}
       >
         <div>No results from:</div>
         <SQL>{tables[0].sql}</SQL>
