@@ -1,4 +1,5 @@
 import { DropdownMenuIcon } from "@modulz/radix-icons";
+import { useNode } from "editor/react-flow/components/Nodes/wrapNode";
 import { useSetSelectedNodeState } from "editor/state";
 import { Button } from "editor/ui/Button";
 import { Column } from "editor/ui/Column";
@@ -15,15 +16,15 @@ import ColumnCheckbox from "../ui/ColumnCheckbox";
 import SqliteInput from "../ui/SqliteInput";
 import SqliteNodeUI from "../ui/SqliteNodeUI";
 
-function JoinNode(node) {
+function JoinNode() {
+  const node = useNode();
   const filters = nodeFilters(node);
   const setSelectedNodeState = useSetSelectedNodeState();
   return (
-    <SqliteNodeUI node={node}>
+    <SqliteNodeUI>
       {/* todo type of join */}
       JOIN ON{" "}
       <SqliteInput
-        node={node}
         displayValue={!hasFilter(node) ? "∅" : null}
         value={filters}
         onChange={(filters) => {

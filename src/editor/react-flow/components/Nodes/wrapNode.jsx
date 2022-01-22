@@ -1,20 +1,21 @@
 import cc from "classcat";
-import { current } from "immer";
+import * as Edge from "graph/Edge";
+import * as Edges from "graph/Edges";
+import * as Node from "graph/Node";
+import * as Nodes from "graph/Nodes";
+import * as Arrays from "js/Arrays";
+import { first, only } from "js/Arrays";
 import React, {
+  createContext,
   memo,
   useCallback,
+  useContext,
   useEffect,
   useLayoutEffect,
   useMemo,
   useRef,
 } from "react";
 import { DraggableCore } from "react-draggable";
-import * as Arrays from "js/Arrays";
-import { first, only } from "js/Arrays";
-import * as Edge from "graph/Edge";
-import * as Edges from "graph/Edges";
-import * as Node from "graph/Node";
-import * as Nodes from "graph/Nodes";
 import * as Layout from "../../../Layout";
 import { useSetAppStateContext } from "../../../state";
 import { useStoreActions, useStoreState } from "../../store/hooks";
@@ -62,9 +63,6 @@ export default function wrapNode(NodeComponent) {
     const setAppState = useSetAppStateContext();
     const updateNodeDimensions = useUpdateNodeDimensions();
     const addSelectedElements = useAddSelectedElements();
-    const updateNodePosDiff = useStoreActions(
-      (actions) => actions.updateNodePosDiff
-    );
     const unsetNodesSelection = useStoreActions(
       (actions) => actions.unsetNodesSelection
     );
@@ -163,11 +161,12 @@ export default function wrapNode(NodeComponent) {
         }
       },
       [
+        onNodeDragStart,
         node,
-        selected,
         selectNodesOnDrag,
         isSelectable,
-        onNodeDragStart,
+        selected,
+        unsetNodesSelection,
         addSelectedElements,
         multiSelectionActive,
       ]
@@ -297,7 +296,6 @@ export default function wrapNode(NodeComponent) {
         // onNodeDragStop?.(event, node);
       },
       [
-        id,
         setAppState,
         //   node,
         //   isSelectable,
@@ -341,6 +339,21 @@ export default function wrapNode(NodeComponent) {
         selectable: isSelectable,
       },
     ]);
+    const nodeInfo = {
+      id,
+      data,
+      type,
+      xPos,
+      yPos,
+      selected,
+      highlight,
+      isConnectable,
+      sourcePosition,
+      targetPosition,
+      isDragging,
+      edited,
+      dragHandle,
+    };
     return (
       <DraggableCore
         onStart={onDragStart}
@@ -366,25 +379,19 @@ export default function wrapNode(NodeComponent) {
           onDoubleClick={onNodeDoubleClickHandler}
           data-id={id}
         >
-          <NodeComponent
-            id={id}
-            data={data}
-            type={type}
-            xPos={xPos}
-            yPos={yPos}
-            selected={selected}
-            highlight={highlight}
-            isConnectable={isConnectable}
-            sourcePosition={sourcePosition}
-            targetPosition={targetPosition}
-            isDragging={isDragging}
-            edited={edited}
-            dragHandle={dragHandle}
-          />
+          <NodeContext.Provider value={nodeInfo}>
+            <NodeComponent />
+          </NodeContext.Provider>
         </div>
       </DraggableCore>
     );
   };
   NodeWrapper.displayName = "NodeWrapper";
   return memo(NodeWrapper);
+}
+
+const NodeContext = createContext();
+
+export function useNode() {
+  return useContext(NodeContext);
 }

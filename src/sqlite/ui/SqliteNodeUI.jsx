@@ -15,7 +15,6 @@ import { getEmptyNode, getHasProblem, TIGHT_CHILD_NODES } from "../sqliteNodes";
 export default function SqliteNodeUI({ node, showTools, children }) {
   return (
     <NodeUI
-      node={node}
       showTools={showTools}
       useAddButtons={useAddButtons}
       hasProblem={hasProblem}

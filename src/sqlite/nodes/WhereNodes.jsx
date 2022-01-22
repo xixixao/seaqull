@@ -1,3 +1,4 @@
+import { useNode } from "editor/react-flow/components/Nodes/wrapNode";
 import { useSetSelectedNodeState } from "editor/state";
 import * as Nodes from "graph/Nodes";
 import { only } from "js/Arrays";
@@ -6,11 +7,12 @@ import { getColumnNames, getQuerySelectable } from "../sqliteNodes";
 import SqliteInput from "../ui/SqliteInput";
 import SqliteNodeUI from "../ui/SqliteNodeUI";
 
-function WhereNode(node) {
+function WhereNode() {
+  const node = useNode();
   const filters = nodeFilters(node);
   const setSelectedNodeState = useSetSelectedNodeState();
   return (
-    <SqliteNodeUI node={node}>
+    <SqliteNodeUI>
       WHERE{" "}
       <SqliteInput
         displayValue={!hasFilter(node) ? "∅" : null}

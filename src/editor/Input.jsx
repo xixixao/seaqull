@@ -14,12 +14,12 @@ import {
   useRef,
   useState,
 } from "react";
+import { useNode } from "./react-flow/components/Nodes/wrapNode";
 import { useSetAppStateContext } from "./state";
 import { Box } from "./ui/Box";
 import { codeMirrorStyles } from "./ui/codeMirrorStyles";
 
 export default function Input({
-  node,
   extensions,
   displayValue,
   autoFocus,
@@ -58,6 +58,7 @@ export default function Input({
     },
     [onChange]
   );
+  const node = useNode();
   useEffectUpdateNodeEdited(node?.id, edited);
   useEffectConfirmOnClickOutside(editorRef, edited, handleConfirm);
   useSyncGivenValue(value, edited, setEdited);

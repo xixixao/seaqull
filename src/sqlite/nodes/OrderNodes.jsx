@@ -1,3 +1,4 @@
+import { useNode } from "editor/react-flow/components/Nodes/wrapNode";
 import { useSetSelectedNodeState } from "editor/state";
 import { Button } from "editor/ui/Button";
 import HorizontalSpace from "editor/ui/HorizontalSpace";
@@ -10,10 +11,11 @@ import { getColumnNames, getQuerySelectable } from "../sqliteNodes";
 import SqliteInput from "../ui/SqliteInput";
 import SqliteNodeUI from "../ui/SqliteNodeUI";
 
-function OrderNode(node) {
+function OrderNode() {
+  const node = useNode();
   const setSelectedNodeState = useSetSelectedNodeState();
   return (
-    <SqliteNodeUI node={node}>
+    <SqliteNodeUI>
       ORDER BY{" "}
       <SqliteInput
         value={!hasOrdered(node) ? "∅" : orderClause(node)}

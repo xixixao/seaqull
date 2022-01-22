@@ -1,3 +1,4 @@
+import { useNode } from "editor/react-flow/components/Nodes/wrapNode";
 import { useSetSelectedNodeState } from "editor/state";
 import HorizontalSpace from "editor/ui/HorizontalSpace";
 import { Row } from "editor/ui/Row";
@@ -14,13 +15,13 @@ import ColumnCheckbox from "../ui/ColumnCheckbox";
 import SqliteInput from "../ui/SqliteInput";
 import SqliteNodeUI from "../ui/SqliteNodeUI";
 
-function SelectNode(node) {
+function SelectNode() {
+  const node = useNode();
   const setSelectedNodeState = useSetSelectedNodeState();
   return (
-    <SqliteNodeUI node={node}>
+    <SqliteNodeUI>
       SELECT{" "}
       <SqliteInput
-        node={node}
         value={someOrAllColumnList(selectedExpressions(node))}
         onChange={(expressions) => {
           setSelectedNodeState((node) => {

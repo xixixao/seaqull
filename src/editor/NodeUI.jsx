@@ -2,6 +2,7 @@ import { PlusIcon } from "@modulz/radix-icons";
 import * as Node from "graph/Node";
 import * as Nodes from "graph/Nodes";
 import { Handle } from "./react-flow";
+import { useNode } from "./react-flow/components/Nodes/wrapNode";
 import { useAppStateDataContext } from "./state";
 import { styled } from "./style";
 import { Box } from "./ui/Box";
@@ -10,12 +11,12 @@ import { IconButton } from "./ui/IconButton";
 import { Row } from "./ui/Row";
 
 export default function NodeUI({
-  node,
   showTools,
   children,
   useAddButtons,
   hasProblem,
 }) {
+  const node = useNode();
   const appState = useAppStateDataContext();
   return (
     <div>
@@ -49,15 +50,11 @@ export default function NodeUI({
         {Node.label(node)}
       </Box>
       {node.isDragging ? null : (
-        <NodeUIAddButtons
-          node={node}
-          showTools={showTools}
-          useAddButtons={useAddButtons}
-        />
+        <NodeUIAddButtons showTools={showTools} useAddButtons={useAddButtons} />
       )}
 
       {/* <HorizontalSpace /> */}
-      {/* <DeleteNodeButton node={node} /> */}
+      {/* todo: use right click menu instead <DeleteNodeButton node={node} /> */}
       {/* {isSelected && showTools ? (
         <>
           <div
@@ -84,7 +81,8 @@ function visibleIf(bool) {
   return { visibility: bool ? "visible" : "hidden" };
 }
 
-function NodeUIAddButtons({ node, showTools, useAddButtons }) {
+function NodeUIAddButtons({ showTools, useAddButtons }) {
+  const node = useNode();
   const appState = useAppStateDataContext();
   const buttons = useAddButtons(node);
   if (buttons == null || node.edited) {

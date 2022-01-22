@@ -1,17 +1,18 @@
+import { useNode } from "editor/react-flow/components/Nodes/wrapNode";
 import { AppStateContext, useSetSelectedNodeState } from "editor/state";
 import { Button } from "editor/ui/Button";
 import { useContext } from "react";
 import SqliteInput from "../ui/SqliteInput";
 import SqliteNodeUI from "../ui/SqliteNodeUI";
 
-function FromNode(node) {
+function FromNode() {
+  const node = useNode();
   const name = nodeName(node);
   const setSelectedNodeState = useSetSelectedNodeState();
   return (
-    <SqliteNodeUI node={node} showTools={name?.length > 0}>
+    <SqliteNodeUI showTools={name?.length > 0}>
       FROM{" "}
       <SqliteInput
-        node={node}
         autoFocus={true}
         value={name}
         onChange={(name) => {

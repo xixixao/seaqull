@@ -17,10 +17,12 @@ import {
 import { Box } from "editor/ui/Box";
 import HorizontalSpace from "editor/ui/HorizontalSpace";
 import ShowOnClick from "editor/ui/ShowOnClick";
+import { useNode } from "editor/react-flow/components/Nodes/wrapNode";
 
-function GroupNode(node) {
+function GroupNode() {
+  const node = useNode();
   return (
-    <SqliteNodeUI node={node}>
+    <SqliteNodeUI>
       <div>
         GROUP BY {someOrNoneColumnList(Array.from(groupedColumns(node)))}
       </div>
