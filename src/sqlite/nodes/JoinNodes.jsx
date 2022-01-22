@@ -198,11 +198,6 @@ function hasFilter(node) {
   return nodeFilters(node).length > 0;
 }
 
-function validParents(appState, node) {
-  const parents = Nodes.parents(appState, node);
-  return parents.length === 2 ? parents : null;
-}
-
 function nodeFilters(node) {
   return node.data.filters;
 }
