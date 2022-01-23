@@ -26,6 +26,7 @@ export const Link = styled(
     );
   },
   {
+    cursor: "pointer",
     alignItems: "center",
     flexShrink: 0,
     outline: "none",

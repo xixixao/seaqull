@@ -35,20 +35,23 @@ import { SQLiteStateProvider, useEditorConfig } from "./sqliteState";
 import { useMemo } from "react";
 import { useContext } from "react";
 import * as LocalStorage from "js/LocalStorage";
+import { Dialog, DialogContent } from "./ui/Dialog";
+import HorizontalSpace from "editor/ui/HorizontalSpace";
+import { Link } from "editor/ui/Link";
 
 export default function SQLiteLanguage({ tables, snapshot }) {
   const DATABASE = database(tables);
+  const lastState = loadFromLocalStorage();
   return (
     <SQLiteStateProvider initialState={{ editorConfig: DATABASE }}>
       <Editor
-        initialState={
-          loadFromLocalStorage() ?? stateFromSnapshot(snapshot, DATABASE)
-        }
+        initialState={lastState ?? stateFromSnapshot(snapshot, DATABASE)}
         topUI={<AddFromNodeButton />}
         nodeTypes={Objects.map(NODE_CONFIGS, (type) => type.Component)}
         onDoubleClick={addFromNodeOnDoubleClick}
         onKeyDown={addNodeFromKey}
       >
+        {lastState == null ? <WelcomeDialog /> : null}
         <Results />
         <SaveToLocalStorage />
       </Editor>
@@ -75,6 +78,26 @@ function SaveToLocalStorage() {
 
 function loadFromLocalStorage() {
   return Serialize.parse(LocalStorage.read()).appState;
+}
+
+function WelcomeDialog() {
+  return (
+    <Dialog defaultOpen={true}>
+      <DialogContent css={{ padding: "$20", borderRadius: "$8" }}>
+        <h1>Welcome to Seaqull(beta)!</h1>
+        <br />
+        This is the SQLite version of <Link newtab>Seaqull</Link>. Would you
+        like to explore the example database or one of your own?
+        <br />
+        <br />
+        <Row>
+          <Button>Example database</Button>
+          <HorizontalSpace />
+          <Button>Open .sqlite file</Button>
+        </Row>
+      </DialogContent>
+    </Dialog>
+  );
 }
 
 function addFromNodeOnDoubleClick(appState, position) {
