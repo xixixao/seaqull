@@ -56,7 +56,7 @@ function useHasProblem() {
   const appState = useAppStateDataContext();
   const editorConfig = useEditorConfig();
   const node = useNode();
-  return getHasProblem(appState, node, { editorConfig });
+  return getHasProblem({ ...appState, editorConfig }, node);
 }
 
 function AddTightChildStepButtons() {

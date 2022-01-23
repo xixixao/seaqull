@@ -1,7 +1,6 @@
 import { useNode } from "editor/react-flow/components/Nodes/wrapNode";
-import { AppStateContext, useSetSelectedNodeState } from "editor/state";
+import { useSetSelectedNodeState } from "editor/state";
 import { Button } from "editor/ui/Button";
-import { useContext } from "react";
 import { useEditorConfig } from "../sqliteState";
 import SqliteInput from "../ui/SqliteInput";
 import SqliteNodeUI from "../ui/SqliteNodeUI";
@@ -32,8 +31,8 @@ export const FromNodeConfig = {
   results(appState, node) {
     return nodeName(node) === "" ? <SelectTable node={node} /> : null;
   },
-  hasProblem(appState, node, sqliteState) {
-    return nodeName(node) !== "" && !hasValidName(sqliteState, node);
+  hasProblem(appState, node) {
+    return nodeName(node) !== "" && !hasValidName(appState, node);
   },
   query(appState, node) {
     const name = nodeName(node);
@@ -61,8 +60,8 @@ function nodeName(node) {
   return node.data.name;
 }
 
-function hasValidName(sqliteState, node) {
-  return sqliteState.editorConfig.table(nodeName(node)) != null;
+function hasValidName(appState, node) {
+  return appState.editorConfig.table(nodeName(node)) != null;
 }
 
 function setName(node, name) {

@@ -27,6 +27,7 @@ import * as Promises from "js/Promises";
 import * as Arrays from "js/Arrays";
 import { Editor } from "editor/Editor";
 import { SQLiteStateProvider, useEditorConfig } from "./sqliteState";
+import { useMemo } from "react";
 
 export default function SQLiteLanguage({ tables, snapshot }) {
   const DATABASE = database(tables);
@@ -97,8 +98,11 @@ function Results() {
 }
 
 function ResultsTable() {
-  const appState = useAppStateDataContext();
+  const appStateData = useAppStateDataContext();
   const editorConfig = useEditorConfig();
+  const appState = useMemo(() => {
+    return { ...appStateData, editorConfig };
+  }, [appStateData, editorConfig]);
   const [resultsState, setResultsState] = useState(null);
   const [lastShownNode, setLastShownNode] = useState(null);
   const [updated, setUpdated] = useState();
@@ -138,7 +142,7 @@ function ResultsTable() {
         setResultsState({
           queries,
           tables: queries.map((query) => execQuery(database, query)),
-          appState: appState,
+          appState,
         });
         setUpdated(
           lastShownNode != null &&

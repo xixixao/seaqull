@@ -67,8 +67,8 @@ export function getResults(appState, node) {
   return fn(appState, node);
 }
 
-export function getHasProblem(appState, node, sqliteState) {
-  return getNodeConfig(node).hasProblem(appState, node, sqliteState);
+export function getHasProblem(appState, node) {
+  return getNodeConfig(node).hasProblem(appState, node);
 }
 
 export function getQuery(appState, node) {
