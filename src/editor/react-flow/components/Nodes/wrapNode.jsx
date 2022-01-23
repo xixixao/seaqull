@@ -353,6 +353,7 @@ export default function wrapNode(NodeComponent) {
       isDragging,
       edited,
       dragHandle,
+      nodeElement,
     };
     return (
       <DraggableCore

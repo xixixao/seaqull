@@ -60,7 +60,7 @@ export default function Input({
   );
   const node = useNode();
   useEffectUpdateNodeEdited(node?.id, edited);
-  useEffectConfirmOnClickOutside(editorRef, edited, handleConfirm);
+  useEffectConfirmOnClickOutside(edited, handleConfirm);
   useSyncGivenValue(value, edited, setEdited);
   const startEditing = useCallback(
     (event) => {
@@ -130,11 +130,11 @@ function useEffectUpdateNodeEdited(nodeID, edited) {
   }, [edited, nodeID, setAppState]);
 }
 
-function useEffectConfirmOnClickOutside(editorRef, edited, handleConfirm) {
+function useEffectConfirmOnClickOutside(edited, handleConfirm) {
+  const { nodeElement } = useNode();
   useEffect(() => {
     const handleClickOutside = (event) => {
-      const editor = editorRef.current;
-      if (edited != null && !editor.container.contains(event.target)) {
+      if (edited != null && !nodeElement.current.contains(event.target)) {
         handleConfirm(edited);
       }
     };
@@ -142,7 +142,7 @@ function useEffectConfirmOnClickOutside(editorRef, edited, handleConfirm) {
     return () => {
       document.removeEventListener("mouseup", handleClickOutside);
     };
-  }, [editorRef, edited, handleConfirm]);
+  }, [nodeElement, edited, handleConfirm]);
 }
 
 function useShouldStopEditingOnMouseMoveOutside(handleReset) {
@@ -153,9 +153,10 @@ function useShouldStopEditingOnMouseMoveOutside(handleReset) {
   const resetShouldStopEditing = useCallback(() => {
     setShouldStopEditing(false);
   }, []);
+  const { nodeElement } = useNode();
   useEffect(() => {
     const handleMouseMove = (event) => {
-      if (shouldStopEditing) {
+      if (shouldStopEditing && !nodeElement.current.contains(event.target)) {
         setShouldStopEditing(false);
         handleReset();
       }
@@ -165,7 +166,7 @@ function useShouldStopEditingOnMouseMoveOutside(handleReset) {
     return () => {
       document.removeEventListener("mousemove", handleMouseMove);
     };
-  }, [handleReset, shouldStopEditing]);
+  }, [handleReset, shouldStopEditing, nodeElement]);
   return [setShouldStopEditingNext, resetShouldStopEditing];
 }
 
