@@ -3,7 +3,7 @@ import { defaultKeymap } from "@codemirror/commands";
 import { classHighlightStyle } from "@codemirror/highlight";
 import { EditorSelection, EditorState, StateEffect } from "@codemirror/state";
 import { tooltips } from "@codemirror/tooltip";
-import { EditorView, keymap } from "@codemirror/view";
+import { drawSelection, EditorView, keymap } from "@codemirror/view";
 import * as Node from "graph/Node";
 import * as Nodes from "graph/Nodes";
 import {
@@ -253,6 +253,8 @@ export function useCodeMirror(props) {
   const autocomplete = autocompletion();
   let getExtensions = [
     ...extensions,
+    EditorState.allowMultipleSelections.of(true),
+    editable ? drawSelection() : [],
     tooltips({ position: "absolute" }),
     autocomplete.slice(0, -1 /*remove theme*/),
     keymap.of([
@@ -342,6 +344,6 @@ function posAtClick(view, click) {
 const ResetStyles = EditorView.theme({
   "&.cm-editor.cm-focused": { outline: "none" },
   "& .cm-scroller": { fontFamily: "inherit" },
-  "& .cm-content": { padding: 0 },
+  "& .cm-content": { padding: "0 2px 0 0" },
   "& .cm-line": { padding: 0 },
 });
