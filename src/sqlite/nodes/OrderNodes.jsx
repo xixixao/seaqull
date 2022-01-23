@@ -18,7 +18,8 @@ function OrderNode() {
     <SqliteNodeUI>
       ORDER BY{" "}
       <SqliteInput
-        value={!hasOrdered(node) ? "∅" : orderClause(node)}
+        displayValue={!hasOrdered(node) ? "∅" : null}
+        value={hasOrdered(node) ? orderClause(node) : null}
         onChange={(orderClause) => {
           setSelectedNodeState((node) => {
             let columnToOrder = {};

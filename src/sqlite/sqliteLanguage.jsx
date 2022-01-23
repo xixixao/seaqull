@@ -1,4 +1,8 @@
-import { useAppStateDataContext, useSetSelectedNodeState } from "editor/state";
+import {
+  useAppStateContext,
+  useAppStateDataContext,
+  useSetSelectedNodeState,
+} from "editor/state";
 import { keyframes, styled } from "editor/style";
 import { Box } from "editor/ui/Box";
 import { Column } from "editor/ui/Column";
@@ -25,22 +29,28 @@ import { Row } from "editor/ui/Row";
 import { addNodeAtPosition } from "editor/AddNodeButton";
 import * as Promises from "js/Promises";
 import * as Arrays from "js/Arrays";
+import * as Serialize from "js/Serialize";
 import { Editor } from "editor/Editor";
 import { SQLiteStateProvider, useEditorConfig } from "./sqliteState";
 import { useMemo } from "react";
+import { useContext } from "react";
+import * as LocalStorage from "js/LocalStorage";
 
 export default function SQLiteLanguage({ tables, snapshot }) {
   const DATABASE = database(tables);
   return (
     <SQLiteStateProvider initialState={{ editorConfig: DATABASE }}>
       <Editor
-        initialState={stateFromSnapshot(snapshot, DATABASE)}
+        initialState={
+          loadFromLocalStorage() ?? stateFromSnapshot(snapshot, DATABASE)
+        }
         topUI={<AddFromNodeButton />}
         nodeTypes={Objects.map(NODE_CONFIGS, (type) => type.Component)}
         onDoubleClick={addFromNodeOnDoubleClick}
         onKeyDown={addNodeFromKey}
       >
         <Results />
+        <SaveToLocalStorage />
       </Editor>
     </SQLiteStateProvider>
   );
@@ -52,6 +62,19 @@ function stateFromSnapshot([nodes, positions, edges]) {
     positions: new Map(nodes.map((element, i) => [element.id, positions[i]])),
     edges: idMap(edges),
   };
+}
+
+function SaveToLocalStorage() {
+  const appState = useAppStateContext();
+  useEffect(() => {
+    LocalStorage.writeEventually(Serialize.stringify({ appState }));
+  }, [appState]);
+  useEffect(() => LocalStorage.writeOnExit(), []);
+  return null;
+}
+
+function loadFromLocalStorage() {
+  return Serialize.parse(LocalStorage.read()).appState;
 }
 
 function addFromNodeOnDoubleClick(appState, position) {
