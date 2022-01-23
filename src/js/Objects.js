@@ -11,3 +11,11 @@ export function reduce(object, fn, acc) {
     return fn(acc, object[key], key);
   }, acc);
 }
+
+export function fromMap(map) {
+  const object = {};
+  map.forEach((value, key) => {
+    object[key] = value;
+  });
+  return object;
+}

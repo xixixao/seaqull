@@ -1,111 +1,36 @@
 import initSqlJs from "sql.js";
 import sqlWasmURL from "./sql-wasm.wasm?url";
+import * as Objects from "js/Objects";
 
-export function database(tables) {
-  function table(tableName) {
-    return tables.find(([name]) => tableName === name);
-  }
-  return {
-    db: (async () => {
-      const [SQL, sql] = await Promise.all([
-        initSqlJs({ locateFile: (file) => sqlWasmURL }),
-        setupSql(tables),
-      ]);
-      const db = new SQL.Database();
-      // console.log(sql);
-      db.run(sql);
-      return db;
-    })(),
-    table,
-    tableColumns(tableName) {
-      const maybeTable = table(tableName);
-      if (maybeTable == null) {
-        return [];
-      }
-      const [, columns] = maybeTable;
-      return columnDefinitionToNames(columns);
-    },
-    schema: schema(tables),
-  };
+export function database(arrayBuffer) {
+  return (async () => {
+    const SQL = await initSqlJs({ locateFile: (file) => sqlWasmURL });
+    const db = new SQL.Database(new Uint8Array(arrayBuffer));
+    const schema = schemaFromDatabase(db);
+    return {
+      db,
+      schema: Objects.fromMap(schema),
+      tableExists: (name) => schema.has(name),
+      tableColumns: (name) => schema.get(name),
+    };
+  })();
 }
 
-function schema(tables) {
-  const schema = {};
-  for (const [table, columns] of tables) {
-    schema[table] = columnDefinitionToNames(columns);
-  }
-  return schema;
+function schemaFromDatabase(db) {
+  return new Map(
+    db
+      .exec('SELECT name, sql FROM sqlite_schema WHERE type="table"')[0]
+      .values.map(([name, createSQL]) => [
+        name,
+        createSqlToColumnNames(createSQL),
+      ])
+  );
 }
 
-function columnDefinitionToNames(definition) {
-  return definition.split(",\n").map((column) => column.split(" ")[0]);
+function createSqlToColumnNames(createSQL) {
+  return createSQL
+    .replace(/\n/g, "")
+    .replace(/^[^(]+\((.+)\)\s*$/, "$1")
+    .replace(/\s[^,]+/g, "")
+    .split(",");
 }
-
-async function setupSql(tables) {
-  return (
-    await Promise.all(
-      tables.map(async (table) => {
-        const [tableName, columns, dataURL] = table;
-        const createSQL = `CREATE TABLE ${tableName} (${columns});`;
-        const columnNames = columnDefinitionToNames(columns);
-        const rows = (await (await fetch(dataURL)).text())
-          .split("\n")
-          .map((row) => row.split("\t"));
-
-        const insertSql = `INSERT INTO ${tableName} (${columnNames.join(
-          ","
-        )}) VALUES ${rows
-          .map((row) =>
-            row.map((value) => (isNaN(value) ? `"${value}"` : value)).join(",")
-          )
-          .map((rowSql) => `(${rowSql})`)
-          .join(",")};`;
-        return createSQL + insertSql;
-      })
-    )
-  ).join("\n");
-}
-
-// todo move inside setup
-// const COLUMNS = [
-//   ["ds", "TEXT"],
-//   ["id", "INTEGER"],
-//   ["name", "TEXT"],
-//   ["dau", "INTEGER"],
-//   ["wau", "INTEGER"],
-//   ["country", "TEXT"],
-//   ["metadata", "TEXT"],
-// ];
-// const DATABASE_SETUP_SQL = (() => {
-//   const tableName = "users";
-//   const columns = COLUMNS;
-//   // prettier-ignore
-//   const rows = [
-// ["2042-02-03", 9, 'John', 1, 0, 'UK', "{foo: 'bar', bee: 'ba', do: 'da'}"],
-// ["2042-02-03", 4, 'Bob', 0, 0, 'CZ', "{foo: 'bar', bee: 'ba', do: 'da'}"],
-// ["2042-02-03", 12, 'Ross', 0, 0, 'FR', "{foo: 'bar', bee: 'ba', do: 'da'}"],
-// ["2042-02-01", 1, 'Marline', 1, 1, 'US', "{foo: 'bar', bee: 'ba', do: 'da'}"],
-// ["2042-02-01", 14, 'Jackie', 0, 1, 'BU', "{foo: 'bar', bee: 'ba', do: 'da'}"],
-// ["2042-02-04", 11, 'Major', 0, 0, 'IS', "{foo: 'bar', bee: 'ba', do: 'da'}"],
-// ["2042-02-04", 2, 'Smith', 0, 0, 'LI', "{foo: 'bar', bee: 'ba', do: 'da'}"],
-// ["2042-02-03", 16, 'Capic', 1, 0, 'LA', "{foo: 'bar', bee: 'ba', do: 'da'}"],
-//   ];
-//   const createSql = `CREATE TABLE ${tableName} (${columns
-//     .map((pair) => pair.join(" "))
-//     .join(",")});`;
-//   const insertSql = `INSERT INTO ${tableName} (${columns
-//     .map(([column]) => column)
-//     .join(",")}) VALUES ${rows
-//     .map((row) =>
-//       row.map((value) => (isNaN(value) ? `"${value}"` : value)).join(",")
-//     )
-//     .map((rowSql) => `(${rowSql})`)
-//     .join(",")};`;
-//   return createSql + insertSql;
-// })();
-
-// const TABLES = [
-//   { value: "chocolate", label: "Chocolate" },
-//   { value: "strawberry", label: "Strawberry" },
-//   { value: "vanilla", label: "Vanilla" },
-// ];

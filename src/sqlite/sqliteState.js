@@ -6,6 +6,7 @@ export const {
   useSetState: useSetSQLiteState,
   provider: SQLiteStateProvider,
 } = createContextState({
+  source: null,
   editorConfig: null,
 });
 

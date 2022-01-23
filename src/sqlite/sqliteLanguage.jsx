@@ -1,16 +1,32 @@
+import { QuestionMarkIcon } from "@modulz/radix-icons";
+import { addNodeAtPosition } from "editor/AddNodeButton";
+import { Editor } from "editor/Editor";
 import {
   useAppStateContext,
   useAppStateDataContext,
+  useSetAppStateContext,
   useSetSelectedNodeState,
 } from "editor/state";
 import { keyframes, styled } from "editor/style";
 import { Box } from "editor/ui/Box";
+import { Button } from "editor/ui/Button";
 import { Column } from "editor/ui/Column";
+import HorizontalSpace from "editor/ui/HorizontalSpace";
+import { IconButton } from "editor/ui/IconButton";
+import { Link } from "editor/ui/Link";
+import { Row } from "editor/ui/Row";
 import * as Node from "graph/Node";
 import * as Nodes from "graph/Nodes";
+import * as Arrays from "js/Arrays";
 import { only } from "js/Arrays";
+import * as LocalStorage from "js/LocalStorage";
 import * as Objects from "js/Objects";
-import React, { memo, useEffect, useState } from "react";
+import * as Promises from "js/Promises";
+import * as Serialize from "js/Serialize";
+import React, { memo, useEffect, useMemo, useState } from "react";
+import { useContext } from "react";
+import { format as formatSQL } from "sql-formatter";
+import dvdRentalURI from "../sqlite_examples/dvd_rental.db?url";
 import { database } from "./database";
 import {
   getColumnControl,
@@ -22,36 +38,26 @@ import {
   NODE_CONFIGS,
   TIGHT_CHILD_NODES,
 } from "./sqliteNodes";
+import {
+  SQLiteStateContext,
+  SQLiteStateProvider,
+  useEditorConfig,
+  useSetSQLiteState,
+} from "./sqliteState";
+import { Dialog, DialogClose, DialogContent, DialogTrigger } from "./ui/Dialog";
 import { AddFromNodeButton, addQueryStep } from "./ui/SqliteNodeUI";
-import { format as formatSQL } from "sql-formatter";
-import { Button } from "editor/ui/Button";
-import { Row } from "editor/ui/Row";
-import { addNodeAtPosition } from "editor/AddNodeButton";
-import * as Promises from "js/Promises";
-import * as Arrays from "js/Arrays";
-import * as Serialize from "js/Serialize";
-import { Editor } from "editor/Editor";
-import { SQLiteStateProvider, useEditorConfig } from "./sqliteState";
-import { useMemo } from "react";
-import { useContext } from "react";
-import * as LocalStorage from "js/LocalStorage";
-import { Dialog, DialogContent } from "./ui/Dialog";
-import HorizontalSpace from "editor/ui/HorizontalSpace";
-import { Link } from "editor/ui/Link";
 
-export default function SQLiteLanguage({ tables, snapshot }) {
-  const DATABASE = database(tables);
-  const lastState = loadFromLocalStorage();
+export default function SQLiteLanguage() {
   return (
-    <SQLiteStateProvider initialState={{ editorConfig: DATABASE }}>
+    <SQLiteStateProvider>
       <Editor
-        initialState={lastState ?? stateFromSnapshot(snapshot, DATABASE)}
+        topRightUI={<Help />}
         topUI={<AddFromNodeButton />}
         nodeTypes={Objects.map(NODE_CONFIGS, (type) => type.Component)}
         onDoubleClick={addFromNodeOnDoubleClick}
         onKeyDown={addNodeFromKey}
       >
-        {lastState == null ? <WelcomeDialog /> : null}
+        <LoadFromLocalStorage onColdStart={<WelcomeDialog />} />
         <Results />
         <SaveToLocalStorage />
       </Editor>
@@ -59,30 +65,53 @@ export default function SQLiteLanguage({ tables, snapshot }) {
   );
 }
 
-function stateFromSnapshot([nodes, positions, edges]) {
-  return {
-    nodes: idMap(nodes),
-    positions: new Map(nodes.map((element, i) => [element.id, positions[i]])),
-    edges: idMap(edges),
-  };
-}
-
 function SaveToLocalStorage() {
   const appState = useAppStateContext();
+  const source = useContext(SQLiteStateContext.source);
   useEffect(() => {
-    LocalStorage.writeEventually(Serialize.stringify({ appState }));
-  }, [appState]);
+    LocalStorage.writeEventually(Serialize.stringify({ appState, source }));
+  }, [appState, source]);
   useEffect(() => LocalStorage.writeOnExit(), []);
   return null;
 }
 
-function loadFromLocalStorage() {
-  return Serialize.parse(LocalStorage.read()).appState;
+function LoadFromLocalStorage() {
+  const [loading, setLoading] = useState(true);
+  const setAppState = useSetAppStateContext();
+  const setSQLiteState = useSetSQLiteState();
+  useEffect(() => {
+    const lastState = Serialize.parse(LocalStorage.read());
+    if (lastState == null) {
+      setLoading(null);
+      return;
+    }
+    const { appState, source } = lastState;
+    (async () => {
+      const editorConfig = await database(await loadHostedDatabase(source));
+      setSQLiteState(() => ({ editorConfig, source }));
+      setAppState(() => appState);
+    })();
+  }, [setAppState, setSQLiteState]);
+  return loading == null ? <WelcomeDialog defaultOpen /> : null;
 }
 
-function WelcomeDialog() {
+function Help() {
   return (
-    <Dialog defaultOpen={true}>
+    <WelcomeDialog>
+      <DialogTrigger asChild>
+        <IconButton>
+          <QuestionMarkIcon />
+        </IconButton>
+      </DialogTrigger>
+    </WelcomeDialog>
+  );
+}
+
+function WelcomeDialog({ defaultOpen, children }) {
+  const setSQLiteState = useSetSQLiteState();
+  return (
+    <Dialog defaultOpen={defaultOpen}>
+      {children}
       <DialogContent css={{ padding: "$20", borderRadius: "$8" }}>
         <h1>Welcome to Seaqull(beta)!</h1>
         <br />
@@ -91,13 +120,42 @@ function WelcomeDialog() {
         <br />
         <br />
         <Row>
-          <Button>Example database</Button>
+          <DialogClose asChild>
+            <Button
+              onClick={() => {
+                (async () => {
+                  const editorConfig = await database(
+                    await loadHostedDatabase(dvdRentalURI)
+                  );
+                  setSQLiteState((state) =>
+                    state.source === dvdRentalURI
+                      ? state
+                      : { editorConfig, source: dvdRentalURI }
+                  );
+                })();
+              }}
+            >
+              Example database
+            </Button>
+          </DialogClose>
           <HorizontalSpace />
-          <Button>Open .sqlite file</Button>
+          <Button>Open a database file</Button>
         </Row>
       </DialogContent>
     </Dialog>
   );
+}
+
+async function loadHostedDatabase(uri) {
+  return await (await fetch(dvdRentalURI)).arrayBuffer();
+}
+
+function stateFromSnapshot([nodes, positions, edges]) {
+  return {
+    nodes: idMap(nodes),
+    positions: new Map(nodes.map((element, i) => [element.id, positions[i]])),
+    edges: idMap(edges),
+  };
 }
 
 function addFromNodeOnDoubleClick(appState, position) {
@@ -177,35 +235,34 @@ function ResultsTable() {
       setIsLoading(true);
     }
     let canceled = false;
-    editorConfig.db.then((database) => {
+    const database = editorConfig.db;
+    if (canceled) {
+      return;
+    }
+    // const ARTIFICIAL_DELAY = 300;
+    // setTimeout(() => {
+    setIsLoading(false);
+    if (queries.length > 0) {
+      setResultsState({
+        queries,
+        tables: queries.map((query) => execQuery(database, query)),
+        appState,
+      });
+      setUpdated(
+        lastShownNode != null &&
+          oneShown != null &&
+          !Node.is(oneShown, lastShownNode)
+      );
+      setLastShownNode(oneShown);
+    }
+    const NEW_RESULTS_INDICATOR_DURATION = 1000;
+    Promises.delay(NEW_RESULTS_INDICATOR_DURATION).then(() => {
       if (canceled) {
         return;
       }
-      // const ARTIFICIAL_DELAY = 300;
-      // setTimeout(() => {
-      setIsLoading(false);
-      if (queries.length > 0) {
-        setResultsState({
-          queries,
-          tables: queries.map((query) => execQuery(database, query)),
-          appState,
-        });
-        setUpdated(
-          lastShownNode != null &&
-            oneShown != null &&
-            !Node.is(oneShown, lastShownNode)
-        );
-        setLastShownNode(oneShown);
-      }
-      const NEW_RESULTS_INDICATOR_DURATION = 1000;
-      Promises.delay(NEW_RESULTS_INDICATOR_DURATION).then(() => {
-        if (canceled) {
-          return;
-        }
-        setUpdated(false);
-      });
-      // }, ARTIFICIAL_DELAY)
+      setUpdated(false);
     });
+    // }, ARTIFICIAL_DELAY)
     return () => {
       canceled = true;
     };

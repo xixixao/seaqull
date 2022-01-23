@@ -227,6 +227,6 @@ export function tightLeafs(graph) {
 
 function newNodeID(graph) {
   return String(
-    Math.max(...Arrays.map(nodes(graph), (node) => Node.intID(node))) + 1
+    Math.max(0, ...Arrays.map(nodes(graph), (node) => Node.intID(node))) + 1
   );
 }

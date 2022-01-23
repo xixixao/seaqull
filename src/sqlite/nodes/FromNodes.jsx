@@ -61,7 +61,7 @@ function nodeName(node) {
 }
 
 function hasValidName(appState, node) {
-  return appState.editorConfig.table(nodeName(node)) != null;
+  return appState.editorConfig.tableExists(nodeName(node)) != null;
 }
 
 function setName(node, name) {
