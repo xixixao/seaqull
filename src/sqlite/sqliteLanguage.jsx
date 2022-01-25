@@ -57,7 +57,7 @@ export default function SQLiteLanguage() {
         onDoubleClick={addFromNodeOnDoubleClick}
         onKeyDown={addNodeFromKey}
       >
-        <LoadFromLocalStorage onColdStart={<WelcomeDialog />} />
+        <LoadFromLocalStorage />
         <Results />
         <SaveToLocalStorage />
       </Editor>
@@ -108,9 +108,12 @@ function Help() {
 }
 
 function WelcomeDialog({ defaultOpen, children }) {
-  const setSQLiteState = useSetSQLiteState();
+  const [open, setOpen] = useState(defaultOpen);
+  const close = () => {
+    setOpen(false);
+  };
   return (
-    <Dialog defaultOpen={defaultOpen}>
+    <Dialog open={open} onOpenChange={setOpen}>
       {children}
       <DialogContent css={{ padding: "$20", borderRadius: "$8" }}>
         <h1>Welcome to Seaqull(beta)!</h1>
@@ -120,29 +123,63 @@ function WelcomeDialog({ defaultOpen, children }) {
         <br />
         <br />
         <Row>
-          <DialogClose asChild>
-            <Button
-              onClick={() => {
-                (async () => {
-                  const editorConfig = await database(
-                    await loadHostedDatabase(dvdRentalURI)
-                  );
-                  setSQLiteState((state) =>
-                    state.source === dvdRentalURI
-                      ? state
-                      : { editorConfig, source: dvdRentalURI }
-                  );
-                })();
-              }}
-            >
-              Example database
-            </Button>
-          </DialogClose>
+          <ButtonUseExampleDatabase onDone={close}>
+            Example database
+          </ButtonUseExampleDatabase>
           <HorizontalSpace />
-          <Button>Open a database file</Button>
+          <ButtonOpenFile onDone={close}>Open a database file</ButtonOpenFile>
         </Row>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function ButtonUseExampleDatabase({ onDone, children }) {
+  const setSQLiteState = useSetSQLiteState();
+  return (
+    <Button
+      onClick={() => {
+        (async () => {
+          const editorConfig = await database(
+            await loadHostedDatabase(dvdRentalURI)
+          );
+          setSQLiteState((state) =>
+            state.source === dvdRentalURI
+              ? state
+              : { editorConfig, source: dvdRentalURI }
+          );
+          onDone();
+        })();
+      }}
+    >
+      {children}
+    </Button>
+  );
+}
+
+function ButtonOpenFile({ children, onDone }) {
+  const setSQLiteState = useSetSQLiteState();
+  return (
+    <Button
+      onClick={() => {
+        const input = document.createElement("input");
+        input.type = "file";
+        input.addEventListener("change", () => {
+          (async () => {
+            const file = input.files[0];
+            const source = file.name;
+            const editorConfig = await database(await file.arrayBuffer());
+            setSQLiteState((state) =>
+              state.source === source ? state : { editorConfig, source }
+            );
+          })();
+          onDone();
+        });
+        input.click();
+      }}
+    >
+      {children}
+    </Button>
   );
 }
 
