@@ -143,11 +143,7 @@ function ButtonUseExampleDatabase({ onDone, children }) {
           const editorConfig = await database(
             await loadHostedDatabase(dvdRentalURI)
           );
-          setSQLiteState((state) =>
-            state.source === dvdRentalURI
-              ? state
-              : { editorConfig, source: dvdRentalURI }
-          );
+          setSQLiteState((state) => ({ editorConfig, source: dvdRentalURI }));
           onDone();
         })();
       }}
@@ -169,9 +165,7 @@ function ButtonOpenFile({ children, onDone }) {
             const file = input.files[0];
             const source = file.name;
             const editorConfig = await database(await file.arrayBuffer());
-            setSQLiteState((state) =>
-              state.source === source ? state : { editorConfig, source }
-            );
+            setSQLiteState((state) => ({ editorConfig, source }));
           })();
           onDone();
         });
