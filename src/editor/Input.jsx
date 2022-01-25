@@ -34,9 +34,6 @@ export default function Input({
 
   const editorRef = useRef();
   const handleReset = useCallback(() => {
-    if (edited === "") {
-      return;
-    }
     setEdited(null);
     onChange(edited);
   }, [edited, onChange]);
@@ -51,9 +48,7 @@ export default function Input({
   );
   const handleConfirm = useCallback(
     (value) => {
-      if (value !== "") {
-        setEdited(null);
-      }
+      setEdited(null);
       onChange(value);
     },
     [onChange]
@@ -69,6 +64,7 @@ export default function Input({
     },
     [value]
   );
+  const isEmpty = (displayValue ?? value) === "";
   return (
     <div style={{ display: "inline-block" }} onKeyDown={stopEventPropagation}>
       {label != null ? <Label>{label}</Label> : null}
@@ -93,7 +89,11 @@ export default function Input({
         />
       ) : (
         <CodeEditor
-          css={{ cursor: "pointer" }}
+          css={{
+            borderWidth: isEmpty ? "0 0 1px 0" : "0",
+            cursor: "pointer",
+            minWidth: isEmpty ? "100px" : undefined,
+          }}
           extensions={extensions}
           editable={false}
           value={displayValue ?? value}
