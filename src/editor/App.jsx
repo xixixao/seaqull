@@ -149,24 +149,31 @@ function NodesPane({ children, nodeTypes, onDoubleClick, onKeyDown }) {
               if (Nodes.countSelected(appState) === 0) {
                 return;
               }
-              const parentToSelect = Nodes.tightParent(
-                appState,
-                only(Nodes.selected(appState))
-              );
 
-              Nodes.selected(appState).forEach((node) => {
-                const tightParent = Nodes.tightParent(appState, node);
-                const children = Nodes.children(appState, node);
-                Nodes.remove(appState, node);
+              const tightGroups = Nodes.groupBy(
+                Nodes.selected(appState),
+                (node) => Nodes.tightRoot(appState, node)
+              ).map((nodes) => Nodes.sortTight(appState, nodes));
+              const parentsToSelect = tightGroups.map((nodes) => {
+                const firstNode = Arrays.first(nodes);
+
+                const tightParent = Nodes.tightParent(appState, firstNode);
+                const lastNode = Arrays.last(nodes);
+                const children = Nodes.tightChildren(appState, lastNode);
+
+                nodes.forEach((node) => Nodes.remove(appState, node));
+
                 if (tightParent != null) {
                   Edges.addTightChildren(appState, tightParent, children);
                   Layout.layoutTightStack(appState, tightParent);
                 }
+
+                return tightParent;
               });
 
               Nodes.select(
                 appState,
-                parentToSelect != null ? [parentToSelect] : []
+                parentsToSelect.filter((node) => node != null)
               );
             } else {
               onRequestLayout(onKeyDown(appState, event));
