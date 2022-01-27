@@ -12,7 +12,6 @@ import * as Edges from "graph/Edges";
 import * as Node from "graph/Node";
 import * as Nodes from "graph/Nodes";
 import * as Arrays from "js/Arrays";
-import { only } from "js/Arrays";
 import React, { useCallback, useLayoutEffect, useRef } from "react";
 import { LayoutRequestProvider } from "./AddNodeButton";
 import { positionToRendererPosition } from "./react-flow/utils/graph";
