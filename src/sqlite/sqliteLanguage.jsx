@@ -23,10 +23,9 @@ import * as LocalStorage from "js/LocalStorage";
 import * as Objects from "js/Objects";
 import * as Promises from "js/Promises";
 import * as Serialize from "js/Serialize";
-import React, { memo, useEffect, useMemo, useState } from "react";
-import { useContext } from "react";
+import React, { memo, useContext, useEffect, useMemo, useState } from "react";
 import { format as formatSQL } from "sql-formatter";
-import dvdRentalURI from "../sqlite_examples/dvd_rental.db?url";
+import dvdRentalURL from "../sqlite_examples/dvd_rental.db?url";
 import { database } from "./database";
 import {
   getColumnControl,
@@ -44,7 +43,7 @@ import {
   useEditorConfig,
   useSetSQLiteState,
 } from "./sqliteState";
-import { Dialog, DialogClose, DialogContent, DialogTrigger } from "./ui/Dialog";
+import { Dialog, DialogContent, DialogTrigger } from "./ui/Dialog";
 import { AddFromNodeButton, addQueryStep } from "./ui/SqliteNodeUI";
 
 export default function SQLiteLanguage() {
@@ -87,21 +86,29 @@ function LoadFromLocalStorage() {
     }
     const { appState, source } = lastState;
     (async () => {
-      const editorConfig = await database(await loadHostedDatabase(source));
-      setSQLiteState(() => ({ editorConfig, source }));
       setAppState(() => appState);
+      if (source?.type === "example") {
+        const editorConfig = await database(await loadHostedDatabase());
+        setSQLiteState(() => ({ editorConfig, source }));
+      } else {
+        setLoading(null);
+      }
     })();
   }, [setAppState, setSQLiteState]);
   return loading == null ? <WelcomeDialog defaultOpen /> : null;
 }
 
 function Help() {
+  const source = useContext(SQLiteStateContext.source);
   return (
     <WelcomeDialog>
       <DialogTrigger asChild>
-        <IconButton>
-          <QuestionMarkIcon />
-        </IconButton>
+        <Row align="center">
+          {source != null ? <Button>{source.name}</Button> : null}
+          <IconButton>
+            <QuestionMarkIcon />
+          </IconButton>
+        </Row>
       </DialogTrigger>
     </WelcomeDialog>
   );
@@ -118,9 +125,12 @@ function WelcomeDialog({ defaultOpen, children }) {
       <DialogContent css={{ padding: "$20", borderRadius: "$8" }}>
         <h1>Welcome to Seaqull(beta)!</h1>
         <br />
-        This is the SQLite version of <Link newtab>Seaqull</Link>. Would you
-        like to explore the example database or one of your own?
-        <br />
+        <p>
+          This is the SQLite version of <Link newtab>Seaqull</Link>.
+        </p>
+        <p>
+          Would you like to explore the example database or one of your own?
+        </p>
         <br />
         <Row>
           <ButtonUseExampleDatabase onDone={close}>
@@ -140,10 +150,14 @@ function ButtonUseExampleDatabase({ onDone, children }) {
     <Button
       onClick={() => {
         (async () => {
-          const editorConfig = await database(
-            await loadHostedDatabase(dvdRentalURI)
-          );
-          setSQLiteState((state) => ({ editorConfig, source: dvdRentalURI }));
+          const editorConfig = await database(await loadHostedDatabase());
+          setSQLiteState((state) => ({
+            editorConfig,
+            source: {
+              type: "example",
+              name: "dvd_rental.db",
+            },
+          }));
           onDone();
         })();
       }}
@@ -163,9 +177,12 @@ function ButtonOpenFile({ children, onDone }) {
         input.addEventListener("change", () => {
           (async () => {
             const file = input.files[0];
-            const source = file.name;
+            const { name } = file;
             const editorConfig = await database(await file.arrayBuffer());
-            setSQLiteState((state) => ({ editorConfig, source }));
+            setSQLiteState((state) => ({
+              editorConfig,
+              source: { type: "file", name },
+            }));
           })();
           onDone();
         });
@@ -177,8 +194,8 @@ function ButtonOpenFile({ children, onDone }) {
   );
 }
 
-async function loadHostedDatabase(uri) {
-  return await (await fetch(dvdRentalURI)).arrayBuffer();
+async function loadHostedDatabase() {
+  return await (await fetch(dvdRentalURL)).arrayBuffer();
 }
 
 function stateFromSnapshot([nodes, positions, edges]) {
@@ -243,6 +260,9 @@ function ResultsTable() {
   const [updated, setUpdated] = useState();
   const [isLoading, setIsLoading] = useState(false);
   useEffect(() => {
+    if (editorConfig.db == null) {
+      return;
+    }
     const selected = Nodes.selected(appState);
     const isSelecting = selected.length > 0;
     const previous = lastShownNode && Nodes.current(appState, lastShownNode);

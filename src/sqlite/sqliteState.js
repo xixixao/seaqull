@@ -7,7 +7,14 @@ export const {
   provider: SQLiteStateProvider,
 } = createContextState({
   source: null,
-  editorConfig: null,
+  editorConfig: {
+    tableExists() {
+      return false;
+    },
+    tableColumns() {
+      return [];
+    },
+  },
 });
 
 export function useEditorConfig() {
