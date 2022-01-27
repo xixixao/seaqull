@@ -43,7 +43,7 @@ function createSqlToColumnNames(createSQL) {
     cursor.nextSibling() &&
     !(
       cursor.name === "Keyword" &&
-      /foreign|constraint/i.test(at(cursor, createSQL))
+      /^foreign|constraint$/i.test(at(cursor, createSQL))
     )
   ) {
     if (columnStart) {
