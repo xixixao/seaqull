@@ -142,8 +142,10 @@ function ResultsDisplay({ updated, state }) {
       <Box
         css={{
           display: "inline-flex",
-          border: "1px solid transparent",
-          animation: updated ? `${borderBlink} 1s ease-out` : null,
+          // border: "1px solid transparent",
+          table: {
+            animation: updated ? `${borderBlink} 1s ease-out` : null,
+          },
         }}
       >
         {view === "table" ? (
@@ -166,8 +168,8 @@ const SQL = styled(
 );
 
 const borderBlink = keyframes({
-  from: { borderColor: "$lime9" },
-  to: { borderColor: "transparent" },
+  from: { background: "$lime3" },
+  to: {},
 });
 
 const ResultsTableLoaded = memo(function ResultsTableLoaded({
