@@ -54,15 +54,21 @@ export default function Input({
     [onChange]
   );
   const node = useNode();
-  useEffectUpdateNodeEdited(node?.id, edited);
+  const nodeID = node?.id;
+  useEffectUpdateNodeEdited(nodeID, edited);
   useEffectConfirmOnClickOutside(edited, handleConfirm);
   useSyncGivenValue(value, edited, setEdited);
+  const setAppState = useSetAppStateContext();
   const startEditing = useCallback(
     (event) => {
+      // Deselects other selected nodes when edit starts
+      setAppState((appState) => {
+        Nodes.select(appState, [Node.fake(nodeID)]);
+      });
       setClick({ x: event.clientX, y: event.clientY });
       setEdited(value ?? "");
     },
-    [value]
+    [value, nodeID, setAppState]
   );
   const isEmpty = (displayValue ?? value) === "";
   return (
