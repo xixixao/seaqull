@@ -12,8 +12,8 @@ import * as Edges from "graph/Edges";
 import * as Node from "graph/Node";
 import * as Nodes from "graph/Nodes";
 import * as Arrays from "js/Arrays";
-import React, { useCallback, useLayoutEffect, useRef } from "react";
-import { LayoutRequestProvider } from "./AddNodeButton";
+import React, { useCallback, useContext, useLayoutEffect, useRef } from "react";
+import { LayoutRequestContext } from "./layoutRequest";
 import { positionToRendererPosition } from "./react-flow/utils/graph";
 
 function App({
@@ -26,13 +26,7 @@ function App({
 }) {
   return (
     <AppStateContextProvider initialState={initialState}>
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          height: "100%",
-        }}
-      >
+      <Wrapper onKeyDown={onKeyDown}>
         <ReactFlowProvider>
           <NodesPane
             nodeTypes={nodeTypes}
@@ -51,7 +45,7 @@ function App({
         >
           {children}
         </div>
-      </div>
+      </Wrapper>
     </AppStateContextProvider>
   );
 }
@@ -67,16 +61,9 @@ const PAN_SETTINGS = {
   WINDOWS: {},
 };
 
-function NodesPane({ children, nodeTypes, onDoubleClick, onKeyDown }) {
-  //   const onElementsRemove = (elementsToRemove) =>
-  //     setElements((els) => removeElements(elementsToRemove, els));
-  // const onConnect = (params) => setElements((els) => addEdge(params, els));
-  // const updateNodePosDiff = useStoreActions(
-  //   (actions) => actions.updateNodePosDiff
-  // );
+function Wrapper({ children, onKeyDown }) {
   const appState = useAppStateContext();
   const setAppState = useSetAppStateContext();
-  const store = useStore();
 
   const layoutRequestRef = useRef(null);
   useLayoutEffect(() => {
@@ -100,47 +87,13 @@ function NodesPane({ children, nodeTypes, onDoubleClick, onKeyDown }) {
     layoutRequestRef.current = request;
   }, []);
 
-  const onSelectionChange = useCallback(
-    (elements) => {
-      const nodes = (elements ?? []).filter(
-        (element) => element.source == null
-      );
-      setAppState((appState) => {
-        if (
-          !Arrays.isEqual(
-            nodes.map(Node.id),
-            Array.from(appState.selectedNodeIDs)
-          )
-        ) {
-          Nodes.select(appState, nodes);
-        }
-      });
-    },
-    [setAppState]
-  );
-
   return (
-    <LayoutRequestProvider value={onRequestLayout}>
-      <Div
-        css={{
-          height: "65%",
-          borderBottom: "1px solid $slate7",
-          // borderTop: "1px solid $slate7",
-          outline: "none",
-        }}
-        tabIndex="-1"
-        onDoubleClick={(event) => {
-          setAppState((appState) => {
-            onRequestLayout(
-              onDoubleClick(
-                appState,
-                positionToRendererPosition(store, {
-                  x: event.clientX,
-                  y: event.clientY,
-                })
-              )
-            );
-          });
+    <LayoutRequestContext.Provider value={onRequestLayout}>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          height: "100%",
         }}
         onKeyDown={(event) => {
           setAppState((appState) => {
@@ -180,17 +133,70 @@ function NodesPane({ children, nodeTypes, onDoubleClick, onKeyDown }) {
           });
         }}
       >
-        <ReactFlow
-          nodeTypes={nodeTypes}
-          edgeTypes={EDGE_COMPONENTS}
-          onSelectionChange={onSelectionChange}
-          zoomOnDoubleClick={false}
-          {...PAN_SETTINGS.MAC}
-          // onElementsRemove={onElementsRemove}
-          // onConnect={onConnect}
-          // onLoad={onLoad}
-        >
-          {/* <MiniMap
+        {children}
+      </div>{" "}
+    </LayoutRequestContext.Provider>
+  );
+}
+
+function NodesPane({ children, nodeTypes, onDoubleClick }) {
+  const setAppState = useSetAppStateContext();
+  const store = useStore();
+  const onRequestLayout = useContext(LayoutRequestContext);
+
+  const onSelectionChange = useCallback(
+    (elements) => {
+      const nodes = (elements ?? []).filter(
+        (element) => element.source == null
+      );
+      setAppState((appState) => {
+        if (
+          !Arrays.isEqual(
+            nodes.map(Node.id),
+            Array.from(appState.selectedNodeIDs)
+          )
+        ) {
+          Nodes.select(appState, nodes);
+        }
+      });
+    },
+    [setAppState]
+  );
+
+  return (
+    <Div
+      css={{
+        height: "65%",
+        borderBottom: "1px solid $slate7",
+        // borderTop: "1px solid $slate7",
+        outline: "none",
+      }}
+      tabIndex="-1"
+      onDoubleClick={(event) => {
+        setAppState((appState) => {
+          onRequestLayout(
+            onDoubleClick(
+              appState,
+              positionToRendererPosition(store, {
+                x: event.clientX,
+                y: event.clientY,
+              })
+            )
+          );
+        });
+      }}
+    >
+      <ReactFlow
+        nodeTypes={nodeTypes}
+        edgeTypes={EDGE_COMPONENTS}
+        onSelectionChange={onSelectionChange}
+        zoomOnDoubleClick={false}
+        {...PAN_SETTINGS.MAC}
+        // onElementsRemove={onElementsRemove}
+        // onConnect={onConnect}
+        // onLoad={onLoad}
+      >
+        {/* <MiniMap
         nodeStrokeColor={(n) => {
           if (n.style?.background) return n.style.background;
           if (n.type === "input") return "#0041d0";
@@ -207,23 +213,22 @@ function NodesPane({ children, nodeTypes, onDoubleClick, onKeyDown }) {
         nodeBorderRadius={2}
       /> */}
 
-          <div
-            style={{
-              position: "absolute",
-              padding: 4,
-              zIndex: 5,
-              transform: "translate(-50%, 0)",
-              top: 0,
-              left: "50%",
-            }}
-          >
-            {children}
-          </div>
-          <PaneControls showInteractive={false} />
-          <Background color="#aaa" gap={16} />
-        </ReactFlow>
-      </Div>
-    </LayoutRequestProvider>
+        <div
+          style={{
+            position: "absolute",
+            padding: 4,
+            zIndex: 5,
+            transform: "translate(-50%, 0)",
+            top: 0,
+            left: "50%",
+          }}
+        >
+          {children}
+        </div>
+        <PaneControls showInteractive={false} />
+        <Background color="#aaa" gap={16} />
+      </ReactFlow>
+    </Div>
   );
 }
 

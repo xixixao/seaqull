@@ -4,13 +4,10 @@ import * as Edges from "graph/Edges";
 import * as Node from "graph/Node";
 import * as Nodes from "graph/Nodes";
 import { onlyWarns } from "js/Arrays";
-import { createContext, useContext } from "react";
+import { useContext } from "react";
+import { LayoutRequestContext } from "./layoutRequest";
 import { useSetAppStateContext } from "./state";
 import { ButtonWithIcon } from "./ui/ButtonWithIcon";
-
-const LayoutRequestContext = createContext();
-
-export const LayoutRequestProvider = LayoutRequestContext.Provider;
 
 export function AddNodeButton({ children, onAdd }) {
   const setAppState = useSetAppStateContext();
