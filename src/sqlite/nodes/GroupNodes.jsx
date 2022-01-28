@@ -15,7 +15,15 @@ import React from "react";
 import { getColumnNames, getQuerySelectable } from "../sqliteNodes";
 import SqliteInput from "../ui/SqliteInput";
 import SqliteNodeUI from "../ui/SqliteNodeUI";
-import { aliasedExpressionList, expressionList } from "./sqliteExpressions";
+import {
+  aliasedExpressionList,
+  aliasedToExpression,
+  aliasedToName,
+  aliasedToSelectable,
+  expressionList,
+  joinList,
+  stripTrailingComma,
+} from "./sqliteExpressions";
 
 function GroupNode() {
   const node = useNode();
@@ -82,7 +90,7 @@ export const GroupNodeConfig = {
     if (otherColumns.length === 0) {
       return null;
     }
-    return [`SELECT ${otherColumns} FROM (${fromQuery})`];
+    return [`SELECT ${otherColumns.join(",")} FROM (${fromQuery})`];
   },
   querySelectable(appState, node) {
     if (!hasGrouped(node)) {
@@ -93,14 +101,9 @@ export const GroupNodeConfig = {
       return null;
     }
     const fromQuery = getQuerySelectable(appState, sourceNode);
-    console.log(
-      node,
-      aggregationList(node),
-      aliasedListToAliasedString(aggregationList(node))
-    );
     return sql(
       node,
-      aliasedListToAliasedString(aggregationList(node)),
+      aggregationList(node).map(aliasedToSelectable).join(","),
       fromQuery
     );
   },
@@ -110,7 +113,7 @@ export const GroupNodeConfig = {
       return new Set();
     }
     return hasGrouped(node)
-      ? selectableColumns(node)
+      ? new Set(aggregationList(node).map(aliasedToName))
       : getColumnNames(appState, sourceNode);
   },
   columnControl(appState, node, columnName, setSelectedNodeState, isPrimary) {
@@ -241,38 +244,7 @@ function hasSelectedColumn(node, column) {
   );
 }
 
-function selectableColumns(node) {
-  return new Set(aggregationList(node).map(aliasedToName));
-}
-
-function aliasedListToString(aliased) {
-  return aliased
-    .map(([expression, alias]) =>
-      alias != null ? `${expression} AS ${alias}` : expression
-    )
-    .join(", ");
-}
-
-function aliasedListToAliasedString(aliased) {
-  return aliased
-    .map(([expression, alias]) => {
-      const name = aliasedToName([expression, alias]);
-      console.log(expression, alias, name);
-      return name === expression ? name : `${expression} AS ${name}`;
-    })
-    .join(", ");
-}
-
-function aliasedToName([expression, alias]) {
-  return alias != null
-    ? alias
-    : /^\w+$/.test(expression)
-    ? expression
-    : expression.replace(/\W+/g, " ").trim().replace(/\s+/, "_").toLowerCase();
-}
-
 function setGroupedBy(node, groupedBy) {
-  console.log("here?", groupedBy);
   node.data.groupedBy = groupedBy;
   addGroupedByToAggregations(node);
 }
@@ -311,23 +283,26 @@ function addGroupedByToAggregations(node) {
 }
 
 function addAggregation(node, aggregation) {
-  setAggregations(
+  setAggregationsFromList(
     node,
-    aliasedListToString(
-      aggregationList(node).concat(aliasedExpressionList(aggregation))
-    )
+    aggregationList(node).concat(aliasedExpressionList(aggregation))
   );
 }
 
 function removeAggregation(node, removedAggregation) {
+  setAggregationsFromList(
+    node,
+    aggregationList(node).filter(
+      ([aggregation, alias]) =>
+        aggregation !== removedAggregation && alias !== removedAggregation
+    )
+  );
+}
+
+function setAggregationsFromList(node, aggregationList) {
   setAggregations(
     node,
-    aliasedListToString(
-      aggregationList(node).filter(
-        ([aggregation, alias]) =>
-          aggregation !== removedAggregation && alias !== removedAggregation
-      )
-    )
+    joinList(aggregationList.map(aliasedToExpression), aggregations(node))
   );
 }
 
@@ -336,7 +311,7 @@ function aggregationList(node) {
 }
 
 function sql(node, aggregations, fromQuery) {
-  return `SELECT ${aggregations === "" ? "*" : aggregations}
+  return `SELECT ${aggregations === "" ? "*" : stripTrailingComma(aggregations)}
     FROM (${fromQuery})
-    GROUP BY ${groupedBy(node)}`;
+    GROUP BY ${stripTrailingComma(groupedBy(node))}`;
 }

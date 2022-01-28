@@ -6,14 +6,19 @@ import * as Nodes from "graph/Nodes";
 import * as Arrays from "js/Arrays";
 import { only } from "js/Arrays";
 import React from "react";
-import {
-  getColumnNames,
-  getQuerySelectable,
-  someOrAllColumnList,
-} from "../sqliteNodes";
+import { getColumnNames, getQuerySelectable } from "../sqliteNodes";
 import ColumnCheckbox from "../ui/ColumnCheckbox";
 import SqliteInput from "../ui/SqliteInput";
 import SqliteNodeUI from "../ui/SqliteNodeUI";
+import {
+  aliasedExpressionList,
+  aliasedToExpression,
+  aliasedToName,
+  aliasedToSelectable,
+  expressionList,
+  joinList,
+  stripTrailingComma,
+} from "./sqliteExpressions";
 
 function SelectNode() {
   const node = useNode();
@@ -22,13 +27,11 @@ function SelectNode() {
     <SqliteNodeUI>
       SELECT{" "}
       <SqliteInput
-        value={someOrAllColumnList(selectedExpressions(node))}
-        onChange={(expressions) => {
+        displayValue={hasSelected(node) ? null : "*"}
+        value={selected(node)}
+        onChange={(selected) => {
           setSelectedNodeState((node) => {
-            setSelectedExpressions(
-              node,
-              "*" === expressions ? [] : expressions.split(/, */)
-            );
+            setSelected(node, selected);
           });
         }}
       />
@@ -46,9 +49,7 @@ export const SelectNodeConfig = {
     const sourceNode = only(Nodes.parents(appState, node));
     const fromQuery =
       sourceNode == null ? null : getQuerySelectable(appState, sourceNode);
-    return `SELECT ${someOrAllColumnList(
-      selectedExpressions(node)
-    )} FROM (${fromQuery})`;
+    return sql(selected(node), fromQuery);
   },
   queryAdditionalValues(appState, node) {
     const sourceNode = only(Nodes.parents(appState, node));
@@ -56,36 +57,34 @@ export const SelectNodeConfig = {
       return null;
     }
     const fromQuery = getQuerySelectable(appState, sourceNode);
-    const expressions = selectedExpressions(node);
-    if (expressions.length === 0) {
+    if (!hasSelected(node)) {
       return null;
     }
     const otherColumns = Arrays.subtractSets(
       getColumnNames(appState, sourceNode),
-      // TODO: Fix this logic
-      new Set(expressions)
+      new Set(selectedExpressions(node).map(aliasedToName))
     );
     if (otherColumns.length === 0) {
       return null;
     }
-    return [`SELECT ${otherColumns} FROM (${fromQuery})`];
+    return [sql(otherColumns.join(","), fromQuery)];
   },
   querySelectable(appState, node) {
     const sourceNode = only(Nodes.parents(appState, node));
     const fromQuery =
       sourceNode == null ? null : getQuerySelectable(appState, sourceNode);
-    return `SELECT ${someOrAllColumnList(
-      selectedExpressionsAliased(node)
-    )} FROM (${fromQuery})`;
+    return sql(
+      selectedExpressions(node).map(aliasedToSelectable).join(","),
+      fromQuery
+    );
   },
   columnNames(appState, node) {
     const sourceNode = only(Nodes.parents(appState, node));
     if (sourceNode == null) {
       return new Set();
     }
-    const expressions = selectedExpressions(node);
-    return expressions.length > 0
-      ? selectedColumns(node)
+    return hasSelected(node)
+      ? new Set(selectedExpressions(node).map(aliasedToName))
       : getColumnNames(appState, sourceNode);
   },
   columnControl(appState, node, columnName, setSelectedNodeState) {
@@ -119,65 +118,57 @@ function SelectableColumn({ node, columnName, setSelectedNodeState }) {
   );
 }
 
-export function empty() {
-  return { selected: [] };
+function empty() {
+  return { selected: "" };
 }
 
-export function selectedExpressions(node) {
+function selected(node) {
   return node.data.selected;
 }
 
-export function selectedExpressionsAliased(node) {
-  return selectedExpressions(node).map((expression) =>
-    !isColumnName(expression) && !hasAlias(expression)
-      ? `${expression} as ${alias(expression)}`
-      : expression
-  );
+function selectedColumns(node) {
+  return expressionList(selected(node));
 }
 
-export function selectedColumns(node) {
-  return new Set(
-    selectedExpressions(node).map((expression) =>
-      !isColumnName(expression) && !hasAlias(expression)
-        ? alias(expression)
-        : hasAlias(expression)
-        ? getAlias(expression)
-        : expression
+function selectedColumnSet(node) {
+  return new Set(selectedColumns(node));
+}
+
+function selectedExpressions(node) {
+  return aliasedExpressionList(selected(node));
+}
+
+function hasSelected(node) {
+  return selectedExpressions(node).length > 0;
+}
+
+function hasSelectedColumn(node, column) {
+  return selectedColumnSet(node).has(column);
+}
+
+function setSelected(node, expressions) {
+  node.data.selected = expressions;
+}
+
+function toggleSelectedColumn(node, columnName) {
+  const aliasedList = selectedExpressions(node);
+  setSelected(
+    node,
+    joinList(
+      (!hasSelectedColumn(node, columnName)
+        ? aliasedList.concat(aliasedExpressionList(columnName))
+        : aliasedList.filter(
+            ([expression, alias]) =>
+              expression !== columnName && alias !== columnName
+          )
+      ).map(aliasedToExpression),
+      selected(node)
     )
   );
 }
 
-function isColumnName(expression) {
-  return /^\w+$/.test(expression);
-}
-
-function hasAlias(expression) {
-  return /as\s+\w+$/i.test(expression);
-}
-
-function alias(expression) {
-  return expression.replace(/(\W|\s)+/g, "_");
-}
-
-function getAlias(expression) {
-  return expression.replace(/^.*as\s+(\w+)$/g, "$1");
-}
-
-export function hasSelected(node, column) {
-  return selectedExpressions(node).length > 0;
-}
-
-export function hasSelectedColumn(node, column) {
-  return new Set(selectedExpressions(node)).has(column);
-}
-
-export function setSelectedExpressions(node, expressions) {
-  node.data.selected = expressions;
-}
-
-export function toggleSelectedColumn(node, columnName) {
-  const selected = selectedExpressions(node);
-  node.data.selected = !hasSelectedColumn(node, columnName)
-    ? selected.concat([columnName])
-    : selected.filter((key) => key !== columnName);
+function sql(expressions, fromQuery) {
+  return `SELECT ${
+    expressions === "" ? "*" : stripTrailingComma(expressions)
+  } FROM (${fromQuery})`;
 }

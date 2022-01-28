@@ -1,6 +1,34 @@
 import { SQLite } from "@codemirror/lang-sql";
 import * as Arrays from "js/Arrays";
 
+export function joinList(list, original) {
+  return (
+    list.join("," + (/\n/.test(original) ? "\n" : " ")) +
+    (/,\s*$/.test(original) ? "," : "")
+  );
+}
+
+export function stripTrailingComma(string) {
+  return string.replace(/,\s*$/, "");
+}
+
+export function aliasedToExpression([expression, alias]) {
+  return alias != null ? `${expression} AS ${alias}` : expression;
+}
+
+export function aliasedToSelectable([expression, alias]) {
+  const name = aliasedToName([expression, alias]);
+  return name === expression ? name : `${expression} AS ${name}`;
+}
+
+export function aliasedToName([expression, alias]) {
+  return alias != null
+    ? alias
+    : /^\w+$/.test(expression)
+    ? expression
+    : expression.replace(/\W+/g, " ").trim().replace(/\s+/, "_").toLowerCase();
+}
+
 export function expressionList(expressions) {
   return aliasedExpressionList(expressions).map(Arrays.first);
 }
@@ -27,10 +55,12 @@ export function aliasedExpressionList(expressions) {
       continue;
     }
     if (cursor.name === "Punctuation") {
-      cursor.nextSibling();
       list.push([expression, alias]);
       expression = "";
       alias = null;
+      if (!cursor.nextSibling()) {
+        break;
+      }
     }
     if (expression !== "" && expressions[cursor.from - 1] === " ") {
       expression += " ";
