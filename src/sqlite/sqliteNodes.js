@@ -75,8 +75,8 @@ export function getQuery(appState, node) {
   return getNodeConfig(node).query(appState, node);
 }
 
-export function getQueryAdditionalValues(appState, node) {
-  return getNodeConfig(node).queryAdditionalValues(appState, node);
+export function getQueryAdditionalTables(appState, node) {
+  return getNodeConfig(node).queryAdditionalTables(appState, node);
 }
 
 export function getQuerySelectable(appState, node) {

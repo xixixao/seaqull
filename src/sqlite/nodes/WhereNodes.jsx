@@ -42,9 +42,11 @@ export const WhereNodeConfig = {
     if (!hasFilter(node)) {
       return `SELECT * FROM (${fromQuery})`;
     }
-    return `SELECT * FROM (${fromQuery}) WHERE ${nodeFilters(node)}`;
+    return `SELECT * FROM (${fromQuery}) WHERE ${nodeFilters(node)}
+      UNION SELECT * FROM (${fromQuery}) WHERE NOT (${nodeFilters(node)})
+    `;
   },
-  queryAdditionalValues(appState, node) {
+  queryAdditionalTables(appState, node) {
     return null;
   },
   querySelectable(appState, node) {

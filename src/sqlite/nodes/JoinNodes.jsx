@@ -84,7 +84,7 @@ export const JoinNodeConfig = {
     // validParents(appState, node)
     // return (name ?? "").length > 0 ? `SELECT * from ${name}` : null;
   },
-  queryAdditionalValues(appState, node) {
+  queryAdditionalTables(appState, node) {
     return null;
   },
   querySelectable(appState, node) {

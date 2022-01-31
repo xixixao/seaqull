@@ -53,7 +53,7 @@ export const OrderNodeConfig = {
     return `SELECT * FROM  (${fromQuery})
     ORDER BY ${orderClause(node)}`;
   },
-  queryAdditionalValues() {
+  queryAdditionalTables() {
     return null;
   },
   querySelectable(appState, node) {

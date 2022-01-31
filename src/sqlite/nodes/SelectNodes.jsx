@@ -51,7 +51,7 @@ export const SelectNodeConfig = {
       sourceNode == null ? null : getQuerySelectable(appState, sourceNode);
     return sql(selected(node), fromQuery);
   },
-  queryAdditionalValues(appState, node) {
+  queryAdditionalTables(appState, node) {
     const sourceNode = only(Nodes.parents(appState, node));
     if (sourceNode == null) {
       return null;

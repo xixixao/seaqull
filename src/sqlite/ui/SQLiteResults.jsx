@@ -13,7 +13,7 @@ import { format as formatSQL } from "sql-formatter";
 import {
   getColumnControl,
   getQuery,
-  getQueryAdditionalValues,
+  getQueryAdditionalTables,
   getQuerySelectable,
   getResults,
 } from "../sqliteNodes";
@@ -65,7 +65,7 @@ function ResultsTable() {
       .map((node) =>
         (isEditing ? getQuery : getQuerySelectable)(appState, node)
       )
-      .concat(isEditing ? getQueryAdditionalValues(appState, oneShown) : [])
+      .concat(isEditing ? getQueryAdditionalTables(appState, oneShown) : [])
       .filter((query) => query != null)
       .slice(0, 2); // TODO: For now limit number of tables for perf reasons
     // and interaction with dragging

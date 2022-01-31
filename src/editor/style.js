@@ -403,6 +403,7 @@ globalCss({
   },
   table: {
     borderCollapse: "collapse",
+    height: "fit-content",
   },
   th: {
     // borderWidth: "1px",

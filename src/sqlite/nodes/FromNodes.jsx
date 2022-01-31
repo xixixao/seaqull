@@ -38,7 +38,7 @@ export const FromNodeConfig = {
     const name = nodeName(node);
     return name.length > 0 ? `SELECT * from ${name}` : null;
   },
-  queryAdditionalValues(appState, node) {
+  queryAdditionalTables(appState, node) {
     return null;
   },
   querySelectable(appState, node) {

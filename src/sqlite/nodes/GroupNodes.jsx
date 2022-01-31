@@ -74,7 +74,7 @@ export const GroupNodeConfig = {
 
     return sql(node, aggregations(node), fromQuery);
   },
-  queryAdditionalValues(appState, node) {
+  queryAdditionalTables(appState, node) {
     const sourceNode = only(Nodes.parents(appState, node));
     if (sourceNode == null) {
       return null;
