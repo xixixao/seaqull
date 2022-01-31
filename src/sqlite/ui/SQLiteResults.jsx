@@ -258,7 +258,7 @@ function execQuery(db, sql) {
   // console.log(sql);
   let result = null;
   try {
-    result = db.exec(sql + " LIMIT 100");
+    result = db.exec(`SELECT * from (${sql}) LIMIT 100`);
   } catch (e) {
     return new ResultError(sql, e);
   }
