@@ -350,7 +350,12 @@ function posAtClick(view, click) {
 
 const ResetStyles = EditorView.theme({
   "&.cm-editor.cm-focused": { outline: "none" },
-  "& .cm-scroller": { fontFamily: "inherit" },
-  "& .cm-content": { padding: "0 2px 0 0" },
+  "& .cm-scroller": {
+    fontFamily: "inherit",
+    // This fixes cursors no being visible on edge of editor, but might
+    // cause problem if we ever want to scroll horizontally
+    overflowX: "visible",
+  },
+  "& .cm-content": { padding: "0" },
   "& .cm-line": { padding: 0 },
 });

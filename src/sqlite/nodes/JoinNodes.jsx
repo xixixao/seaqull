@@ -22,8 +22,15 @@ function JoinNode() {
   const setSelectedNodeState = useSetSelectedNodeState();
   return (
     <SqliteNodeUI>
-      {/* todo type of join */}
-      JOIN ON{" "}
+      <SqliteInput
+        value={joinType(node)}
+        onChange={(joinType) => {
+          setSelectedNodeState((node) => {
+            setJoinType(node, joinType);
+          });
+        }}
+      />{" "}
+      ON{" "}
       <SqliteInput
         displayValue={!hasFilter(node) ? "∅" : null}
         value={filters}
@@ -58,7 +65,11 @@ export const JoinNodeConfig = {
       new Set(joined.map(second))
     );
 
-    return `SELECT ${
+    return sql(
+      appState,
+      node,
+      a,
+      b,
       joined.length > 0
         ? joined
             .map(first)
@@ -69,10 +80,7 @@ export const JoinNodeConfig = {
             )
             .join(",")
         : "a.*, b.*"
-    } FROM (${a != null ? getQuerySelectable(appState, a) : null}) AS a
-    JOIN (${b != null ? getQuerySelectable(appState, b) : null}) AS b ${
-      hasFilter(node) ? `ON ${nodeFilters(node)}` : ""
-    }`;
+    );
     // validParents(appState, node)
     // return (name ?? "").length > 0 ? `SELECT * from ${name}` : null;
   },
@@ -85,15 +93,13 @@ export const JoinNodeConfig = {
     const parentsColumnNames = parents.map((parent) =>
       getColumnNames(appState, parent)
     );
-    return `SELECT ${selectedColumnExpressionsAliased(
+    return sql(
+      appState,
       node,
-      parentsColumnNames
-    ).join(",")} FROM (${
-      a != null ? getQuerySelectable(appState, a) : null
-    }) AS a
-    JOIN (${b != null ? getQuerySelectable(appState, b) : null}) AS b ${
-      hasFilter(node) ? `ON ${nodeFilters(node)}` : ""
-    }`;
+      a,
+      b,
+      selectedColumnExpressionsAliased(node, parentsColumnNames).join(",")
+    );
   },
   columnNames(appState, node) {
     const parents = Nodes.parents(appState, node);
@@ -191,37 +197,50 @@ function JoinOnSelector({ columns, onChange }) {
   );
 }
 
-function empty(filters = "") {
-  return { filters };
+function empty() {
+  return { type: "JOIN", where: "" };
 }
 
 function hasFilter(node) {
   return nodeFilters(node).length > 0;
 }
 
-function nodeFilters(node) {
-  return node.data.filters;
+function joinType(node) {
+  return node.data.type;
 }
 
-function setFilters(node, filters) {
-  node.data.filters = filters;
+function nodeFilters(node) {
+  return node.data.where;
+}
+
+function setJoinType(node, joinType) {
+  node.data.type = joinType;
+}
+
+function setFilters(node, where) {
+  node.data.where = where;
 }
 
 function addFilter(node, filter) {
-  node.data.filters =
-    nodeFilters(node) === "" ? filter : `${nodeFilters(node)} AND ${filter}`;
+  setFilters(
+    node,
+    nodeFilters(node) === "" ? filter : `${nodeFilters(node)} AND ${filter}`
+  );
 }
 
 function removeFilter(node, column) {
-  node.data.filters = filterListToString(
-    filterList(node).filter((filter) => {
-      const simpleJoin = getSimpleJoin(filter);
-      if (simpleJoin == null) {
-        return true;
-      }
-      const [a] = simpleJoin;
-      return a !== column;
-    })
+  setFilters(
+    node,
+    filterListToString(
+      filterList(node).filter((filter) => {
+        const simpleJoin = getSimpleJoin(filter);
+        if (simpleJoin == null) {
+          return true;
+        }
+        const [a] = simpleJoin;
+        return a !== column;
+      })
+    )
   );
 }
 
@@ -319,4 +338,13 @@ function getSimpleJoin(filter) {
   }
   const [, a, b] = matched;
   return [a, b];
+}
+
+function sql(appState, node, a, b, selected) {
+  return `SELECT ${selected} FROM (${
+    a != null ? getQuerySelectable(appState, a) : null
+  }) AS a
+  ${joinType(node)} (${
+    b != null ? getQuerySelectable(appState, b) : null
+  }) AS b ${hasFilter(node) ? `ON ${nodeFilters(node)}` : ""}`;
 }
