@@ -14,6 +14,7 @@ import {
   getColumnControl,
   getQuery,
   getQueryAdditionalTables,
+  getQueryAdditionalValues,
   getQuerySelectable,
   getResults,
 } from "../sqliteNodes";
@@ -68,6 +69,9 @@ function ResultsTable() {
       .concat(isEditing ? getQueryAdditionalTables(appState, oneShown) : [])
       .filter((query) => query != null)
       .slice(0, 2); // TODO: For now limit number of tables for perf reasons
+    const additionalValuesQueries = [
+      isEditing ? getQueryAdditionalValues(appState, oneShown) : null,
+    ].filter((query) => query != null);
     // and interaction with dragging
     // console.log(appState);
     // console.log(query);
@@ -86,6 +90,9 @@ function ResultsTable() {
       setResultsState({
         queries,
         tables: queries.map((query) => execQuery(database, query)),
+        additionalValues: additionalValuesQueries.map((query) =>
+          execQuery(database, query)
+        ),
         appState,
       });
       setUpdated(
@@ -173,7 +180,7 @@ const borderBlink = keyframes({
 });
 
 const ResultsTableLoaded = memo(function ResultsTableLoaded({
-  state: { tables, appState },
+  state: { appState, tables, additionalValues },
 }) {
   const setSelectedNodeState = useSetSelectedNodeState();
   const selectedNode = only(Nodes.selected(appState));
@@ -198,6 +205,7 @@ const ResultsTableLoaded = memo(function ResultsTableLoaded({
   }
   return tables.map(({ columns, values }, tableIndex) => {
     const isPrimary = tableIndex === 0;
+    const moreValues = additionalValues[tableIndex];
     return (
       <Table
         key={tableIndex}
@@ -225,20 +233,30 @@ const ResultsTableLoaded = memo(function ResultsTableLoaded({
             ))}
           </tr>
         </thead>
-        <tbody>
-          {values.map((row, j) => (
-            <tr key={j}>
-              {row.map((value, i) => (
-                <td key={i}>{value}</td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
+        <TableBody values={values} />
+        {moreValues != null ? (
+          <TableBody css={{ color: "$slate11" }} values={moreValues.values} />
+        ) : null}
       </Table>
     );
   });
 });
 
+function TableBody({ css, values }) {
+  return (
+    <TBody css={css}>
+      {values.map((row, j) => (
+        <tr key={j}>
+          {row.map((value, i) => (
+            <td key={i}>{value}</td>
+          ))}
+        </tr>
+      ))}
+    </TBody>
+  );
+}
+
+const TBody = styled("tbody");
 const Table = styled("table");
 
 class ResultError {

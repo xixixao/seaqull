@@ -60,11 +60,7 @@ function getNodeConfig(node) {
 }
 
 export function getResults(appState, node) {
-  const fn = getNodeConfig(node).results;
-  if (fn == null) {
-    return null;
-  }
-  return fn(appState, node);
+  return getNodeConfig(node).results?.(appState, node);
 }
 
 export function getHasProblem(appState, node) {
@@ -77,6 +73,10 @@ export function getQuery(appState, node) {
 
 export function getQueryAdditionalTables(appState, node) {
   return getNodeConfig(node).queryAdditionalTables(appState, node);
+}
+
+export function getQueryAdditionalValues(appState, node) {
+  return getNodeConfig(node).queryAdditionalValues?.(appState, node);
 }
 
 export function getQuerySelectable(appState, node) {
