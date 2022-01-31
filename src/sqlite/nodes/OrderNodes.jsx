@@ -5,11 +5,15 @@ import HorizontalSpace from "editor/ui/HorizontalSpace";
 import { Row } from "editor/ui/Row";
 import * as Nodes from "graph/Nodes";
 import { only } from "js/Arrays";
-import { produce } from "js/immer";
 import React from "react";
 import { getColumnNames, getQuerySelectable } from "../sqliteNodes";
 import SqliteInput from "../ui/SqliteInput";
 import SqliteNodeUI from "../ui/SqliteNodeUI";
+import {
+  aliasedExpressionList,
+  joinList,
+  suffixedExpressionList,
+} from "./sqliteExpressions";
 
 function OrderNode() {
   const node = useNode();
@@ -19,18 +23,10 @@ function OrderNode() {
       ORDER BY{" "}
       <SqliteInput
         displayValue={!hasOrdered(node) ? "∅" : null}
-        value={hasOrdered(node) ? orderClause(node) : null}
+        value={orderClause(node)}
         onChange={(orderClause) => {
           setSelectedNodeState((node) => {
-            let columnToOrder = {};
-            orderClause
-              .split(/, */)
-              .map((columnOrder) => columnOrder.split(/ +/))
-              .filter(([column]) => column !== "∅")
-              .forEach(([column, order]) => {
-                columnToOrder[column] = order ?? "ASC";
-              });
-            node.data.columnToOrder = columnToOrder;
+            setOrderBy(node, orderClause);
           });
         }}
       />
@@ -71,35 +67,17 @@ export const OrderNodeConfig = {
     return getColumnNames(appState, sourceNode);
   },
   columnControl(appState, node, columnName, setSelectedNodeState) {
-    // const selectableColumnNames = getColumnNames(appState, node.source);
-    // // TODO: Fix O(N^2) algo to be nlogn
-    // if (!selectableColumnNames.find((column) => column === columnName)) {
-    //   return null;
-    // }
-    const columnToOrderNotNull = node.data.columnToOrder ?? {};
-    const state = columnToOrderNotNull[columnName];
     return (
       <Row>
         <Button
           onClick={() => {
             setSelectedNodeState((node) => {
-              node.data.columnToOrder = produce(columnToOrderNotNull, (map) => {
-                switch (state) {
-                  case "ASC":
-                    map[columnName] = "DESC";
-                    break;
-                  case "DESC":
-                    delete map[columnName];
-                    break;
-                  default:
-                    map[columnName] = "ASC";
-                }
-              });
+              updateColumnOrder(node, columnName);
             });
           }}
         >
           {(() => {
-            switch (state) {
+            switch (columnState(node, columnName)) {
               case "ASC":
                 return "▲";
               case "DESC":
@@ -116,18 +94,54 @@ export const OrderNodeConfig = {
   },
 };
 
-export function empty() {
-  // TODO: Support arbitrary order by clauses
-  return { columnToOrder: {} };
+function empty() {
+  return { by: "" };
 }
 
-export function hasOrdered(node) {
-  return Object.keys(node.data.columnToOrder).length > 0;
+function hasOrdered(node) {
+  return aliasedExpressionList(orderClause(node)).length > 0;
 }
 
-export function orderClause(node) {
-  const columnToOrder = node.data.columnToOrder ?? {};
-  return Object.keys(columnToOrder)
-    .map((column) => `${column} ${columnToOrder[column]}`)
-    .join(", ");
+function orderClause(node) {
+  return node.data.by;
+  // const columnToOrder = node.data.columnToOrder ?? {};
+  // return Object.keys(columnToOrder)
+  //   .map((column) => `${column} ${columnToOrder[column]}`)
+  //   .join(", ");
+}
+
+function columnState(node, columnName) {
+  const [, modifier] =
+    suffixedExpressionList(orderClause(node)).find(
+      ([expression]) => expression === columnName
+    ) ?? [];
+  return modifier;
+}
+
+function setOrderBy(node, orderClause) {
+  node.data.by = orderClause;
+}
+
+function updateColumnOrder(node, columnName) {
+  setOrderBy(
+    node,
+    joinList(
+      suffixedExpressionList(orderClause(node))
+        .filter(([expression]) => expression !== columnName)
+        .concat(
+          (() => {
+            switch (columnState(node, columnName)) {
+              case "ASC":
+                return [[columnName, "DESC"]];
+              case "DESC":
+                return [];
+              default:
+                return [[columnName, "ASC"]];
+            }
+          })()
+        )
+        .map((pair) => pair.join(" ")),
+      orderClause(node)
+    )
+  );
 }
