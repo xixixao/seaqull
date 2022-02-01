@@ -192,6 +192,9 @@ function NodesPane({ children, nodeTypes, onDoubleClick }) {
         onSelectionChange={onSelectionChange}
         zoomOnDoubleClick={false}
         {...PAN_SETTINGS.MAC}
+        onEdgeUpdate={() => {
+          console.log(arguments);
+        }}
         // onElementsRemove={onElementsRemove}
         // onConnect={onConnect}
         // onLoad={onLoad}

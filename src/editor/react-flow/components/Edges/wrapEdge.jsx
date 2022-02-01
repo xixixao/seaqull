@@ -3,7 +3,8 @@ import cc from "classcat";
 import { useStoreActions, useStoreState } from "../../store/hooks";
 import { onMouseDown } from "../Handle/handler";
 import { EdgeAnchor } from "./EdgeAnchor";
-export default (EdgeComponent) => {
+
+export default function wrapEdge(EdgeComponent) {
   const EdgeWrapper = ({
     id,
     className,
@@ -252,4 +253,4 @@ export default (EdgeComponent) => {
   };
   EdgeWrapper.displayName = "EdgeWrapper";
   return memo(EdgeWrapper);
-};
+}
