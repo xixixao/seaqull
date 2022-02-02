@@ -4,10 +4,22 @@ import * as Nodes from "./Nodes";
 import * as Arrays from "js/Arrays";
 import { only } from "js/Arrays";
 
-export function isAncestor(graph, target, source) {
-  return children(graph, target).some((childEdge) => {
+export function isAncestor(graph, ancestor, descendant) {
+  return children(graph, ancestor).some((childEdge) => {
     const id = Edge.childID(childEdge);
-    return Node.hasID(source, id) || isAncestor(graph, Node.fake(id), source);
+    return (
+      Node.hasID(descendant, id) || isAncestor(graph, Node.fake(id), descendant)
+    );
+  });
+}
+
+export function isTightAncestor(graph, ancestor, descendant) {
+  return tightChildren(graph, ancestor).some((childEdge) => {
+    const id = Edge.childID(childEdge);
+    return (
+      Node.hasID(descendant, id) ||
+      isTightAncestor(graph, Node.fake(id), descendant)
+    );
   });
 }
 

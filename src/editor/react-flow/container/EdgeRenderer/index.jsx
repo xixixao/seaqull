@@ -10,7 +10,95 @@ import { isEdge } from "../../utils/graph";
 import MarkerDefinitions from "./MarkerDefinitions";
 import { getEdgePositions, getHandle, isEdgeVisible } from "./utils";
 
-const Edge = ({
+const EdgeRenderer = (props) => {
+  const transform = useStoreState((state) => state.transform);
+  const appState = useAppStateContext();
+  const edges = useContext(AppStateContext.edges);
+  const connectionNodeId = useStoreState((state) => state.connectionNodeId);
+  const connectionHandleId = useStoreState((state) => state.connectionHandleId);
+  const connectionHandleType = useStoreState(
+    (state) => state.connectionHandleType
+  );
+  const connectionPosition = useStoreState((state) => state.connectionPosition);
+  const selectedElements = useStoreState((state) => state.selectedElements);
+  const nodesConnectable = useStoreState((state) => state.nodesConnectable);
+  const elementsSelectable = useStoreState((state) => state.elementsSelectable);
+  const width = useStoreState((state) => state.width);
+  const height = useStoreState((state) => state.height);
+
+  const isValidConnection = useCallback(
+    ({ source, target }) => {
+      return (
+        !Edges.isTightAncestor(
+          appState,
+          Node.fake(source),
+          Node.fake(target)
+        ) &&
+        !Edges.isTightAncestor(
+          appState,
+          Node.fake(target),
+          Node.fake(source)
+        ) &&
+        !Node.is(Node.fake(target), Node.fake(source))
+      );
+    },
+    [appState]
+  );
+
+  if (!width) {
+    return null;
+  }
+  const {
+    connectionLineType,
+    arrowHeadColor,
+    connectionLineStyle,
+    connectionLineComponent,
+    onlyRenderVisibleElements,
+  } = props;
+  const transformStyle = `translate(${transform[0]},${transform[1]}) scale(${transform[2]})`;
+  const renderConnectionLine = connectionNodeId && connectionHandleType;
+  return (
+    <svg width={width} height={height} className="react-flow__edges">
+      <MarkerDefinitions color={arrowHeadColor} />
+      <g transform={transformStyle}>
+        {Array.from(edges.values()).map((edge) => (
+          <Edge
+            key={edge.id}
+            edge={edge}
+            props={props}
+            appState={appState}
+            selectedElements={selectedElements}
+            elementsSelectable={elementsSelectable}
+            transform={transform}
+            width={width}
+            height={height}
+            onlyRenderVisibleElements={onlyRenderVisibleElements}
+            isValidConnection={isValidConnection}
+          />
+        ))}
+        {renderConnectionLine && (
+          <ConnectionLine
+            sourceNode={Nodes.positionOf(appState, Node.fake(connectionNodeId))}
+            connectionNodeId={connectionNodeId}
+            connectionHandleId={connectionHandleId}
+            connectionHandleType={connectionHandleType}
+            connectionPositionX={connectionPosition.x}
+            connectionPositionY={connectionPosition.y}
+            transform={transform}
+            connectionLineStyle={connectionLineStyle}
+            connectionLineType={connectionLineType}
+            isConnectable={nodesConnectable}
+            CustomConnectionLineComponent={connectionLineComponent}
+          />
+        )}
+      </g>
+    </svg>
+  );
+};
+EdgeRenderer.displayName = "EdgeRenderer";
+export default memo(EdgeRenderer);
+
+function Edge({
   edge,
   props,
   appState,
@@ -21,9 +109,11 @@ const Edge = ({
   height,
   onlyRenderVisibleElements,
   connectionMode,
-}) => {
+  isValidConnection,
+}) {
   const sourceHandleId = edge.sourceHandle || null;
   const targetHandleId = edge.targetHandle || null;
+  // TODO: We shouldnt need full appState, only edges and positions to do this
   const sourceNode = Edges.parentNode(appState, edge);
   const targetNode = Edges.childNode(appState, edge);
   // const { sourceNode, targetNode } = getSourceTargetNodes(edge, nodes);
@@ -133,6 +223,7 @@ const Edge = ({
       isHidden={edge.isHidden || edge.type === "tight"}
       onConnectEdge={onConnectEdge}
       handleEdgeUpdate={typeof props.onEdgeUpdate !== "undefined"}
+      isValidConnection={isValidConnection}
       onContextMenu={props.onEdgeContextMenu}
       onMouseEnter={props.onEdgeMouseEnter}
       onMouseMove={props.onEdgeMouseMove}
@@ -143,71 +234,4 @@ const Edge = ({
       onEdgeUpdateEnd={props.onEdgeUpdateEnd}
     />
   );
-};
-const EdgeRenderer = (props) => {
-  const transform = useStoreState((state) => state.transform);
-  // const nodes = useContext(AppStateContext.nodes);
-  const appState = useAppStateContext();
-  const edges = Array.from(useContext(AppStateContext.edges).values());
-  const connectionNodeId = useStoreState((state) => state.connectionNodeId);
-  const connectionHandleId = useStoreState((state) => state.connectionHandleId);
-  const connectionHandleType = useStoreState(
-    (state) => state.connectionHandleType
-  );
-  const connectionPosition = useStoreState((state) => state.connectionPosition);
-  const selectedElements = useStoreState((state) => state.selectedElements);
-  const nodesConnectable = useStoreState((state) => state.nodesConnectable);
-  const elementsSelectable = useStoreState((state) => state.elementsSelectable);
-  const width = useStoreState((state) => state.width);
-  const height = useStoreState((state) => state.height);
-  if (!width) {
-    return null;
-  }
-  const {
-    connectionLineType,
-    arrowHeadColor,
-    connectionLineStyle,
-    connectionLineComponent,
-    onlyRenderVisibleElements,
-  } = props;
-  const transformStyle = `translate(${transform[0]},${transform[1]}) scale(${transform[2]})`;
-  const renderConnectionLine = connectionNodeId && connectionHandleType;
-  return (
-    <svg width={width} height={height} className="react-flow__edges">
-      <MarkerDefinitions color={arrowHeadColor} />
-      <g transform={transformStyle}>
-        {edges.map((edge) => (
-          <Edge
-            key={edge.id}
-            edge={edge}
-            props={props}
-            appState={appState}
-            selectedElements={selectedElements}
-            elementsSelectable={elementsSelectable}
-            transform={transform}
-            width={width}
-            height={height}
-            onlyRenderVisibleElements={onlyRenderVisibleElements}
-          />
-        ))}
-        {renderConnectionLine && (
-          <ConnectionLine
-            sourceNode={Nodes.positionOf(appState, Node.fake(connectionNodeId))}
-            connectionNodeId={connectionNodeId}
-            connectionHandleId={connectionHandleId}
-            connectionHandleType={connectionHandleType}
-            connectionPositionX={connectionPosition.x}
-            connectionPositionY={connectionPosition.y}
-            transform={transform}
-            connectionLineStyle={connectionLineStyle}
-            connectionLineType={connectionLineType}
-            isConnectable={nodesConnectable}
-            CustomConnectionLineComponent={connectionLineComponent}
-          />
-        )}
-      </g>
-    </svg>
-  );
-};
-EdgeRenderer.displayName = "EdgeRenderer";
-export default memo(EdgeRenderer);
+}

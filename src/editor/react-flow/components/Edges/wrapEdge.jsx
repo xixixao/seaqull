@@ -36,6 +36,7 @@ export default function wrapEdge(EdgeComponent) {
     sourceHandleId,
     targetHandleId,
     handleEdgeUpdate,
+    isValidConnection,
     onConnectEdge,
     onContextMenu,
     onMouseEnter,
@@ -129,7 +130,6 @@ export default function wrapEdge(EdgeComponent) {
       (event, isSourceHandle) => {
         const nodeId = isSourceHandle ? target : source;
         const handleId = isSourceHandle ? targetHandleId : sourceHandleId;
-        const isValidConnection = () => true;
         const isTarget = isSourceHandle;
         onEdgeUpdateStart?.(event, edgeElement);
         const _onEdgeUpdate = onEdgeUpdateEnd
@@ -160,6 +160,7 @@ export default function wrapEdge(EdgeComponent) {
         setPosition,
         edgeElement,
         onConnectEdge,
+        isValidConnection,
       ]
     );
     const onEdgeUpdaterSourceMouseDown = useCallback(
