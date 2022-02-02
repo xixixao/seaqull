@@ -1,67 +1,6 @@
 import { getHostForElement } from "../../utils";
 import { ConnectionMode } from "../../types";
-// checks if element below mouse is a handle and returns connection in form of an object { source: 123, target: 312 }
-function checkElementBelowIsValid(
-  event,
-  connectionMode,
-  isTarget,
-  nodeId,
-  handleId,
-  isValidConnection,
-  doc
-) {
-  // TODO: why does this throw an error? elementFromPoint should be available for ShadowRoot too
-  // @ts-ignore
-  const elementBelow = doc.elementFromPoint(event.clientX, event.clientY);
-  const elementBelowIsTarget =
-    elementBelow?.classList.contains("target") || false;
-  const elementBelowIsSource =
-    elementBelow?.classList.contains("source") || false;
-  const result = {
-    elementBelow,
-    isValid: false,
-    connection: {
-      source: null,
-      target: null,
-      sourceHandle: null,
-      targetHandle: null,
-    },
-    isHoveringHandle: false,
-  };
-  if (elementBelow && (elementBelowIsTarget || elementBelowIsSource)) {
-    result.isHoveringHandle = true;
-    // in strict mode we don't allow target to target or source to source connections
-    const isValid =
-      connectionMode === ConnectionMode.Strict
-        ? (isTarget && elementBelowIsSource) ||
-          (!isTarget && elementBelowIsTarget)
-        : true;
-    if (isValid) {
-      const elementBelowNodeId = elementBelow.getAttribute("data-nodeid");
-      const elementBelowHandleId = elementBelow.getAttribute("data-handleid");
-      const connection = isTarget
-        ? {
-            source: elementBelowNodeId,
-            sourceHandle: elementBelowHandleId,
-            target: nodeId,
-            targetHandle: handleId,
-          }
-        : {
-            source: nodeId,
-            sourceHandle: handleId,
-            target: elementBelowNodeId,
-            targetHandle: elementBelowHandleId,
-          };
-      result.connection = connection;
-      result.isValid = isValidConnection(connection);
-    }
-  }
-  return result;
-}
-function resetRecentHandle(hoveredHandle) {
-  hoveredHandle?.classList.remove("react-flow__handle-valid");
-  hoveredHandle?.classList.remove("react-flow__handle-connecting");
-}
+
 export function onMouseDown(
   event,
   handleId,
@@ -165,4 +104,97 @@ export function onMouseDown(
   }
   doc.addEventListener("mousemove", onMouseMove);
   doc.addEventListener("mouseup", onMouseUp);
+}
+
+function resetRecentHandle(hoveredHandle) {
+  hoveredHandle?.classList.remove("react-flow__handle-valid");
+  hoveredHandle?.classList.remove("react-flow__handle-connecting");
+}
+
+// checks if element below mouse is a handle and returns connection in form of an object { source: 123, target: 312 }
+function checkElementBelowIsValid(
+  event,
+  connectionMode,
+  isTarget,
+  nodeId,
+  handleId,
+  isValidConnection,
+  doc
+) {
+  // TODO: why does this throw an error? elementFromPoint should be available for ShadowRoot too
+  // @ts-ignore
+  const elementBelow = doc.elementFromPoint(event.clientX, event.clientY);
+  const elementBelowIsTarget =
+    elementBelow?.classList.contains("target") || false;
+  const elementBelowIsSource =
+    elementBelow?.classList.contains("source") || false;
+  const result = {
+    elementBelow,
+    isValid: false,
+    connection: {
+      source: null,
+      target: null,
+      sourceHandle: null,
+      targetHandle: null,
+    },
+    isHoveringHandle: false,
+  };
+  if (elementBelow && (elementBelowIsTarget || elementBelowIsSource)) {
+    result.isHoveringHandle = true;
+    // in strict mode we don't allow target to target or source to source connections
+    const isValid =
+      connectionMode === ConnectionMode.Strict
+        ? (isTarget && elementBelowIsSource) ||
+          (!isTarget && elementBelowIsTarget)
+        : true;
+    if (isValid) {
+      const elementBelowNodeId = elementBelow.getAttribute("data-nodeid");
+      const elementBelowHandleId = elementBelow.getAttribute("data-handleid");
+      const connection = isTarget
+        ? {
+            source: elementBelowNodeId,
+            sourceHandle: elementBelowHandleId,
+            target: nodeId,
+            targetHandle: handleId,
+          }
+        : {
+            source: nodeId,
+            sourceHandle: handleId,
+            target: elementBelowNodeId,
+            targetHandle: elementBelowHandleId,
+          };
+      result.connection = connection;
+      result.isValid = isValidConnection(connection);
+    }
+  }
+  const nodeBelow = findAncestorWithAttribute(elementBelow, "data-id");
+  if (nodeBelow != null) {
+    const nodeBelowID = nodeBelow.getAttribute("data-id");
+    const connection = isTarget
+      ? {
+          source: nodeBelowID,
+          target: nodeId,
+        }
+      : {
+          source: nodeId,
+          target: nodeBelowID,
+        };
+    result.connection = connection;
+    result.isValid = isValidConnection(connection);
+  }
+  return result;
+}
+
+function findAncestorWithAttribute(element, attribute) {
+  if (element == null) {
+    return null;
+  }
+  if (element.hasAttribute(attribute)) {
+    return element;
+  }
+  // Bail out early
+  if (element.classList.contains("react-flow")) {
+    return null;
+  }
+  return findAncestorWithAttribute(element.parentNode, attribute);
 }

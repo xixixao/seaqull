@@ -26,7 +26,7 @@ export function createEdgeTypes(edgeTypes) {
     ...specialTypes,
   };
 }
-export function getHandlePosition(position, pos, node, handle = null) {
+export function getHandlePosition(position, pos, handle = null) {
   const x = (handle?.x || 0) + pos.x;
   const y = (handle?.y || 0) + pos.y;
   const width = handle?.width || pos.width;
@@ -69,12 +69,11 @@ export function getHandle(bounds, handleId) {
   }
   return typeof handle === "undefined" ? null : handle;
 }
+
 export const getEdgePositions = (
-  sourceNode,
   sourceHandle,
   sourcePos,
   sourcePosition,
-  targetNode,
   targetHandle,
   targetPos,
   targetPosition
@@ -82,13 +81,11 @@ export const getEdgePositions = (
   const sourceHandlePos = getHandlePosition(
     sourcePosition,
     sourcePos,
-    sourceNode,
     sourceHandle
   );
   const targetHandlePos = getHandlePosition(
     targetPosition,
     targetPos,
-    targetNode,
     targetHandle
   );
   return {

@@ -1,16 +1,18 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
+import { ConnectionLineType, Position } from "../../types";
 import { getBezierPath } from "../Edges/BezierEdge";
 import { getSmoothStepPath } from "../Edges/SmoothStepEdge";
-import { Position, ConnectionLineType } from "../../types";
+
 const getSourceHandle = (handleId, sourceNode, connectionHandleType) => {
   const handleTypeInverted =
     connectionHandleType === "source" ? "target" : "source";
   const handleBound =
-    sourceNode.__rf.handleBounds[connectionHandleType] ||
-    sourceNode.__rf.handleBounds[handleTypeInverted];
+    sourceNode.handleBounds[connectionHandleType] ||
+    sourceNode.handleBounds[handleTypeInverted];
   return handleId ? handleBound.find((d) => d.id === handleId) : handleBound[0];
 };
-export default ({
+
+export default function ConnectionLine({
   connectionNodeId,
   connectionHandleId,
   connectionHandleType,
@@ -18,19 +20,13 @@ export default ({
   connectionPositionX,
   connectionPositionY,
   connectionLineType = ConnectionLineType.Bezier,
-  nodes = [],
+  sourceNode,
   transform,
   isConnectable,
   CustomConnectionLineComponent,
-}) => {
-  const [sourceNode, setSourceNode] = useState(null);
-  const nodeId = connectionNodeId;
+}) {
   const handleId = connectionHandleId;
-  useEffect(() => {
-    const nextSourceNode = nodes.find((n) => n.id === nodeId) || null;
-    setSourceNode(nextSourceNode);
-  }, []);
-  if (!sourceNode || !isConnectable) {
+  if (sourceNode == null || !isConnectable) {
     return null;
   }
   const sourceHandle = getSourceHandle(
@@ -40,12 +36,12 @@ export default ({
   );
   const sourceHandleX = sourceHandle
     ? sourceHandle.x + sourceHandle.width / 2
-    : sourceNode.__rf.width / 2;
+    : sourceNode.width / 2;
   const sourceHandleY = sourceHandle
     ? sourceHandle.y + sourceHandle.height / 2
-    : sourceNode.__rf.height;
-  const sourceX = sourceNode.__rf.position.x + sourceHandleX;
-  const sourceY = sourceNode.__rf.position.y + sourceHandleY;
+    : sourceNode.height;
+  const sourceX = sourceNode.x + sourceHandleX;
+  const sourceY = sourceNode.y + sourceHandleY;
   const targetX = (connectionPositionX - transform[0]) / transform[2];
   const targetY = (connectionPositionY - transform[1]) / transform[2];
   const isRightOrLeft =
@@ -111,4 +107,4 @@ export default ({
       />
     </g>
   );
-};
+}

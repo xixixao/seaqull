@@ -1,6 +1,7 @@
 import React, { memo, useCallback, useContext } from "react";
 import * as Edges from "graph/Edges";
 import * as Nodes from "graph/Nodes";
+import * as Node from "graph/Node";
 import { AppStateContext, useAppStateContext } from "../../../state";
 import ConnectionLine from "../../components/ConnectionLine/index";
 import { useStoreState } from "../../store/hooks";
@@ -78,11 +79,9 @@ const Edge = ({
     return null;
   }
   const { sourceX, sourceY, targetX, targetY } = getEdgePositions(
-    sourceNode,
     sourceHandle,
     sourcePos,
     sourcePosition,
-    targetNode,
     targetHandle,
     targetPos,
     targetPosition
@@ -131,7 +130,7 @@ const Edge = ({
       targetPosition={targetPosition}
       elementsSelectable={elementsSelectable}
       markerEndId={props.markerEndId}
-      isHidden={edge.isHidden}
+      isHidden={edge.isHidden || edge.type === "tight"}
       onConnectEdge={onConnectEdge}
       handleEdgeUpdate={typeof props.onEdgeUpdate !== "undefined"}
       onContextMenu={props.onEdgeContextMenu}
@@ -193,7 +192,7 @@ const EdgeRenderer = (props) => {
         ))}
         {renderConnectionLine && (
           <ConnectionLine
-            nodes={[]}
+            sourceNode={Nodes.positionOf(appState, Node.fake(connectionNodeId))}
             connectionNodeId={connectionNodeId}
             connectionHandleId={connectionHandleId}
             connectionHandleType={connectionHandleType}
