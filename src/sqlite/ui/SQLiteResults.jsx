@@ -10,6 +10,7 @@ import * as Nodes from "graph/Nodes";
 import { only } from "js/Arrays";
 import * as Promises from "js/Promises";
 import React, { memo, useEffect, useMemo, useState } from "react";
+import { useRef } from "react";
 import { format as formatSQL } from "sql-formatter";
 import {
   getColumnControl,
@@ -19,7 +20,7 @@ import {
   getQuerySelectable,
   getResults,
 } from "../sqliteNodes";
-import { useEditorConfig } from "../sqliteState";
+import { useAppStateWithEditorConfig, useEditorConfig } from "../sqliteState";
 
 export function SQLiteResults() {
   const appState = useAppStateDataContext();
@@ -41,22 +42,20 @@ export function SQLiteResults() {
 }
 
 function ResultsTable() {
-  const appStateData = useAppStateDataContext();
-  const editorConfig = useEditorConfig();
-  const appState = useMemo(() => {
-    return { ...appStateData, editorConfig };
-  }, [appStateData, editorConfig]);
+  const appState = useAppStateWithEditorConfig();
   const [resultsState, setResultsState] = useState(null);
-  const [lastShownNode, setLastShownNode] = useState(null);
+  const lastShownNode = useRef();
   const [updated, setUpdated] = useState();
   const [isLoading, setIsLoading] = useState(false);
   useEffect(() => {
-    if (editorConfig.db == null) {
+    if (appState.editorConfig.db == null) {
       return;
     }
     const selected = Nodes.selected(appState);
     const isSelecting = selected.length > 0;
-    const previous = lastShownNode && Nodes.current(appState, lastShownNode);
+    const previous =
+      lastShownNode.current != null &&
+      Nodes.current(appState, lastShownNode.current);
     if (previous == null && !isSelecting) {
       setResultsState(null);
       return;
@@ -80,7 +79,7 @@ function ResultsTable() {
       setIsLoading(true);
     }
     let canceled = false;
-    const database = editorConfig.db;
+    const database = appState.editorConfig.db;
     if (canceled) {
       return;
     }
@@ -101,7 +100,7 @@ function ResultsTable() {
           oneShown != null &&
           !Node.is(oneShown, lastShownNode)
       );
-      setLastShownNode(oneShown);
+      lastShownNode.current = oneShown;
     }
     const NEW_RESULTS_INDICATOR_DURATION = 1000;
     Promises.delay(NEW_RESULTS_INDICATOR_DURATION).then(() => {
@@ -114,7 +113,6 @@ function ResultsTable() {
     return () => {
       canceled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [appState]);
 
   if (isLoading && resultsState == null) {

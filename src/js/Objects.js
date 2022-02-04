@@ -19,3 +19,11 @@ export function fromMap(map) {
   });
   return object;
 }
+
+export function fromKeys(keys, fn) {
+  const object = {};
+  keys.forEach((key, index) => {
+    object[key] = fn(key, index);
+  });
+  return object;
+}

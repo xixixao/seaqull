@@ -137,7 +137,7 @@ function useEffectUpdateNodeEdited(nodeID, edited) {
   useEffect(() => {
     if (nodeID != null) {
       setAppState((appState) => {
-        Nodes.positionOf(appState, Node.fake(nodeID)).edited = edited;
+        Nodes.positionOf(appState, Node.fake(nodeID)).edited = edited != null;
       });
     }
   }, [edited, nodeID, setAppState]);

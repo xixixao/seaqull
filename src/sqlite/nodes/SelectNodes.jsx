@@ -7,9 +7,11 @@ import * as Arrays from "js/Arrays";
 import { only } from "js/Arrays";
 import React from "react";
 import { getColumnNames, getQuerySelectable } from "../sqliteNodes";
+import { useAppStateWithEditorConfig } from "../sqliteState";
 import ColumnCheckbox from "../ui/ColumnCheckbox";
 import SqliteInput from "../ui/SqliteInput";
 import SqliteNodeUI from "../ui/SqliteNodeUI";
+import { columnSchema } from "./sqliteCompletions";
 import {
   aliasedExpressionList,
   aliasedToExpression,
@@ -23,11 +25,13 @@ import {
 function SelectNode() {
   const node = useNode();
   const setSelectedNodeState = useSetSelectedNodeState();
+  const appState = useAppStateWithEditorConfig();
   return (
     <SqliteNodeUI>
       SELECT{" "}
       <SqliteInput
         displayValue={hasSelected(node) ? null : "*"}
+        schema={columnSchema(appState, node)}
         value={selected(node)}
         onChange={(selected) => {
           setSelectedNodeState((node) => {

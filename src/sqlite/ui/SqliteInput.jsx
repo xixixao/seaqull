@@ -1,20 +1,20 @@
 import { schemaCompletion, SQLite } from "@codemirror/lang-sql";
 import { LanguageSupport } from "@codemirror/language";
 import Input from "editor/Input";
-import { useMemo } from "react";
-import { useEditorConfig } from "../sqliteState";
 
-export default function SqliteInput(props) {
-  const { schema } = useEditorConfig();
-  const extensions = useMemo(() => {
-    return [
-      sql({
-        dialect: SQLite,
-        schema,
-      }),
-    ];
-  }, [schema]);
-  return <Input {...props} extensions={extensions} />;
+export default function SqliteInput({ schema, ...props }) {
+  console.log(schema);
+  return (
+    <Input
+      {...props}
+      extensions={[
+        sql({
+          dialect: SQLite,
+          schema,
+        }),
+      ]}
+    />
+  );
 }
 
 // Dont suggest keywords, there are too many

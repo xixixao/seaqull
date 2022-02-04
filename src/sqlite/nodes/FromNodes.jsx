@@ -9,11 +9,14 @@ function FromNode() {
   const node = useNode();
   const name = nodeName(node);
   const setSelectedNodeState = useSetSelectedNodeState();
+  const { schema } = useEditorConfig();
+  console.log(schema);
   return (
     <SqliteNodeUI hideControls={name.length === 0} type="output">
       FROM{" "}
       <SqliteInput
         autoFocus={true}
+        schema={schema}
         value={name}
         onChange={(name) => {
           setSelectedNodeState((node) => {
