@@ -151,11 +151,13 @@ function ResultsDisplay({ updated, state }) {
         {view === "table" ? (
           <ResultsTableLoaded state={state} />
         ) : (
-          <SQL>{state.queries[0]}</SQL>
+          <ResultBox background="$slate2">
+            <SQL>{state.queries[0]}</SQL>
+          </ResultBox>
         )}
       </Box>
 
-      <Box css={{ paddingLeft: "$8" }}>
+      <Box css={{ paddingLeft: "$8", flexGrow: 1 }}>
         {
           // Rendered twice, to create correct scroll buffer space
           controls
