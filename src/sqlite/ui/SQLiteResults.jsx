@@ -9,8 +9,7 @@ import * as Node from "graph/Node";
 import * as Nodes from "graph/Nodes";
 import { only } from "js/Arrays";
 import * as Promises from "js/Promises";
-import React, { memo, useEffect, useMemo, useState } from "react";
-import { useRef } from "react";
+import React, { memo, useEffect, useRef, useState } from "react";
 import { format as formatSQL } from "sql-formatter";
 import {
   getColumnControl,
@@ -20,7 +19,7 @@ import {
   getQuerySelectable,
   getResults,
 } from "../sqliteNodes";
-import { useAppStateWithEditorConfig, useEditorConfig } from "../sqliteState";
+import { useAppStateWithEditorConfig } from "../sqliteState";
 
 export function SQLiteResults() {
   const appState = useAppStateDataContext();

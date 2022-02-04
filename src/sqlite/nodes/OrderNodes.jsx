@@ -7,8 +7,10 @@ import * as Nodes from "graph/Nodes";
 import { only } from "js/Arrays";
 import React from "react";
 import { getColumnNames, getQuerySelectable } from "../sqliteNodes";
+import { useAppStateWithEditorConfig } from "../sqliteState";
 import SqliteInput from "../ui/SqliteInput";
 import SqliteNodeUI from "../ui/SqliteNodeUI";
+import { columnSchema } from "./sqliteCompletions";
 import {
   aliasedExpressionList,
   joinList,
@@ -18,11 +20,13 @@ import {
 function OrderNode() {
   const node = useNode();
   const setSelectedNodeState = useSetSelectedNodeState();
+  const appState = useAppStateWithEditorConfig();
   return (
     <SqliteNodeUI>
       ORDER BY{" "}
       <SqliteInput
         displayValue={!hasOrdered(node) ? "∅" : null}
+        schema={columnSchema(appState, node)}
         value={orderClause(node)}
         onChange={(orderClause) => {
           setSelectedNodeState((node) => {

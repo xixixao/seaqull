@@ -27,3 +27,11 @@ export function fromKeys(keys, fn) {
   });
   return object;
 }
+
+export function fromEntries(entries, fn) {
+  const object = {};
+  entries.forEach(([key, value]) => {
+    object[key] = value;
+  });
+  return object;
+}

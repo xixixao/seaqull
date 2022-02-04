@@ -9,9 +9,11 @@ import { Row } from "editor/ui/Row";
 import ShowOnClick from "editor/ui/ShowOnClick";
 import * as Nodes from "graph/Nodes";
 import * as Arrays from "js/Arrays";
+import * as Objects from "js/Objects";
 import { first, second } from "js/Arrays";
 import * as Sets from "js/Sets";
 import { getColumnNames, getQuerySelectable } from "../sqliteNodes";
+import { useAppStateWithEditorConfig } from "../sqliteState";
 import ColumnCheckbox from "../ui/ColumnCheckbox";
 import SqliteInput from "../ui/SqliteInput";
 import SqliteNodeUI from "../ui/SqliteNodeUI";
@@ -20,6 +22,7 @@ function JoinNode() {
   const node = useNode();
   const filters = nodeFilters(node);
   const setSelectedNodeState = useSetSelectedNodeState();
+  const appState = useAppStateWithEditorConfig();
   return (
     <SqliteNodeUI>
       <SqliteInput
@@ -33,6 +36,7 @@ function JoinNode() {
       ON{" "}
       <SqliteInput
         displayValue={!hasFilter(node) ? "∅" : null}
+        schema={joinColumnsSchema(appState, node)}
         value={filters}
         onChange={(filters) => {
           setSelectedNodeState((node) => {
@@ -347,4 +351,16 @@ function sql(appState, node, a, b, selected) {
   ${joinType(node)} (${
     b != null ? getQuerySelectable(appState, b) : null
   }) AS b ${hasFilter(node) ? `ON ${nodeFilters(node)}` : ""}`;
+}
+
+function joinColumnsSchema(appState, node) {
+  const parents = Nodes.parents(appState, node);
+  return Objects.fromEntries(
+    parents
+      .map((parent) => getColumnNames(appState, parent))
+      .map((columns, parentIndex) => [
+        tableAlias(parentIndex),
+        Array.from(columns),
+      ])
+  );
 }

@@ -13,8 +13,10 @@ import * as Arrays from "js/Arrays";
 import { only } from "js/Arrays";
 import React from "react";
 import { getColumnNames, getQuerySelectable } from "../sqliteNodes";
+import { useAppStateWithEditorConfig } from "../sqliteState";
 import SqliteInput from "../ui/SqliteInput";
 import SqliteNodeUI from "../ui/SqliteNodeUI";
+import { columnSchema } from "./sqliteCompletions";
 import {
   aliasedExpressionList,
   aliasedToExpression,
@@ -28,11 +30,13 @@ import {
 function GroupNode() {
   const node = useNode();
   const setSelectedNodeState = useSetSelectedNodeState();
+  const appState = useAppStateWithEditorConfig();
   return (
     <SqliteNodeUI>
       GROUP BY{" "}
       <SqliteInput
         displayValue={hasGrouped(node) ? null : "∅"}
+        schema={columnSchema(appState, node)}
         value={groupedBy(node)}
         onChange={(groupedBy) => {
           setSelectedNodeState((node) => {
@@ -44,6 +48,7 @@ function GroupNode() {
         SELECT{" "}
         <SqliteInput
           displayValue={hasSelected(node) ? null : "*"}
+          schema={columnSchema(appState, node)}
           value={aggregations(node)}
           onChange={(aggregations) => {
             setSelectedNodeState((node) => {
