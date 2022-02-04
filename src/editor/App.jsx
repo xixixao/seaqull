@@ -127,6 +127,17 @@ function Wrapper({ children, onKeyDown }) {
                 appState,
                 parentsToSelect.filter((node) => node != null)
               );
+            } else if (event.key === "ArrowUp" || event.key === "ArrowDown") {
+              Nodes.select(
+                appState,
+                Nodes.selected(appState)
+                  .map(
+                    event.key === "ArrowUp"
+                      ? (node) => Nodes.tightParent(appState, node) ?? node
+                      : (node) => Nodes.tightChild(appState, node) ?? node
+                  )
+                  .filter((node) => node != null)
+              );
             } else {
               onRequestLayout(onKeyDown(appState, event));
             }

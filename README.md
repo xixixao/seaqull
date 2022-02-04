@@ -42,6 +42,8 @@ Click on a node to select it.
 
 Use the <kbd>Backspace</kbd>/<kbd>delete</kbd> key to delete all selected nodes.
 
+Use the <kbd>↑</kbd> and <kbd>↓</kbd> arrow keys to select the previous or next node in the same query.
+
 To select multiple nodes, hold the <kbd>Ctrl</kbd>/<kbd>command</kbd> key while clicking a node. When two nodes are selected results from both are shown.
 
 To select many nodes, hold the <kbd>Shift</kbd> key while clicking and dragging the cursor to draw a selection box.
