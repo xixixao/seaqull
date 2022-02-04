@@ -130,8 +130,7 @@ function ResultsDisplay({ updated, state }) {
     <>
       <Row
         css={{
-          paddingTop: "$4",
-          paddingRight: "$16",
+          padding: "$8",
           top: 0,
           right: 0,
           position: "absolute",
@@ -186,21 +185,19 @@ const ResultsTableLoaded = memo(function ResultsTableLoaded({
   const selectedNode = only(Nodes.selected(appState));
   if (tables[0] instanceof NoResultsError) {
     return (
-      <Column
-        css={{ background: "$yellow3", padding: "$12", borderRadius: "$4" }}
-      >
+      <ResultBox background="$yellow3">
         <div>No results from:</div>
         <SQL>{tables[0].sql}</SQL>
-      </Column>
+      </ResultBox>
     );
   }
   const brokenTable = tables.find((table) => table instanceof ResultError);
   if (brokenTable != null) {
     return (
-      <Column css={{ background: "$red3", padding: "$12", borderRadius: "$4" }}>
+      <ResultBox background="$red3">
         <div>{brokenTable.error.toString()} in:</div>
         <SQL>{brokenTable.sql}</SQL>
-      </Column>
+      </ResultBox>
     );
   }
   return tables.map(({ columns, values }, tableIndex) => {
@@ -212,6 +209,9 @@ const ResultsTableLoaded = memo(function ResultsTableLoaded({
         css={{
           textAlign: "start",
           whiteSpace: "nowrap",
+          th: {
+            fontWeight: 600,
+          },
           color: isPrimary ? null : "$slate11",
         }}
       >
@@ -284,4 +284,14 @@ function execQuery(db, sql) {
     return new NoResultsError(sql);
   }
   return result[0];
+}
+
+function ResultBox({ background, children }) {
+  return (
+    <Box css={{ paddingTop: "$8" }}>
+      <Column css={{ background, padding: "$12", borderRadius: "$4" }}>
+        {children}
+      </Column>
+    </Box>
+  );
 }
