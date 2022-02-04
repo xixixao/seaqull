@@ -152,7 +152,7 @@ function ResultsDisplay({ updated, state }) {
           <ResultsTableLoaded state={state} />
         ) : (
           <ResultBox background="$slate2">
-            <SQL>{state.queries[0]}</SQL>
+            <SQL>{executedSql(state.queries[0])}</SQL>
           </ResultBox>
         )}
       </Box>
@@ -291,7 +291,7 @@ function execQuery(db, sql) {
   // console.log(sql);
   let result = null;
   try {
-    result = db.exec(`SELECT * from (${sql}) LIMIT 100`);
+    result = db.exec(executedSql(sql));
   } catch (e) {
     return new ResultError(sql, e);
   }
@@ -299,6 +299,10 @@ function execQuery(db, sql) {
     return new NoResultsError(sql);
   }
   return result[0];
+}
+
+function executedSql(sql) {
+  return sql + (/limit \d+\s*$/i.test(sql) ? "" : " LIMIT 100");
 }
 
 function ResultBox({ background, children }) {
