@@ -1,4 +1,8 @@
-import { acceptCompletion, autocompletion } from "@codemirror/autocomplete";
+import {
+  acceptCompletion,
+  autocompletion,
+  closeCompletion,
+} from "@codemirror/autocomplete";
 import { defaultKeymap } from "@codemirror/commands";
 import { classHighlightStyle } from "@codemirror/highlight";
 import { EditorSelection, EditorState, StateEffect } from "@codemirror/state";
@@ -57,6 +61,7 @@ export default function Input({
   const nodeID = node?.id;
   useEffectUpdateNodeEdited(nodeID, edited);
   useEffectConfirmOnClickOutside(edited, handleConfirm);
+  useEffectCloseCompletionOnStopEditing(editorRef, edited);
   useSyncGivenValue(value, edited, setEdited);
   const setAppState = useSetAppStateContext();
   const startEditing = useCallback(
@@ -101,6 +106,7 @@ export default function Input({
             minWidth: isEmpty ? "100px" : undefined,
           }}
           extensions={extensions}
+          ref={editorRef}
           editable={false}
           value={displayValue ?? value}
           onClick={startEditing}
@@ -174,6 +180,14 @@ function useShouldStopEditingOnMouseMoveOutside(handleReset) {
     };
   }, [handleReset, shouldStopEditing, nodeElement]);
   return [setShouldStopEditingNext, resetShouldStopEditing];
+}
+
+function useEffectCloseCompletionOnStopEditing(editorRef, edited) {
+  useEffect(() => {
+    if (edited == null && editorRef.current?.view != null) {
+      closeCompletion(editorRef.current.view);
+    }
+  }, [edited, editorRef]);
 }
 
 function Label(props) {
