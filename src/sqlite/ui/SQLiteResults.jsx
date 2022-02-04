@@ -53,8 +53,9 @@ function ResultsTable() {
     const selected = Nodes.selected(appState);
     const isSelecting = selected.length > 0;
     const previous =
-      lastShownNode.current != null &&
-      Nodes.current(appState, lastShownNode.current);
+      lastShownNode.current != null
+        ? Nodes.current(appState, lastShownNode.current)
+        : null;
     if (previous == null && !isSelecting) {
       setResultsState(null);
       return;
