@@ -5,6 +5,7 @@ import path from "path";
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  base: "/seaqull/",
   resolve: {
     alias: {
       js: path.resolve(__dirname, "./src/js"),

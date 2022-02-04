@@ -20,7 +20,11 @@ export function WelcomeDialog({ defaultOpen, children }) {
         <h1>Welcome to Seaqull(beta)!</h1>
         <br />
         <p>
-          This is the SQLite version of <Link newtab>Seaqull</Link>.
+          This is the SQLite version of{" "}
+          <Link href="https://github.com/xixixao/seaqull" newtab>
+            Seaqull
+          </Link>
+          .
         </p>
         <p>
           Would you like to explore the example database or one of your own?
