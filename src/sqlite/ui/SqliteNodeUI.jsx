@@ -14,10 +14,11 @@ import { Fragment } from "react";
 import { getEmptyNode, getHasProblem, TIGHT_CHILD_NODES } from "../sqliteNodes";
 import { useEditorConfig } from "../sqliteState";
 
-export default function SqliteNodeUI({ hideControls, children }) {
+export default function SqliteNodeUI({ hideControls, type, children }) {
   return (
     <NodeUI
       hideControls={hideControls}
+      type={type}
       useControls={useControls}
       useHasProblem={useHasProblem}
     >

@@ -220,7 +220,13 @@ export default function wrapNode(NodeComponent) {
           const onlyDraggedGroup = only(tightGroups);
           const validPotentialTightParent =
             onlyDraggedGroup != null
-              ? only(Nodes.overlappingLeafs(appState, first(onlyDraggedGroup)))
+              ? only(
+                  Nodes.overlappingLeafs(
+                    appState,
+                    first(onlyDraggedGroup),
+                    event
+                  )
+                )
               : null;
           appState.highlightedNodeIDs = Nodes.idSet(
             validPotentialTightParent != null ? [validPotentialTightParent] : []
@@ -277,7 +283,7 @@ export default function wrapNode(NodeComponent) {
             return;
           }
           const validPotentialTightParent = only(
-            Nodes.overlappingLeafs(appState, first(onlyDraggedGroup))
+            Nodes.overlappingLeafs(appState, first(onlyDraggedGroup), event)
           );
           if (validPotentialTightParent == null) {
             return;

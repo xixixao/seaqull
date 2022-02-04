@@ -1,6 +1,14 @@
 import { getHostForElement } from "../../utils";
 import { ConnectionMode } from "../../types";
 
+export function hasTargetHandle(node, event) {
+  const doc = getHostForElement(event.target);
+  const nodeElement = doc.querySelector(
+    `.react-flow__node[data-id="${node.id}"]`
+  );
+  return nodeElement?.querySelector(".react-flow__handle.target") != null;
+}
+
 export function onMouseDown(
   event,
   handleId,
@@ -167,7 +175,8 @@ function checkElementBelowIsValid(
       result.isValid = isValidConnection(connection);
     }
   }
-  const nodeBelow = findAncestorWithAttribute(elementBelow, "data-id");
+  // const nodeBelow = findAncestorWithAttribute(elementBelow, "data-id");
+  const nodeBelow = elementBelow.closest("[data-id]");
   if (nodeBelow != null) {
     const nodeBelowID = nodeBelow.getAttribute("data-id");
     const connection = isTarget
@@ -183,18 +192,4 @@ function checkElementBelowIsValid(
     result.isValid = isValidConnection(connection);
   }
   return result;
-}
-
-function findAncestorWithAttribute(element, attribute) {
-  if (element == null) {
-    return null;
-  }
-  if (element.hasAttribute(attribute)) {
-    return element;
-  }
-  // Bail out early
-  if (element.classList.contains("react-flow")) {
-    return null;
-  }
-  return findAncestorWithAttribute(element.parentNode, attribute);
 }

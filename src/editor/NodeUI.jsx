@@ -13,6 +13,7 @@ import { Row } from "./ui/Row";
 export default function NodeUI({
   hideControls,
   children,
+  type,
   useControls,
   useHasProblem,
 }) {
@@ -29,11 +30,13 @@ export default function NodeUI({
         // hasTightParent={Nodes.hasTightParent(appState, node)}
       >
         {children}
-        <Handle
-          style={visibleIf(Nodes.hasDetachedParents(appState, node))}
-          type="target"
-          position="left"
-        />
+        {type !== "output" ? (
+          <Handle
+            style={visibleIf(Nodes.hasDetachedParents(appState, node))}
+            type="target"
+            position="left"
+          />
+        ) : null}
         <Handle
           style={visibleIf(Nodes.hasDetachedChildren(appState, node))}
           type="source"

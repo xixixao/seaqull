@@ -1,3 +1,4 @@
+import { hasTargetHandle } from "editor/react-flow/components/Handle/handler";
 import * as Arrays from "js/Arrays";
 import { doNodesOverlap } from "../editor/react-flow/utils/graph";
 import * as Edge from "./Edge";
@@ -183,7 +184,10 @@ export function groupBy(nodes, groupper) {
   return Array.from(grouped.values());
 }
 
-export function overlappingLeafs(graph, targetNode) {
+export function overlappingLeafs(graph, targetNode, event) {
+  if (!hasTargetHandle(targetNode, event)) {
+    return false;
+  }
   const targetPosition = positionOf(graph, targetNode);
   return tightLeafs(graph).filter((node) => {
     const position = positionOf(graph, node);
