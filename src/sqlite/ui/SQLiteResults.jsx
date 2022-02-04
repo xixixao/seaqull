@@ -4,6 +4,7 @@ import { Box } from "editor/ui/Box";
 import { Button } from "editor/ui/Button";
 import { Column } from "editor/ui/Column";
 import { Row } from "editor/ui/Row";
+import VerticalSpace from "editor/ui/VerticalSpace";
 import * as Node from "graph/Node";
 import * as Nodes from "graph/Nodes";
 import { only } from "js/Arrays";
@@ -90,9 +91,9 @@ function ResultsTable() {
       setResultsState({
         queries,
         tables: queries.map((query) => execQuery(database, query)),
-        additionalValues: additionalValuesQueries.map((query) =>
-          execQuery(database, query)
-        ),
+        additionalValues: additionalValuesQueries
+          .map((query) => execQuery(database, query))
+          .filter((result) => !(result instanceof NoResultsError)),
         appState,
       });
       setUpdated(
@@ -151,9 +152,9 @@ function ResultsDisplay({ updated, state }) {
         {view === "table" ? (
           <ResultsTableLoaded state={state} />
         ) : (
-          <ResultBox background="$slate2">
-            <SQL>{executedSql(state.queries[0])}</SQL>
-          </ResultBox>
+          <SQLDisplay background="$slate2">
+            {executedSql(state.queries[0])}
+          </SQLDisplay>
         )}
       </Box>
 
@@ -179,15 +180,6 @@ function ResultsDisplay({ updated, state }) {
   );
 }
 
-const SQL = styled(
-  ({ children, ...props }) => <pre {...props}>{formatSQL(children ?? "")}</pre>,
-  {
-    lineHeight: 1,
-    fontFamily: "Menlo, Consolas, Monaco, monospace",
-    fontSize: "12px",
-  }
-);
-
 const borderBlink = keyframes({
   from: { background: "$lime3" },
   to: {},
@@ -200,19 +192,20 @@ const ResultsTableLoaded = memo(function ResultsTableLoaded({
   const selectedNode = only(Nodes.selected(appState));
   if (tables[0] instanceof NoResultsError) {
     return (
-      <ResultBox background="$yellow3">
-        <div>No results from:</div>
-        <SQL>{tables[0].sql}</SQL>
-      </ResultBox>
+      <SQLDisplay background="$yellow3" label="No results from:">
+        {tables[0].sql}
+      </SQLDisplay>
     );
   }
   const brokenTable = tables.find((table) => table instanceof ResultError);
   if (brokenTable != null) {
     return (
-      <ResultBox background="$red3">
-        <div>{brokenTable.error.toString()} in:</div>
-        <SQL>{brokenTable.sql}</SQL>
-      </ResultBox>
+      <SQLDisplay
+        background="$red3"
+        label={brokenTable.error.toString() + " in:"}
+      >
+        {brokenTable.sql}
+      </SQLDisplay>
     );
   }
   return tables.map(({ columns, values }, tableIndex) => {
@@ -305,12 +298,27 @@ function executedSql(sql) {
   return sql + (/limit \d+\s*$/i.test(sql) ? "" : " LIMIT 100");
 }
 
-function ResultBox({ background, children }) {
+function SQLDisplay({ background, label, children }) {
   return (
     <Box css={{ paddingTop: "$8" }}>
       <Column css={{ background, padding: "$12", borderRadius: "$4" }}>
-        {children}
+        {label}
+        {label != null ? <VerticalSpace /> : null}
+        <SQL>{children}</SQL>
       </Column>
     </Box>
   );
 }
+
+const SQL = styled(
+  ({ children, ...props }) => (
+    <pre {...props}>
+      {formatSQL(children ?? "", { language: "postgresql" })}
+    </pre>
+  ),
+  {
+    lineHeight: 1,
+    fontFamily: "Menlo, Consolas, Monaco, monospace",
+    fontSize: "12px",
+  }
+);
