@@ -25,7 +25,7 @@ export function SQLiteResults() {
   const selected = Nodes.selected(appState);
   const singleSelectedNode = only(selected);
   return (
-    <Column
+    <Row
       css={{
         overflow: "scroll",
         padding: "0 $8",
@@ -35,7 +35,7 @@ export function SQLiteResults() {
       {(singleSelectedNode != null
         ? getResults(appState, singleSelectedNode)
         : null) ?? <ResultsTable />}
-    </Column>
+    </Row>
   );
 }
 
@@ -126,25 +126,19 @@ function ResultsTable() {
 
 function ResultsDisplay({ updated, state }) {
   const [view, setView] = useState("table");
+  const controls = (
+    <Row justify="end">
+      <Button
+        onClick={() => {
+          setView(view === "table" ? "sql" : "table");
+        }}
+      >
+        {view === "table" ? "SQL" : "Results"}
+      </Button>
+    </Row>
+  );
   return (
     <>
-      <Row
-        css={{
-          padding: "$8",
-          top: 0,
-          right: 0,
-          position: "absolute",
-        }}
-        justify="end"
-      >
-        <Button
-          onClick={() => {
-            setView(view === "table" ? "sql" : "table");
-          }}
-        >
-          {view === "table" ? "SQL" : "Results"}
-        </Button>
-      </Row>
       <Box
         css={{
           display: "inline-flex",
@@ -159,6 +153,25 @@ function ResultsDisplay({ updated, state }) {
         ) : (
           <SQL>{state.queries[0]}</SQL>
         )}
+      </Box>
+
+      <Box css={{ paddingLeft: "$8" }}>
+        {
+          // Rendered twice, to create correct scroll buffer space
+          controls
+        }
+      </Box>
+      <Box
+        css={{
+          padding: "$8",
+          top: 0,
+          right: 0,
+          position: "absolute",
+          background: "$panel",
+          borderBottomLeftRadius: "$4",
+        }}
+      >
+        {controls}
       </Box>
     </>
   );
