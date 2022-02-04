@@ -61,7 +61,7 @@ export default function Input({
   const nodeID = node?.id;
   useEffectUpdateNodeEdited(nodeID, edited);
   useEffectConfirmOnClickOutside(edited, handleConfirm);
-  useEffectCloseCompletionOnStopEditing(editorRef, edited);
+  useEffectCloseCompletionAndFocusNodeOnStopEditing(editorRef, edited);
   useSyncGivenValue(value, edited, setEdited);
   const setAppState = useSetAppStateContext();
   const startEditing = useCallback(
@@ -77,7 +77,7 @@ export default function Input({
   );
   const isEmpty = (displayValue ?? value) === "";
   return (
-    <div style={{ display: "inline-block" }} onKeyDown={stopEventPropagation}>
+    <div style={{ display: "inline-block" }}>
       {label != null ? <Label>{label}</Label> : null}
       {edited != null ? (
         <CodeEditor
@@ -97,6 +97,7 @@ export default function Input({
           onChange={handleEdit}
           // onConfirm={onChange}
           onConfirm={handleConfirm}
+          onKeyDown={stopEventPropagation}
         />
       ) : (
         <CodeEditor
@@ -182,10 +183,11 @@ function useShouldStopEditingOnMouseMoveOutside(handleReset) {
   return [setShouldStopEditingNext, resetShouldStopEditing];
 }
 
-function useEffectCloseCompletionOnStopEditing(editorRef, edited) {
+function useEffectCloseCompletionAndFocusNodeOnStopEditing(editorRef, edited) {
   useEffect(() => {
     if (edited == null && editorRef.current?.view != null) {
       closeCompletion(editorRef.current.view);
+      editorRef.current.container.closest(".react-flow__node").focus();
     }
   }, [edited, editorRef]);
 }

@@ -385,6 +385,7 @@ export default function wrapNode(NodeComponent) {
           onClick={onSelectNodeHandler}
           onDoubleClick={onNodeDoubleClickHandler}
           data-id={id}
+          tabIndex={0}
         >
           <NodeContext.Provider value={nodeInfo}>
             <NodeComponent />
