@@ -47,7 +47,7 @@ export default function Input({
   const node = useNode();
   const nodeID = node?.id;
   useEffectUpdateNodeEdited(nodeID, edited);
-  useEffectConfirmOnClickOutside(edited, handleConfirm);
+  useEffectConfirmOnClickOutside(editorRef, edited, handleConfirm);
   useEffectCloseCompletionAndFocusNodeOnStopEditing(editorRef, edited);
   useSyncGivenValue(value, edited, setEdited);
   const setAppState = useSetAppStateContext();
@@ -129,11 +129,13 @@ function useEffectUpdateNodeEdited(nodeID, edited) {
   }, [edited, nodeID, setAppState]);
 }
 
-function useEffectConfirmOnClickOutside(edited, handleConfirm) {
-  const { nodeElement } = useNode();
+function useEffectConfirmOnClickOutside(editorRef, edited, handleConfirm) {
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (edited != null && !nodeElement.current.contains(event.target)) {
+      if (
+        edited != null &&
+        !editorRef.current?.container.contains(event.target)
+      ) {
         handleConfirm(edited);
       }
     };
@@ -141,7 +143,7 @@ function useEffectConfirmOnClickOutside(edited, handleConfirm) {
     return () => {
       document.removeEventListener("mouseup", handleClickOutside);
     };
-  }, [nodeElement, edited, handleConfirm]);
+  }, [editorRef, edited, handleConfirm]);
 }
 
 function useEffectCloseCompletionAndFocusNodeOnStopEditing(editorRef, edited) {
