@@ -16,17 +16,26 @@ export function aliasedToExpression([expression, alias]) {
   return alias != null ? `${expression} AS ${alias}` : expression;
 }
 
-export function aliasedToSelectable([expression, alias]) {
-  const name = aliasedToName([expression, alias]);
+export function aliasedToSelectable([expression, alias], columnIndex) {
+  const name = aliasedToName([expression, alias], columnIndex);
   return name === expression ? name : `${expression} AS ${name}`;
 }
 
-export function aliasedToName([expression, alias]) {
+export function aliasedToName([expression, alias], columnIndex) {
   return alias != null
     ? alias
     : /^\w+$/.test(expression)
     ? expression
-    : expression.replace(/\W+/g, " ").trim().replace(/\s+/g, "_").toLowerCase();
+    : aliasForExpression(expression, columnIndex);
+}
+
+function aliasForExpression(expression, columnIndex) {
+  const alias = expression
+    .replace(/\W+/g, " ")
+    .trim()
+    .replace(/\s+/g, "_")
+    .toLowerCase();
+  return alias !== "" ? alias : "_" + (columnIndex + 1);
 }
 
 export function expressionList(expressions) {
