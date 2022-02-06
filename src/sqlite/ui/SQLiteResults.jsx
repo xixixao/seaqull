@@ -217,6 +217,7 @@ const ResultsTableLoaded = memo(function ResultsTableLoaded({
           whiteSpace: "nowrap",
           th: {
             fontWeight: 600,
+            height: "36px",
           },
           color: isPrimary ? null : "$slate11",
         }}

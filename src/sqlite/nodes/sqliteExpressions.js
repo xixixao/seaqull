@@ -26,7 +26,7 @@ export function aliasedToName([expression, alias]) {
     ? alias
     : /^\w+$/.test(expression)
     ? expression
-    : expression.replace(/\W+/g, " ").trim().replace(/\s+/, "_").toLowerCase();
+    : expression.replace(/\W+/g, " ").trim().replace(/\s+/g, "_").toLowerCase();
 }
 
 export function expressionList(expressions) {

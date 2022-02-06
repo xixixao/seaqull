@@ -251,7 +251,6 @@ function hasSelectedColumn(node, column) {
 
 function setGroupedBy(node, groupedBy) {
   node.data.groupedBy = groupedBy;
-  addGroupedByToAggregations(node);
 }
 
 function setAggregations(node, aggregations) {
@@ -268,23 +267,18 @@ function toggleGroupedColumn(node, columnName) {
 
 function addGroupBy(node, groupBy) {
   setGroupedBy(node, [...groupedColumns(node), groupBy].join(", "));
+  addAggregation(node, groupBy);
 }
 
 function removeGroupBy(node, removedGroupBy) {
   setGroupedBy(
     node,
-    groupedColumns(node)
-      .filter((groupBy) => groupBy !== removedGroupBy)
-      .join(", ")
+    joinList(
+      groupedColumns(node).filter((groupBy) => groupBy !== removedGroupBy),
+      groupedBy(node)
+    )
   );
   removeAggregation(node, removedGroupBy);
-}
-
-function addGroupedByToAggregations(node) {
-  // TODO: proper placing in order of grouped by
-  node.data.aggregations = [groupedBy(node), aggregations(node)]
-    .filter((string) => string !== "")
-    .join(", ");
 }
 
 function addAggregation(node, aggregation) {
