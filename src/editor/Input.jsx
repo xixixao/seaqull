@@ -37,19 +37,6 @@ export default function Input({
   );
 
   const editorRef = useRef();
-  const handleReset = useCallback(() => {
-    setEdited(null);
-    onChange(edited);
-  }, [edited, onChange]);
-  const [setShouldStopEditingNext, resetShouldStopEditing] =
-    useShouldStopEditingOnMouseMoveOutside(handleReset);
-  const handleEdit = useCallback(
-    (value) => {
-      resetShouldStopEditing();
-      setEdited(value);
-    },
-    [resetShouldStopEditing]
-  );
   const handleConfirm = useCallback(
     (value) => {
       setEdited(null);
@@ -93,8 +80,7 @@ export default function Input({
           editable={true}
           onMouseDown={stopEventPropagation}
           onTouchStart={stopEventPropagation}
-          onMouseLeave={setShouldStopEditingNext}
-          onChange={handleEdit}
+          onChange={setEdited}
           // onConfirm={onChange}
           onConfirm={handleConfirm}
           onKeyDown={stopEventPropagation}
@@ -156,31 +142,6 @@ function useEffectConfirmOnClickOutside(edited, handleConfirm) {
       document.removeEventListener("mouseup", handleClickOutside);
     };
   }, [nodeElement, edited, handleConfirm]);
-}
-
-function useShouldStopEditingOnMouseMoveOutside(handleReset) {
-  const [shouldStopEditing, setShouldStopEditing] = useState(false);
-  const setShouldStopEditingNext = useCallback(() => {
-    setShouldStopEditing(true);
-  }, []);
-  const resetShouldStopEditing = useCallback(() => {
-    setShouldStopEditing(false);
-  }, []);
-  const { nodeElement } = useNode();
-  useEffect(() => {
-    const handleMouseMove = (event) => {
-      if (shouldStopEditing && !nodeElement.current.contains(event.target)) {
-        setShouldStopEditing(false);
-        handleReset();
-      }
-    };
-
-    document.addEventListener("mousemove", handleMouseMove);
-    return () => {
-      document.removeEventListener("mousemove", handleMouseMove);
-    };
-  }, [handleReset, shouldStopEditing, nodeElement]);
-  return [setShouldStopEditingNext, resetShouldStopEditing];
 }
 
 function useEffectCloseCompletionAndFocusNodeOnStopEditing(editorRef, edited) {

@@ -1,4 +1,4 @@
-import { useAppStateDataContext, useSetSelectedNodeState } from "editor/state";
+import { useAppStateDataContext } from "editor/state";
 import { keyframes, styled } from "editor/style";
 import { Box } from "editor/ui/Box";
 import { Button } from "editor/ui/Button";
@@ -186,7 +186,6 @@ const borderBlink = keyframes({
 const ResultsTableLoaded = memo(function ResultsTableLoaded({
   state: { appState, tables, additionalValues },
 }) {
-  const setSelectedNodeState = useSetSelectedNodeState();
   const selectedNode = only(Nodes.selected(appState));
   if (tables[0] instanceof NoResultsError) {
     return (
@@ -228,14 +227,7 @@ const ResultsTableLoaded = memo(function ResultsTableLoaded({
               <th key={i}>
                 {selectedNode == null
                   ? column
-                  : getColumnControl(
-                      appState,
-                      selectedNode,
-                      column,
-                      setSelectedNodeState,
-                      isPrimary,
-                      i
-                    ) ?? column}
+                  : nodeColumnControl(selectedNode, column, isPrimary, i)}
               </th>
             ))}
           </tr>
@@ -248,6 +240,18 @@ const ResultsTableLoaded = memo(function ResultsTableLoaded({
     );
   });
 });
+
+function nodeColumnControl(node, column, isPrimary, columnIndex) {
+  const ColumnControl = getColumnControl(node);
+  return (
+    <ColumnControl
+      node={node}
+      columnName={column}
+      isPrimary={isPrimary}
+      columnIndex={columnIndex}
+    />
+  );
+}
 
 function TableBody({ css, values }) {
   return (

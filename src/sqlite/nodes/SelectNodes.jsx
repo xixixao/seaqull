@@ -1,5 +1,5 @@
 import { useNode } from "editor/react-flow/components/Nodes/wrapNode";
-import { useSetSelectedNodeState } from "editor/state";
+import { useSetNodeState } from "editor/state";
 import HorizontalSpace from "editor/ui/HorizontalSpace";
 import { Row } from "editor/ui/Row";
 import * as Nodes from "graph/Nodes";
@@ -24,7 +24,7 @@ import {
 
 function SelectNode() {
   const node = useNode();
-  const setSelectedNodeState = useSetSelectedNodeState();
+  const setNodeState = useSetNodeState(node);
   const appState = useAppStateWithEditorConfig();
   return (
     <SqliteNodeUI>
@@ -34,7 +34,7 @@ function SelectNode() {
         schema={columnSchema(appState, node)}
         value={selected(node)}
         onChange={(selected) => {
-          setSelectedNodeState((node) => {
+          setNodeState((node) => {
             setSelected(node, selected);
           });
         }}
@@ -91,36 +91,27 @@ export const SelectNodeConfig = {
       ? new Set(selectedExpressions(node).map(aliasedToName))
       : getColumnNames(appState, sourceNode);
   },
-  columnControl(appState, node, columnName, setSelectedNodeState) {
+  ColumnControl({ node, columnName }) {
+    const setNodeState = useSetNodeState(node);
     return (
-      <SelectableColumn
-        node={node}
-        columnName={columnName}
-        setSelectedNodeState={setSelectedNodeState}
-      />
+      <Row align="center">
+        <ColumnCheckbox
+          checked={hasSelectedColumn(node, columnName)}
+          onChange={() => {
+            setNodeState((node) => {
+              toggleSelectedColumn(node, columnName);
+            });
+          }}
+        />
+
+        <HorizontalSpace />
+        <HorizontalSpace />
+        {columnName}
+        <HorizontalSpace />
+      </Row>
     );
   },
 };
-
-function SelectableColumn({ node, columnName, setSelectedNodeState }) {
-  return (
-    <Row align="center">
-      <ColumnCheckbox
-        checked={hasSelectedColumn(node, columnName)}
-        onChange={() => {
-          setSelectedNodeState((node) => {
-            toggleSelectedColumn(node, columnName);
-          });
-        }}
-      />
-
-      <HorizontalSpace />
-      <HorizontalSpace />
-      {columnName}
-      <HorizontalSpace />
-    </Row>
-  );
-}
 
 function empty() {
   return { selected: "" };

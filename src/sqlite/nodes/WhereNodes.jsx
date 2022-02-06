@@ -1,5 +1,5 @@
 import { useNode } from "editor/react-flow/components/Nodes/wrapNode";
-import { useSetSelectedNodeState } from "editor/state";
+import { useSetNodeState } from "editor/state";
 import * as Nodes from "graph/Nodes";
 import { only } from "js/Arrays";
 import React from "react";
@@ -12,7 +12,7 @@ import { columnSchema } from "./sqliteCompletions";
 function WhereNode() {
   const node = useNode();
   const filters = nodeFilters(node);
-  const setSelectedNodeState = useSetSelectedNodeState();
+  const setNodeState = useSetNodeState(node);
   const appState = useAppStateWithEditorConfig();
   return (
     <SqliteNodeUI>
@@ -22,7 +22,7 @@ function WhereNode() {
         schema={columnSchema(appState, node)}
         value={filters}
         onChange={(filters) => {
-          setSelectedNodeState((node) => {
+          setNodeState((node) => {
             setFilters(node, filters);
           });
         }}
@@ -72,8 +72,8 @@ export const WhereNodeConfig = {
     }
     return getColumnNames(appState, sourceNode);
   },
-  columnControl() {
-    return null;
+  ColumnControl({ columnName }) {
+    return columnName;
   },
 };
 

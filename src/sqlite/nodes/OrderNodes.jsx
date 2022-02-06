@@ -1,5 +1,5 @@
 import { useNode } from "editor/react-flow/components/Nodes/wrapNode";
-import { useSetSelectedNodeState } from "editor/state";
+import { useSetNodeState } from "editor/state";
 import { Button } from "editor/ui/Button";
 import HorizontalSpace from "editor/ui/HorizontalSpace";
 import { Row } from "editor/ui/Row";
@@ -19,7 +19,7 @@ import {
 
 function OrderNode() {
   const node = useNode();
-  const setSelectedNodeState = useSetSelectedNodeState();
+  const setNodeState = useSetNodeState(node);
   const appState = useAppStateWithEditorConfig();
   return (
     <SqliteNodeUI>
@@ -29,7 +29,7 @@ function OrderNode() {
         schema={columnSchema(appState, node)}
         value={orderClause(node)}
         onChange={(orderClause) => {
-          setSelectedNodeState((node) => {
+          setNodeState((node) => {
             setOrderBy(node, orderClause);
           });
         }}
@@ -70,12 +70,13 @@ export const OrderNodeConfig = {
     }
     return getColumnNames(appState, sourceNode);
   },
-  columnControl(appState, node, columnName, setSelectedNodeState) {
+  ColumnControl({ node, columnName }) {
+    const setNodeState = useSetNodeState(node);
     return (
       <Row>
         <Button
           onClick={() => {
-            setSelectedNodeState((node) => {
+            setNodeState((node) => {
               updateColumnOrder(node, columnName);
             });
           }}

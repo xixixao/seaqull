@@ -1,6 +1,6 @@
 import { DropdownMenuIcon } from "@modulz/radix-icons";
 import { useNode } from "editor/react-flow/components/Nodes/wrapNode";
-import { useSetSelectedNodeState } from "editor/state";
+import { useSetNodeState } from "editor/state";
 import { Box } from "editor/ui/Box";
 import { Button } from "editor/ui/Button";
 import { Column } from "editor/ui/Column";
@@ -29,7 +29,7 @@ import {
 
 function GroupNode() {
   const node = useNode();
-  const setSelectedNodeState = useSetSelectedNodeState();
+  const setNodeState = useSetNodeState(node);
   const appState = useAppStateWithEditorConfig();
   return (
     <SqliteNodeUI>
@@ -39,7 +39,7 @@ function GroupNode() {
         schema={columnSchema(appState, node)}
         value={groupedBy(node)}
         onChange={(groupedBy) => {
-          setSelectedNodeState((node) => {
+          setNodeState((node) => {
             setGroupedBy(node, groupedBy);
           });
         }}
@@ -51,7 +51,7 @@ function GroupNode() {
           schema={columnSchema(appState, node)}
           value={aggregations(node)}
           onChange={(aggregations) => {
-            setSelectedNodeState((node) => {
+            setNodeState((node) => {
               setAggregations(node, aggregations);
             });
           }}
@@ -121,7 +121,8 @@ export const GroupNodeConfig = {
       ? new Set(aggregationList(node).map(aliasedToName))
       : getColumnNames(appState, sourceNode);
   },
-  columnControl(appState, node, columnName, setSelectedNodeState, isPrimary) {
+  ColumnControl({ node, columnName, isPrimary }) {
+    const setNodeState = useSetNodeState(node);
     const isSelectTable = isPrimary && hasGrouped(node);
     const isToggleable =
       !isSelectTable ||
@@ -137,7 +138,7 @@ export const GroupNodeConfig = {
           style={{ cursor: "pointer" }}
           type="checkbox"
           onChange={(event) => {
-            setSelectedNodeState((node) => {
+            setNodeState((node) => {
               if (isSelectTable && !hasGroupedColumn(node, columnName)) {
                 removeAggregation(node, columnName);
               } else {
@@ -152,7 +153,7 @@ export const GroupNodeConfig = {
         {!isPrimary && hasGrouped(node) ? (
           <AggregationSelector
             onChange={(aggregation) => {
-              setSelectedNodeState((node) => {
+              setNodeState((node) => {
                 addAggregation(node, AGGREGATIONS[aggregation](columnName));
               });
             }}

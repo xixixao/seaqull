@@ -1,6 +1,6 @@
 import { DropdownMenuIcon } from "@modulz/radix-icons";
 import { useNode } from "editor/react-flow/components/Nodes/wrapNode";
-import { useSetSelectedNodeState } from "editor/state";
+import { useSetNodeState } from "editor/state";
 import { Button } from "editor/ui/Button";
 import { Column } from "editor/ui/Column";
 import HorizontalSpace from "editor/ui/HorizontalSpace";
@@ -21,14 +21,14 @@ import SqliteNodeUI from "../ui/SqliteNodeUI";
 function JoinNode() {
   const node = useNode();
   const filters = nodeFilters(node);
-  const setSelectedNodeState = useSetSelectedNodeState();
+  const setNodeState = useSetNodeState(node);
   const appState = useAppStateWithEditorConfig();
   return (
     <SqliteNodeUI>
       <SqliteInput
         value={joinType(node)}
         onChange={(joinType) => {
-          setSelectedNodeState((node) => {
+          setNodeState((node) => {
             setJoinType(node, joinType);
           });
         }}
@@ -39,7 +39,7 @@ function JoinNode() {
         schema={joinColumnsSchema(appState, node)}
         value={filters}
         onChange={(filters) => {
-          setSelectedNodeState((node) => {
+          setNodeState((node) => {
             setFilters(node, filters);
           });
         }}
@@ -113,14 +113,9 @@ export const JoinNodeConfig = {
     return selectedColumnNames(node, parentsColumnNames);
   },
   // TODO: Obviously refactor this
-  columnControl(
-    appState,
-    node,
-    columnName,
-    setSelectedNodeState,
-    isPrimary,
-    columnIndex
-  ) {
+  ColumnControl({ node, columnName, isPrimary, columnIndex }) {
+    const appState = useAppStateWithEditorConfig();
+    const setNodeState = useSetNodeState(node);
     const joined = joinedColumns(node);
     const parents = Nodes.parents(appState, node);
     const aOtherColumns = Arrays.subtractSets(
@@ -139,7 +134,7 @@ export const JoinNodeConfig = {
             <ColumnCheckbox
               checked={true}
               onChange={() => {
-                setSelectedNodeState((node) => {
+                setNodeState((node) => {
                   removeFilter(node, columnName);
                 });
               }}
@@ -159,7 +154,7 @@ export const JoinNodeConfig = {
               (column) => (!isA ? "a" : "b") + "." + column
             )}
             onChange={(otherColumn) => {
-              setSelectedNodeState((node) => {
+              setNodeState((node) => {
                 addFilter(node, `${prefixedColumnName} = ${otherColumn}`);
               });
             }}

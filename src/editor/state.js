@@ -45,3 +45,15 @@ export function useSetSelectedNodeState() {
     }
   });
 }
+
+export function useSetNodeState(node) {
+  const setAppState = useSetAppStateContext();
+  return useCallback(
+    (producer) => {
+      setAppState((appState) => {
+        producer(Nodes.current(appState, node));
+      });
+    },
+    [setAppState, node]
+  );
+}

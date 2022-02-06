@@ -87,20 +87,6 @@ export function getColumnNames(appState, node) {
   return getNodeConfig(node).columnNames(appState, node);
 }
 
-export function getColumnControl(
-  appState,
-  node,
-  column,
-  setSelectedNodeState,
-  isPrimary,
-  i
-) {
-  return getNodeConfig(node).columnControl(
-    appState,
-    node,
-    column,
-    setSelectedNodeState,
-    isPrimary,
-    i
-  );
+export function getColumnControl(node) {
+  return getNodeConfig(node).ColumnControl;
 }

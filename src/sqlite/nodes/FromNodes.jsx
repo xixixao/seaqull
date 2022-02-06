@@ -1,5 +1,5 @@
 import { useNode } from "editor/react-flow/components/Nodes/wrapNode";
-import { useSetSelectedNodeState } from "editor/state";
+import { useSetNodeState } from "editor/state";
 import { Button } from "editor/ui/Button";
 import { useEditorConfig } from "../sqliteState";
 import SqliteInput from "../ui/SqliteInput";
@@ -8,9 +8,8 @@ import SqliteNodeUI from "../ui/SqliteNodeUI";
 function FromNode() {
   const node = useNode();
   const name = nodeName(node);
-  const setSelectedNodeState = useSetSelectedNodeState();
+  const setNodeState = useSetNodeState(node);
   const { schema } = useEditorConfig();
-  console.log(schema);
   return (
     <SqliteNodeUI hideControls={name.length === 0} type="output">
       FROM{" "}
@@ -19,7 +18,7 @@ function FromNode() {
         schema={schema}
         value={name}
         onChange={(name) => {
-          setSelectedNodeState((node) => {
+          setNodeState((node) => {
             setName(node, name);
           });
         }}
@@ -50,8 +49,8 @@ export const FromNodeConfig = {
   columnNames(appState, node) {
     return new Set(appState.editorConfig.tableColumns(nodeName(node)));
   },
-  columnControl() {
-    return null;
+  ColumnControl({ columnName }) {
+    return columnName;
   },
 };
 
@@ -71,9 +70,9 @@ function setName(node, name) {
   node.data.name = name;
 }
 
-function SelectTable() {
+function SelectTable({ node }) {
   const { schema } = useEditorConfig();
-  const setSelectedNodeState = useSetSelectedNodeState();
+  const setNodeState = useSetNodeState(node);
   const tableNames = Object.keys(schema);
   tableNames.sort();
   return (
@@ -91,7 +90,7 @@ function SelectTable() {
               <Button
                 css={{ marginVert: "2px" }}
                 onClick={() => {
-                  setSelectedNodeState((node) => {
+                  setNodeState((node) => {
                     setName(node, tableName);
                   });
                 }}
