@@ -3,7 +3,6 @@ import { LanguageSupport } from "@codemirror/language";
 import Input from "editor/Input";
 
 export default function SqliteInput({ schema, ...props }) {
-  console.log(schema);
   return (
     <Input
       {...props}
