@@ -18,6 +18,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { useZoomPanHelper } from "./react-flow";
 import { useNode } from "./react-flow/components/Nodes/wrapNode";
 import { useSetAppStateContext } from "./state";
 import { Box } from "./ui/Box";
@@ -50,6 +51,7 @@ export default function Input({
   useEffectConfirmOnClickOutside(editorRef, edited, handleConfirm);
   useEffectCloseCompletionAndFocusNodeOnStopEditing(editorRef, edited);
   useSyncGivenValue(value, edited, setEdited);
+  const { zoomTo } = useZoomPanHelper();
   const setAppState = useSetAppStateContext();
   const startEditing = useCallback(
     (event) => {
@@ -57,10 +59,11 @@ export default function Input({
       setAppState((appState) => {
         Nodes.select(appState, [Node.fake(nodeID)]);
       });
+      zoomTo(1);
       setClick({ x: event.clientX, y: event.clientY });
       setEdited(value ?? "");
     },
-    [value, nodeID, setAppState]
+    [value, nodeID, setAppState, zoomTo]
   );
   const isEmpty = (displayValue ?? value) === "";
   return (
