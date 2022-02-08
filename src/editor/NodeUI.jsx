@@ -25,7 +25,9 @@ export default function NodeUI({
       <NodeWrapper
         isHighlighted={node.highlight}
         isSelected={node.selected}
-        wasSelected={!node.selected && node.wasOnlySelected}
+        wasSelected={
+          !node.selected && !Nodes.isSelecting(appState) && node.wasOnlySelected
+        }
         hasProblem={hasProblem}
         // hasTightChild={Nodes.hasTightChild(appState, node)}
         // hasTightParent={Nodes.hasTightParent(appState, node)}

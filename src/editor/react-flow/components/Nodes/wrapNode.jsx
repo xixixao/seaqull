@@ -33,6 +33,7 @@ export default function wrapNode(NodeComponent) {
     xPos,
     yPos,
     selected,
+    onlySelected,
     wasOnlySelected,
     highlight,
     onClick,
@@ -47,7 +48,6 @@ export default function wrapNode(NodeComponent) {
     style,
     className,
     edited,
-    isDraggable,
     isSelectable,
     isConnectable,
     selectNodesOnDrag,
@@ -82,12 +82,7 @@ export default function wrapNode(NodeComponent) {
         zIndex: selected ? 10 : 3,
         transform: `translate(${xPos}px,${yPos}px)`,
         pointerEvents:
-          isSelectable ||
-          isDraggable ||
-          onClick ||
-          onMouseEnter ||
-          onMouseMove ||
-          onMouseLeave
+          isSelectable || onClick || onMouseEnter || onMouseMove || onMouseLeave
             ? "all"
             : "none",
         // prevents jumping of nodes on start
@@ -99,7 +94,6 @@ export default function wrapNode(NodeComponent) {
         xPos,
         yPos,
         isSelectable,
-        isDraggable,
         onClick,
         isInitialized,
         style,
@@ -132,29 +126,15 @@ export default function wrapNode(NodeComponent) {
       }
       return (event) => onContextMenu(event, node);
     }, [onContextMenu, node]);
-    const onSelectNodeHandler = useCallback(
-      (event) => {
-        if (!isDraggable) {
-          if (isSelectable) {
-            unsetNodesSelection();
-            if (!selected) {
-              // TODO: Move multiSelectionActive to context
-              addSelectedElements([node], multiSelectionActive);
-            }
-          }
-          onClick?.(event, node);
-        }
-      },
-      [isSelectable, selected, isDraggable, onClick, node, addSelectedElements]
-    );
     const onDragStart = useCallback(
       (event) => {
         onNodeDragStart?.(event, node);
         if (selectNodesOnDrag && isSelectable) {
           unsetNodesSelection();
           if (!selected) {
-            // TODO: Move multiSelectionActive to context
-            addSelectedElements([node], multiSelectionActive);
+            // TODO: Remove multiSelectionActive from state and use event
+            // props directly
+            addSelectedElements([node], event.metaKey);
           }
         } else if (!selectNodesOnDrag && !selected && isSelectable) {
           unsetNodesSelection();
@@ -315,6 +295,24 @@ export default function wrapNode(NodeComponent) {
       },
       [node, onNodeDoubleClick]
     );
+    const selectNode = useCallback(() => {
+      if (!selected && !multiSelectionActive) {
+        addSelectedElements([node]);
+      }
+    }, [addSelectedElements, multiSelectionActive, node, selected]);
+    const setNodeRef = useCallback(
+      (current) => {
+        nodeElement.current?.removeEventListener("focus", selectNode);
+        current?.addEventListener("focus", selectNode);
+        nodeElement.current = current;
+      },
+      [selectNode]
+    );
+    useEffect(() => {
+      if (onlySelected) {
+        nodeElement.current?.focus();
+      }
+    }, [onlySelected]);
     useLayoutEffect(() => {
       if (nodeElement.current && !isHidden) {
         updateNodeDimensions([
@@ -364,7 +362,6 @@ export default function wrapNode(NodeComponent) {
         onDrag={onDrag}
         onStop={onDragStop}
         scale={scale}
-        disabled={!isDraggable}
         cancel=".nodrag"
         nodeRef={nodeElement}
         grid={grid}
@@ -373,13 +370,12 @@ export default function wrapNode(NodeComponent) {
       >
         <div
           className={nodeClasses}
-          ref={nodeElement}
+          ref={setNodeRef}
           style={nodeStyle}
           onMouseEnter={onMouseEnterHandler}
           onMouseMove={onMouseMoveHandler}
           onMouseLeave={onMouseLeaveHandler}
           onContextMenu={onContextMenuHandler}
-          onClick={onSelectNodeHandler}
           onDoubleClick={onNodeDoubleClickHandler}
           data-id={id}
           tabIndex={0}

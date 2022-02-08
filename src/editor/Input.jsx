@@ -38,18 +38,29 @@ export default function Input({
   );
 
   const editorRef = useRef();
-  const handleConfirm = useCallback(
+  const stopEditing = useCallback(
     (value) => {
       setEdited(null);
       onChange(value);
+      if (editorRef.current?.view != null) {
+        closeCompletion(editorRef.current.view);
+      }
     },
     [onChange]
+  );
+  const handleConfirm = useCallback(
+    (value) => {
+      stopEditing(value);
+      if (editorRef.current?.container != null) {
+        editorRef.current.container.closest(".react-flow__node").focus();
+      }
+    },
+    [stopEditing]
   );
   const node = useNode();
   const nodeID = node?.id;
   useEffectUpdateNodeEdited(nodeID, edited);
   useEffectConfirmOnClickOutside(editorRef, edited, handleConfirm);
-  useEffectCloseCompletionAndFocusNodeOnStopEditing(editorRef, edited);
   useSyncGivenValue(value, edited, setEdited);
   const { zoomTo } = useZoomPanHelper();
   const setAppState = useSetAppStateContext();
@@ -60,11 +71,18 @@ export default function Input({
         Nodes.select(appState, [Node.fake(nodeID)]);
       });
       zoomTo(1);
-      setClick({ x: event.clientX, y: event.clientY });
+      if (event != null) {
+        setClick({ x: event.clientX, y: event.clientY });
+      }
       setEdited(value ?? "");
     },
     [value, nodeID, setAppState, zoomTo]
   );
+  const setEditorRef = useRefEffectControlEditingViaFocus(editorRef, {
+    edited,
+    startEditing,
+    stopEditing,
+  });
   const isEmpty = (displayValue ?? value) === "";
   return (
     <div style={{ display: "inline-block" }}>
@@ -78,7 +96,7 @@ export default function Input({
           }}
           extensions={extensions}
           click={click}
-          ref={editorRef}
+          ref={setEditorRef}
           value={edited}
           editable={true}
           onMouseDown={stopEventPropagation}
@@ -96,7 +114,7 @@ export default function Input({
             minWidth: isEmpty ? "100px" : undefined,
           }}
           extensions={extensions}
-          ref={editorRef}
+          ref={setEditorRef}
           editable={false}
           value={displayValue ?? value}
           onClick={startEditing}
@@ -149,13 +167,36 @@ function useEffectConfirmOnClickOutside(editorRef, edited, handleConfirm) {
   }, [editorRef, edited, handleConfirm]);
 }
 
-function useEffectCloseCompletionAndFocusNodeOnStopEditing(editorRef, edited) {
-  useEffect(() => {
-    if (edited == null && editorRef.current?.view != null) {
-      closeCompletion(editorRef.current.view);
-      editorRef.current.container.closest(".react-flow__node").focus();
+function useRefEffectControlEditingViaFocus(
+  editorRef,
+  { edited, startEditing, stopEditing }
+) {
+  const startEditingOnFocus = useCallback(() => {
+    if (edited == null) {
+      startEditing();
     }
-  }, [edited, editorRef]);
+  }, [edited, startEditing]);
+  const stopEditingOnFocusOut = useCallback(() => {
+    if (edited != null) {
+      stopEditing(edited);
+    }
+  }, [edited, stopEditing]);
+  return useCallback(
+    (current) => {
+      editorRef.current?.container?.removeEventListener(
+        "focusin",
+        startEditingOnFocus
+      );
+      current?.container?.addEventListener("focusin", startEditingOnFocus);
+      editorRef.current?.container?.removeEventListener(
+        "focusout",
+        stopEditingOnFocusOut
+      );
+      current?.container?.addEventListener("focusout", stopEditingOnFocusOut);
+      editorRef.current = current;
+    },
+    [editorRef, startEditingOnFocus, stopEditingOnFocusOut]
+  );
 }
 
 function Label(props) {
@@ -261,7 +302,8 @@ export function useCodeMirror(props) {
     updateListener,
     ResetStyles,
     classHighlightStyle,
-    EditorView.editable.of(editable),
+    // Important! we don't do this to maintain focusability
+    // EditorView.editable.of(editable),
   ];
 
   useEffect(() => {
