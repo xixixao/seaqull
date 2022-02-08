@@ -15,6 +15,9 @@ export function isAncestor(graph, ancestor, descendant) {
 
 export function isTightAncestor(graph, ancestor, descendant) {
   const childEdge = tightChild(graph, ancestor);
+  if (childEdge == null) {
+    return false;
+  }
   const id = Edge.childID(childEdge);
   return (
     Node.hasID(descendant, id) ||
