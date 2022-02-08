@@ -37,7 +37,7 @@ function LoadFromLocalStorage() {
     }
     const { appState, source } = lastState;
     (async () => {
-      setAppState(() => appState);
+      setAppState((oldAppState) => ({ ...oldAppState, ...appState }));
       if (source?.type === "example") {
         const editorConfig = await database(await loadHostedDatabase());
         setSQLiteState(() => ({ editorConfig, source }));

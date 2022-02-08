@@ -25,6 +25,7 @@ export default function NodeUI({
       <NodeWrapper
         isHighlighted={node.highlight}
         isSelected={node.selected}
+        wasSelected={!node.selected && node.wasOnlySelected}
         hasProblem={hasProblem}
         // hasTightChild={Nodes.hasTightChild(appState, node)}
         // hasTightParent={Nodes.hasTightParent(appState, node)}
@@ -144,6 +145,12 @@ const NodeWrapper = styled("div", {
       true: {
         borderColor: "$blue9",
         boxShadow: "0 0 0 0.5px $colors$blue9",
+      },
+    },
+    wasSelected: {
+      true: {
+        borderColor: "$blue7",
+        boxShadow: "0 0 0 0.5px $colors$blue7",
       },
     },
     isHighlighted: {

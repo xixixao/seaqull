@@ -6,6 +6,7 @@ import * as Edges from "./Edges";
 import * as Node from "./Node";
 
 export function select(graph, nodes) {
+  graph.lastSelectedNodeIDs = graph.selectedNodeIDs;
   graph.selectedNodeIDs = idSet(nodes);
 }
 
@@ -25,8 +26,20 @@ export function selected(graph) {
   return nodesWithID(graph, graph.selectedNodeIDs);
 }
 
+export function lastSelected(graph) {
+  return nodesWithID(graph, graph.lastSelectedNodeIDs);
+}
+
 export function hasSelected(graph, node) {
   return graph.selectedNodeIDs.has(Node.id(node));
+}
+
+export function wasOnlySelected(graph, node) {
+  const lastOnlySelected = Arrays.only(lastSelected(graph));
+  if (lastOnlySelected == null) {
+    return false;
+  }
+  return Node.is(lastOnlySelected, node);
 }
 
 export function nodesWithID(graph, ids) {
@@ -39,6 +52,10 @@ export function nodeWithID(graph, id) {
 
 export function current(graph, node) {
   return nodeWithID(graph, Node.id(node));
+}
+
+export function currents(graph, nodes) {
+  return nodesWithID(graph, nodes.map(Node.id));
 }
 
 export function positionWithID(graph, id) {

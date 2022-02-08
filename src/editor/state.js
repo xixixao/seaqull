@@ -10,6 +10,7 @@ export const {
 } = createContextState({
   nodes: new Map(),
   positions: new Map(),
+  lastSelectedNodeIDs: new Set(),
   selectedNodeIDs: new Set(),
   highlightedNodeIDs: new Set(),
   edges: new Map(),

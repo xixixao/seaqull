@@ -9,7 +9,7 @@ import * as Node from "graph/Node";
 import * as Nodes from "graph/Nodes";
 import { only } from "js/Arrays";
 import * as Promises from "js/Promises";
-import React, { memo, useEffect, useRef, useState } from "react";
+import React, { memo, useEffect, useState } from "react";
 import { format as formatSQL } from "sql-formatter";
 import {
   getColumnControl,
@@ -43,7 +43,6 @@ export function SQLiteResults() {
 function ResultsTable() {
   const appState = useAppStateWithEditorConfig();
   const [resultsState, setResultsState] = useState(null);
-  const lastShownNode = useRef();
   const [updated, setUpdated] = useState();
   const [isLoading, setIsLoading] = useState(false);
   useEffect(() => {
@@ -52,10 +51,7 @@ function ResultsTable() {
     }
     const selected = Nodes.selected(appState);
     const isSelecting = selected.length > 0;
-    const previous =
-      lastShownNode.current != null
-        ? Nodes.current(appState, lastShownNode.current)
-        : null;
+    const previous = only(Nodes.lastSelected(appState));
     if (previous == null && !isSelecting) {
       setResultsState(null);
       return;
@@ -96,11 +92,8 @@ function ResultsTable() {
         appState,
       });
       setUpdated(
-        lastShownNode != null &&
-          oneShown != null &&
-          !Node.is(oneShown, lastShownNode)
+        previous != null && oneShown != null && !Node.is(oneShown, previous)
       );
-      lastShownNode.current = oneShown;
     }
     const NEW_RESULTS_INDICATOR_DURATION = 1000;
     Promises.delay(NEW_RESULTS_INDICATOR_DURATION).then(() => {
