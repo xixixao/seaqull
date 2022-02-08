@@ -106,26 +106,26 @@ function Wrapper({ children, onKeyDown }) {
                 Nodes.selected(appState),
                 (node) => Nodes.tightRoot(appState, node)
               ).map((nodes) => Nodes.sortTight(appState, nodes));
-              const parentsToSelect = tightGroups.map((nodes) => {
+              const toSelect = tightGroups.map((nodes) => {
                 const firstNode = Arrays.first(nodes);
 
-                const tightParent = Nodes.tightParent(appState, firstNode);
+                const parent = Nodes.tightParent(appState, firstNode);
                 const lastNode = Arrays.last(nodes);
-                const children = Nodes.tightChildren(appState, lastNode);
+                const child = Nodes.tightChild(appState, lastNode);
 
                 nodes.forEach((node) => Nodes.remove(appState, node));
 
-                if (tightParent != null) {
-                  Edges.addTightChildren(appState, tightParent, children);
-                  Layout.layoutTightStack(appState, tightParent);
+                if (parent != null && child != null) {
+                  Edges.addTightChild(appState, parent, child);
+                  Layout.layoutTightStack(appState, parent);
                 }
 
-                return tightParent;
+                return child ?? parent;
               });
 
               Nodes.select(
                 appState,
-                parentsToSelect.filter((node) => node != null)
+                toSelect.filter((node) => node != null)
               );
             } else if (event.key === "ArrowUp" || event.key === "ArrowDown") {
               Nodes.select(

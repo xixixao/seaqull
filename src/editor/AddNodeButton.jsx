@@ -35,10 +35,7 @@ export function addTightNode(nodeData) {
       return;
     }
     const newNode = Nodes.newNode(appState, nodeData);
-    const selectedNodeChildren = Nodes.tightChildren(appState, selectedNode);
-    const selectedNodeChildEdges = Edges.tightChildren(appState, selectedNode);
-    Edges.removeAll(appState, selectedNodeChildEdges);
-    Edges.addTightChildren(appState, newNode, selectedNodeChildren);
+    Nodes.moveTightChild(appState, selectedNode, newNode);
     Edges.addTightChild(appState, selectedNode, newNode);
     Nodes.add(appState, newNode);
     Nodes.select(appState, [newNode]);

@@ -92,12 +92,6 @@ export function parents(graph, node) {
   );
 }
 
-export function tightChildren(graph, node) {
-  return Edges.tightChildren(graph, node).map((edge) =>
-    Edges.childNode(graph, edge)
-  );
-}
-
 export function hasParents(graph, node) {
   return Edges.parents(graph, node).length > 0;
 }
@@ -115,7 +109,7 @@ export function hasTightParent(graph, node) {
 }
 
 export function hasTightChild(graph, node) {
-  return Edges.tightChildren(graph, node).length > 0;
+  return Edges.tightChild(graph, node) != null;
 }
 
 export function hasDetachedChildren(graph, node) {
@@ -147,8 +141,16 @@ export function tightParent(graph, node) {
 }
 
 export function tightChild(graph, node) {
-  const edge = Arrays.only(Edges.tightChildren(graph, node));
+  const edge = Edges.tightChild(graph, node);
   return edge != null ? Edges.childNode(graph, edge) : null;
+}
+
+export function moveTightChild(graph, from, to) {
+  const child = tightChild(graph, from);
+  if (child != null) {
+    Edges.remove(graph, Edges.tightChild(graph, from));
+    Edges.addTightChild(graph, to, child);
+  }
 }
 
 export function tightStack(graph, node) {
@@ -219,7 +221,7 @@ export function overlappingLeafs(graph, targetNode, event) {
 export function tightLeafs(graph) {
   return Arrays.filter(
     nodes(graph),
-    (node) => Edges.tightChildren(graph, node).length === 0
+    (node) => Edges.tightChild(graph, node) == null
   );
 }
 

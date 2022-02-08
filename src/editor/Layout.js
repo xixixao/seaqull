@@ -2,17 +2,17 @@ import * as Nodes from "graph/Nodes";
 import * as Node from "graph/Node";
 import * as Arrays from "js/Arrays";
 
-// TODO: `layout` can stay here but the algo should go into a separate module
 export function layoutTightStack(graph, node) {
   const { height } = Nodes.positionOf(graph, node);
 
-  Nodes.tightChildren(graph, node).forEach((child) => {
-    Node.move(graph, child, Node.x(graph, node), Node.y(graph, node) + height);
-    layoutTightStack(graph, child);
-  });
+  const child = Nodes.tightChild(graph, node);
+  if (child == null) {
+    return;
+  }
+  Node.move(graph, child, Node.x(graph, node), Node.y(graph, node) + height);
+  layoutTightStack(graph, child);
 }
 
-// TODO: `layout` can stay here but the algo should go into a separate module
 export function layoutStandalone(graph, node) {
   const INIT_Y = 30;
   const NODE_HORIZONTAL_OFFSET = 30;
@@ -24,7 +24,6 @@ export function layoutStandalone(graph, node) {
   Node.move(graph, node, maxX + NODE_HORIZONTAL_OFFSET, INIT_Y);
 }
 
-// TODO: `layout` can stay here but the algo should go into a separate module
 export function layoutDetached(graph, parents, node) {
   const NODE_HORIZONTAL_OFFSET = 30;
 

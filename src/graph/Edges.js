@@ -14,13 +14,12 @@ export function isAncestor(graph, ancestor, descendant) {
 }
 
 export function isTightAncestor(graph, ancestor, descendant) {
-  return tightChildren(graph, ancestor).some((childEdge) => {
-    const id = Edge.childID(childEdge);
-    return (
-      Node.hasID(descendant, id) ||
-      isTightAncestor(graph, Node.fake(id), descendant)
-    );
-  });
+  const childEdge = tightChild(graph, ancestor);
+  const id = Edge.childID(childEdge);
+  return (
+    Node.hasID(descendant, id) ||
+    isTightAncestor(graph, Node.fake(id), descendant)
+  );
 }
 
 export function children(graph, node) {
@@ -44,12 +43,11 @@ export function childNode(graph, edge) {
 }
 
 export function tightParent(graph, node) {
-  const parent = only(parents(graph, node));
-  return parent != null && Edge.isTight(parent) ? parent : null;
+  return only(parents(graph, node).filter(Edge.isTight));
 }
 
-export function tightChildren(graph, node) {
-  return children(graph, node).filter(Edge.isTight);
+export function tightChild(graph, node) {
+  return only(children(graph, node).filter(Edge.isTight));
 }
 
 export function detachedChildren(graph, node) {
@@ -91,12 +89,6 @@ export function addChildren(graph, parent, children) {
 
 export function addChild(graph, parent, child) {
   add(graph, Edge.newEdge(parent, child));
-}
-
-export function addTightChildren(graph, parent, children) {
-  children.forEach((child) => {
-    addTightChild(graph, parent, child);
-  });
 }
 
 export function addTightChild(graph, parent, child) {

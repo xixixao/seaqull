@@ -203,15 +203,10 @@ export default function wrapNode(NodeComponent) {
             const parentEdge = Edges.tightParent(appState, firstNode);
             if (parentEdge != null) {
               const parent = Edges.parentNode(appState, parentEdge);
+              Edge.detach(parentEdge);
 
               const lastNode = Arrays.last(nodes);
-              const children = Nodes.tightChildren(appState, lastNode);
-              Edge.detach(parentEdge);
-              Edges.removeAll(
-                appState,
-                Edges.tightChildren(appState, lastNode)
-              );
-              Edges.addTightChildren(appState, parent, children);
+              Nodes.moveTightChild(appState, lastNode, parent);
               Layout.layoutTightStack(appState, parent);
             }
 
