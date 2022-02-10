@@ -7,7 +7,10 @@ import {
 import NodeUI from "editor/NodeUI";
 import { useNode } from "editor/react-flow/components/Nodes/wrapNode";
 import { useAppStateDataContext } from "editor/state";
+import { Column } from "editor/ui/Column";
 import HorizontalSpace from "editor/ui/HorizontalSpace";
+import { Row } from "editor/ui/Row";
+import VerticalSpace from "editor/ui/VerticalSpace";
 import * as Nodes from "graph/Nodes";
 import * as Arrays from "js/Arrays";
 import { Fragment } from "react";
@@ -46,15 +49,19 @@ function useControls() {
     return null;
   }
   return joinable ? (
-    <AddMultipleParentStepButtons />
+    <Row>
+      <AddMultipleParentStepButtons />
+    </Row>
   ) : (
-    <>
-      {/*
-        TODO: Support
-        <AddJoinNodeBtton />
-      <HorizontalSpace /> */}
-      <AddTightChildStepButtons />
-    </>
+    <Column>
+      <Row>
+        <AddTightChildStepButtons />
+      </Row>
+      <VerticalSpace />
+      <Row>
+        <AddMultipleParentStepButtons />
+      </Row>
+    </Column>
   );
 }
 

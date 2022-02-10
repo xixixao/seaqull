@@ -106,7 +106,7 @@ function NodeUIControls({ hideControls, useControls }) {
         // width: 340,
       }}
     >
-      <Row>{controls}</Row>
+      {controls}
     </div>
   );
   return (hideControls ?? false) || !isSelected ? null : isLast ? (
