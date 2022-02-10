@@ -38,30 +38,41 @@ export default function Input({
   );
 
   const editorRef = useRef();
+  const cleanup = useCallback(() => {
+    if (editorRef.current?.view != null) {
+      closeCompletion(editorRef.current.view);
+    }
+  }, []);
+  const focusParent = useCallback(() => {
+    if (editorRef.current?.container != null) {
+      editorRef.current.container.closest(".react-flow__node").focus();
+    }
+  }, []);
   const stopEditing = useCallback(
     (value) => {
       setEdited(null);
       onChange(value);
-      if (editorRef.current?.view != null) {
-        closeCompletion(editorRef.current.view);
-      }
+      cleanup();
     },
-    [onChange]
+    [cleanup, onChange]
   );
   const handleConfirm = useCallback(
     (value) => {
       stopEditing(value);
-      if (editorRef.current?.container != null) {
-        editorRef.current.container.closest(".react-flow__node").focus();
-      }
+      focusParent();
     },
-    [stopEditing]
+    [focusParent, stopEditing]
   );
+  const handleGivenValueChanged = useCallback(() => {
+    setEdited(null);
+    cleanup();
+    focusParent();
+  }, [cleanup, focusParent]);
   const node = useNode();
   const nodeID = node?.id;
   useEffectUpdateNodeEdited(nodeID, edited);
   useEffectConfirmOnClickOutside(editorRef, edited, handleConfirm);
-  useSyncGivenValue(value, edited, setEdited);
+  useSyncGivenValue(value, edited, handleGivenValueChanged);
   const { zoomTo } = useZoomPanHelper();
   const setAppState = useSetAppStateContext();
   const startEditing = useCallback(
@@ -128,15 +139,16 @@ function stopEventPropagation(event) {
   event.stopPropagation();
 }
 
-function useSyncGivenValue(value, edited, setEdited) {
+function useSyncGivenValue(value, edited, handleGivenValueChanged) {
   const [givenValue, updateGivenValue] = useState(value);
-
-  if (value !== givenValue) {
-    if (value !== "" && edited != null) {
-      setEdited(null);
+  useEffect(() => {
+    if (value !== givenValue) {
+      updateGivenValue(value);
+      if (value !== "") {
+        handleGivenValueChanged();
+      }
     }
-    updateGivenValue(value);
-  }
+  }, [edited, givenValue, handleGivenValueChanged, value]);
 }
 
 function useEffectUpdateNodeEdited(nodeID, edited) {
