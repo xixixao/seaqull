@@ -1,4 +1,4 @@
-import { PlusIcon } from "@modulz/radix-icons";
+import { PlusIcon, UpdateIcon } from "@modulz/radix-icons";
 import * as Layout from "editor/Layout";
 import * as Edges from "graph/Edges";
 import * as Node from "graph/Node";
@@ -6,15 +6,16 @@ import * as Nodes from "graph/Nodes";
 import { onlyWarns } from "js/Arrays";
 import { useContext } from "react";
 import { LayoutRequestContext } from "./layoutRequest";
-import { useSetAppStateContext } from "./state";
+import { useAppModesContext, useSetAppStateContext } from "./state";
 import { ButtonWithIcon } from "./ui/ButtonWithIcon";
 
 export function AddNodeButton({ children, onAdd }) {
   const setAppState = useSetAppStateContext();
+  const modes = useAppModesContext();
   const onRequestLayout = useContext(LayoutRequestContext);
   return (
     <ButtonWithIcon
-      icon={<PlusIcon />}
+      icon={modes.alt ? <UpdateIcon /> : <PlusIcon />}
       onClick={() => {
         setAppState((appState) => {
           onRequestLayout(onAdd(appState));
@@ -30,6 +31,9 @@ export function AddNodeButton({ children, onAdd }) {
 // one node can be selected to avoid confusion
 export function addTightNode(nodeData) {
   return (appState) => {
+    if (shouldReplace(appState)) {
+      return replaceNode(appState, nodeData, layoutTightChild);
+    }
     const selectedNode = onlyWarns(Nodes.selected(appState));
     if (selectedNode == null) {
       return;
@@ -66,6 +70,9 @@ export function addNodeAtPosition(appState, nodeData, position) {
 
 export function addDetachedNode(nodeData) {
   return (appState) => {
+    if (shouldReplace(appState)) {
+      return replaceNode(appState, nodeData, layoutChild);
+    }
     const selected = Nodes.selected(appState);
     const newNode = Nodes.newNode(appState, nodeData);
     selected.forEach((node) => {
@@ -79,4 +86,17 @@ export function addDetachedNode(nodeData) {
 
 function layoutChild(appState, node) {
   Layout.layoutDetached(appState, Nodes.parents(appState, node), node);
+}
+
+function replaceNode(appState, nodeData, layout) {
+  const selectedNode = onlyWarns(Nodes.selected(appState));
+  if (selectedNode == null) {
+    return;
+  }
+  Nodes.replaceNode(appState, selectedNode, nodeData);
+  return [Node.id(selectedNode), layout];
+}
+
+function shouldReplace(appState) {
+  return appState.modes.alt;
 }

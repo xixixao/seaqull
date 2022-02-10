@@ -1,5 +1,6 @@
 import * as Nodes from "graph/Nodes";
 import { onlyWarns } from "js/Arrays";
+import { useContext } from "react";
 import { useCallback } from "react";
 import { createContextState, useCombinedContext } from "../react/contextState";
 
@@ -9,11 +10,12 @@ export const {
   provider: AppStateContextProvider,
 } = createContextState({
   nodes: new Map(),
-  positions: new Map(),
-  lastSelectedNodeIDs: new Set(),
-  selectedNodeIDs: new Set(),
-  highlightedNodeIDs: new Set(),
   edges: new Map(),
+  positions: new Map(),
+  selectedNodeIDs: new Set(),
+  lastSelectedNodeIDs: new Set(),
+  highlightedNodeIDs: new Set(),
+  modes: { alt: false },
 });
 
 export function useSetAppStateCallback(callbackToUpdater) {
@@ -28,8 +30,14 @@ export function useSetAppStateCallback(callbackToUpdater) {
   );
 }
 
+const { modes, ...PersistentContext } = AppStateContext;
+
 export function useAppStateContext() {
-  return useCombinedContext(AppStateContext);
+  return useCombinedContext(PersistentContext);
+}
+
+export function useAppModesContext() {
+  return useContext(modes);
 }
 
 const { positions, highlightedNodeIDs, ...DataContext } = AppStateContext;

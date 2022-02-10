@@ -138,8 +138,17 @@ function Wrapper({ children, onKeyDown }) {
                   )
                   .filter((node) => node != null)
               );
+            } else if (event.key === "Alt") {
+              appState.modes.alt = true;
             } else {
               onRequestLayout(onKeyDown(appState, event));
+            }
+          });
+        }}
+        onKeyUp={(event) => {
+          setAppState((appState) => {
+            if (event.key === "Alt") {
+              appState.modes.alt = false;
             }
           });
         }}

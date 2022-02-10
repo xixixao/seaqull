@@ -82,6 +82,11 @@ export function newNode(graph, nodeData) {
   };
 }
 
+export function replaceNode(graph, node, nodeData) {
+  node.type = nodeData.type;
+  node.data = nodeData.data ?? {};
+}
+
 export function children(graph, node) {
   return nodesWithID(
     graph,

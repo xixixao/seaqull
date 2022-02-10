@@ -6,13 +6,18 @@ import {
 } from "editor/AddNodeButton";
 import NodeUI from "editor/NodeUI";
 import { useNode } from "editor/react-flow/components/Nodes/wrapNode";
-import { useAppStateDataContext } from "editor/state";
+import {
+  AppStateContext,
+  useAppModesContext,
+  useAppStateDataContext,
+} from "editor/state";
 import { Column } from "editor/ui/Column";
 import HorizontalSpace from "editor/ui/HorizontalSpace";
 import { Row } from "editor/ui/Row";
 import VerticalSpace from "editor/ui/VerticalSpace";
 import * as Nodes from "graph/Nodes";
 import * as Arrays from "js/Arrays";
+import { useContext } from "react";
 import { Fragment } from "react";
 import {
   getEmptyNode,
@@ -35,8 +40,9 @@ export default function SqliteNodeUI({ hideControls, type, children }) {
   );
 }
 
-function useControls() {
+function useControls(node) {
   const appState = useAppStateDataContext();
+  const modes = useAppModesContext();
   if (Nodes.countSelected(appState) > 2) {
     return null;
   }
@@ -48,19 +54,30 @@ function useControls() {
   if (twoSelected && !joinable) {
     return null;
   }
+  const isTightChild = TIGHT_CHILD_NODES.has(node.type);
+  const isDetachedChild = MULTIPLE_PARENT_NODES.has(node.type);
   return joinable ? (
     <Row>
       <AddMultipleParentStepButtons />
     </Row>
   ) : (
     <Column>
-      <Row>
-        <AddTightChildStepButtons />
-      </Row>
-      <VerticalSpace />
-      <Row>
-        <AddMultipleParentStepButtons />
-      </Row>
+      {!modes.alt || isTightChild ? (
+        <>
+          <Row>
+            <AddTightChildStepButtons />
+          </Row>
+          <VerticalSpace />
+        </>
+      ) : null}
+      {
+        /* TODO support: `!modes.alt || isDetachedChild` */
+        modes.alt && isDetachedChild ? (
+          <Row>
+            <AddMultipleParentStepButtons />
+          </Row>
+        ) : null
+      }
     </Column>
   );
 }
