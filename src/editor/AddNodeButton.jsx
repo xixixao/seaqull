@@ -1,4 +1,3 @@
-import { PlusIcon, UpdateIcon } from "@modulz/radix-icons";
 import * as Layout from "editor/Layout";
 import * as Edges from "graph/Edges";
 import * as Node from "graph/Node";
@@ -6,19 +5,18 @@ import * as Nodes from "graph/Nodes";
 import { onlyWarns } from "js/Arrays";
 import { useContext } from "react";
 import { LayoutRequestContext } from "./layoutRequest";
-import { useAppModesContext, useSetAppStateContext } from "./state";
+import { useSetAppStateContext } from "./state";
 import { ButtonWithIcon } from "./ui/ButtonWithIcon";
 
-export function AddNodeButton({ children, onAdd }) {
+export function AddNodeButton({ icon, children, onAdd }) {
   const setAppState = useSetAppStateContext();
-  const modes = useAppModesContext();
   const onRequestLayout = useContext(LayoutRequestContext);
   return (
     <ButtonWithIcon
-      icon={modes.alt ? <UpdateIcon /> : <PlusIcon />}
+      icon={icon}
       onClick={() => {
         setAppState((appState) => {
-          onRequestLayout(onAdd(appState));
+          onRequestLayout(onAdd(appState, appState.modes.alt));
         });
       }}
     >
@@ -31,9 +29,6 @@ export function AddNodeButton({ children, onAdd }) {
 // one node can be selected to avoid confusion
 export function addTightNode(nodeData) {
   return (appState) => {
-    if (shouldReplace(appState)) {
-      return replaceNode(appState, nodeData, layoutTightChild);
-    }
     const selectedNode = onlyWarns(Nodes.selected(appState));
     if (selectedNode == null) {
       return;
@@ -45,6 +40,10 @@ export function addTightNode(nodeData) {
     Nodes.select(appState, [newNode]);
     return [Node.id(newNode), layoutTightChild];
   };
+}
+
+export function replaceTightNode(nodeData) {
+  return (appState) => replaceNode(appState, nodeData, layoutTightChild);
 }
 
 function layoutTightChild(appState, node) {
@@ -70,9 +69,6 @@ export function addNodeAtPosition(appState, nodeData, position) {
 
 export function addDetachedNode(nodeData) {
   return (appState) => {
-    if (shouldReplace(appState)) {
-      return replaceNode(appState, nodeData, layoutChild);
-    }
     const selected = Nodes.selected(appState);
     const newNode = Nodes.newNode(appState, nodeData);
     selected.forEach((node) => {
@@ -82,6 +78,10 @@ export function addDetachedNode(nodeData) {
     Nodes.select(appState, [newNode]);
     return [Node.id(newNode), layoutChild];
   };
+}
+
+export function replaceDetachedNode(nodeData) {
+  return (appState) => replaceNode(appState, nodeData, layoutChild);
 }
 
 function layoutChild(appState, node) {
@@ -95,8 +95,4 @@ function replaceNode(appState, nodeData, layout) {
   }
   Nodes.replaceNode(appState, selectedNode, nodeData);
   return [Node.id(selectedNode), layout];
-}
-
-function shouldReplace(appState) {
-  return appState.modes.alt;
 }

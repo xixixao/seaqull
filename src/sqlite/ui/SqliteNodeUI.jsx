@@ -1,23 +1,21 @@
+import { PlusIcon, UpdateIcon } from "@modulz/radix-icons";
 import {
   addDetachedNode,
   AddNodeButton,
   addStandaloneNode,
   addTightNode,
+  replaceDetachedNode,
+  replaceTightNode,
 } from "editor/AddNodeButton";
 import NodeUI from "editor/NodeUI";
 import { useNode } from "editor/react-flow/components/Nodes/wrapNode";
-import {
-  AppStateContext,
-  useAppModesContext,
-  useAppStateDataContext,
-} from "editor/state";
+import { useAppModesContext, useAppStateDataContext } from "editor/state";
 import { Column } from "editor/ui/Column";
 import HorizontalSpace from "editor/ui/HorizontalSpace";
 import { Row } from "editor/ui/Row";
 import VerticalSpace from "editor/ui/VerticalSpace";
 import * as Nodes from "graph/Nodes";
 import * as Arrays from "js/Arrays";
-import { useContext } from "react";
 import { Fragment } from "react";
 import {
   getEmptyNode,
@@ -56,25 +54,32 @@ function useControls(node) {
   }
   const isTightChild = TIGHT_CHILD_NODES.has(node.type);
   const isDetachedChild = MULTIPLE_PARENT_NODES.has(node.type);
+  const shouldReplace = isShouldReplaceMode(modes);
   return joinable ? (
     <Row>
-      <AddMultipleParentStepButtons />
+      <MultipleParentStepButtons icon={<PlusIcon />} action={addDetachedNode} />
     </Row>
   ) : (
     <Column>
-      {!modes.alt || isTightChild ? (
+      {!shouldReplace || isTightChild ? (
         <>
           <Row>
-            <AddTightChildStepButtons />
+            <TightChildStepButtons
+              icon={shouldReplace ? <UpdateIcon /> : <PlusIcon />}
+              action={shouldReplace ? replaceTightNode : addTightNode}
+            />
           </Row>
           <VerticalSpace />
         </>
       ) : null}
       {
-        /* TODO support: `!modes.alt || isDetachedChild` */
-        modes.alt && isDetachedChild ? (
+        /* TODO support: `!shouldReplace || isDetachedChild` */
+        shouldReplace && isDetachedChild ? (
           <Row>
-            <AddMultipleParentStepButtons />
+            <MultipleParentStepButtons
+              icon={<UpdateIcon />}
+              action={replaceDetachedNode}
+            />
           </Row>
         ) : null
       }
@@ -89,12 +94,20 @@ function useHasProblem() {
   return getHasProblem({ ...appState, editorConfig }, node);
 }
 
-function AddTightChildStepButtons() {
+export function addOrReplaceQueryStep(appState, type) {
+  return (
+    isShouldReplaceMode(appState.modes) ? replaceTightNode : addTightNode
+  )(getEmptyNode(type))(appState);
+}
+
+function TightChildStepButtons({ action, icon }) {
   return (
     <>
       {Arrays.map(TIGHT_CHILD_NODES, ({ label }, type) => (
         <Fragment key={type}>
-          <AddNodeButton onAdd={addQueryStep(type)}>{label}</AddNodeButton>
+          <AddNodeButton icon={icon} onAdd={action(getEmptyNode(type))}>
+            {label}
+          </AddNodeButton>
           <HorizontalSpace />
         </Fragment>
       ))}
@@ -102,16 +115,12 @@ function AddTightChildStepButtons() {
   );
 }
 
-export function addQueryStep(type) {
-  return addTightNode(getEmptyNode(type));
-}
-
-function AddMultipleParentStepButtons() {
+function MultipleParentStepButtons({ action, icon }) {
   return (
     <>
       {Arrays.map(MULTIPLE_PARENT_NODES, ({ label }, type) => (
         <Fragment key={type}>
-          <AddNodeButton onAdd={addDetachedNode(getEmptyNode(type))}>
+          <AddNodeButton icon={icon} onAdd={action(getEmptyNode(type))}>
             {label}
           </AddNodeButton>
           <HorizontalSpace />
@@ -123,8 +132,15 @@ function AddMultipleParentStepButtons() {
 
 export function AddFromNodeButton() {
   return (
-    <AddNodeButton onAdd={addStandaloneNode(getEmptyNode("from"))}>
+    <AddNodeButton
+      icon={<PlusIcon />}
+      onAdd={addStandaloneNode(getEmptyNode("from"))}
+    >
       FROM
     </AddNodeButton>
   );
+}
+
+function isShouldReplaceMode(modes) {
+  return modes.alt;
 }

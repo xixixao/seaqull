@@ -13,7 +13,7 @@ import { getEmptyNode, NODE_CONFIGS, TIGHT_CHILD_NODES } from "./sqliteNodes";
 import { SQLiteStateContext, SQLiteStateProvider } from "./sqliteState";
 import { DialogTrigger } from "./ui/Dialog";
 import { SQLiteLocalStorage } from "./ui/SQLiteLocalStorage";
-import { AddFromNodeButton, addQueryStep } from "./ui/SqliteNodeUI";
+import { AddFromNodeButton, addOrReplaceQueryStep } from "./ui/SqliteNodeUI";
 import { SQLiteResults } from "./ui/SQLiteResults";
 import { WelcomeDialog } from "./ui/SQLiteWelcomeDialog";
 
@@ -71,11 +71,13 @@ function addNodeFromKey(appState, event) {
   if (selectedNode == null) {
     return;
   }
-  const type = KEY_LOOKUP.get(event.key);
+  const type = KEY_LOOKUP.get(
+    event.altKey ? event.code.substr(3, 1).toLowerCase() : event.key
+  );
   if (type == null) {
     return;
   }
-  return addQueryStep(type)(appState);
+  return addOrReplaceQueryStep(appState, type);
 }
 
 function idMap(array) {
