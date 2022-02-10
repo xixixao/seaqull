@@ -11,7 +11,12 @@ import HorizontalSpace from "editor/ui/HorizontalSpace";
 import * as Nodes from "graph/Nodes";
 import * as Arrays from "js/Arrays";
 import { Fragment } from "react";
-import { getEmptyNode, getHasProblem, TIGHT_CHILD_NODES } from "../sqliteNodes";
+import {
+  getEmptyNode,
+  getHasProblem,
+  MULTIPLE_PARENT_NODES,
+  TIGHT_CHILD_NODES,
+} from "../sqliteNodes";
 import { useEditorConfig } from "../sqliteState";
 
 export default function SqliteNodeUI({ hideControls, type, children }) {
@@ -41,7 +46,7 @@ function useControls() {
     return null;
   }
   return joinable ? (
-    <AddJoinNodeBtton />
+    <AddMultipleParentStepButtons />
   ) : (
     <>
       {/*
@@ -77,11 +82,18 @@ export function addQueryStep(type) {
   return addTightNode(getEmptyNode(type));
 }
 
-function AddJoinNodeBtton() {
+function AddMultipleParentStepButtons() {
   return (
-    <AddNodeButton onAdd={addDetachedNode(getEmptyNode("join"))}>
-      JOIN
-    </AddNodeButton>
+    <>
+      {Arrays.map(MULTIPLE_PARENT_NODES, ({ label }, type) => (
+        <Fragment key={type}>
+          <AddNodeButton onAdd={addDetachedNode(getEmptyNode(type))}>
+            {label}
+          </AddNodeButton>
+          <HorizontalSpace />
+        </Fragment>
+      ))}
+    </>
   );
 }
 

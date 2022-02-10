@@ -6,6 +6,7 @@ import { JoinNodeConfig } from "./nodes/JoinNodes";
 import { SelectNodeConfig } from "./nodes/SelectNodes";
 import { WhereNodeConfig } from "./nodes/WhereNodes";
 import { OrderNodeConfig } from "./nodes/OrderNodes";
+import { UnionNodeConfig } from "./nodes/UnionNodes";
 
 export function someOrNoneColumnList(columnNames) {
   return columnNames.length > 0 ? columnNames.join(", ") : "∅";
@@ -22,6 +23,7 @@ export const NODE_CONFIGS = {
   where: WhereNodeConfig,
   group: GroupNodeConfig,
   order: OrderNodeConfig,
+  union: UnionNodeConfig,
 };
 
 export const TIGHT_CHILD_NODES = Maps.from({
@@ -40,6 +42,15 @@ export const TIGHT_CHILD_NODES = Maps.from({
   order: {
     label: "ORDER BY",
     key: "o",
+  },
+});
+
+export const MULTIPLE_PARENT_NODES = Maps.from({
+  join: {
+    label: "JOIN",
+  },
+  union: {
+    label: "UNION",
   },
 });
 
@@ -72,7 +83,7 @@ export function getQuery(appState, node) {
 }
 
 export function getQueryAdditionalTables(appState, node) {
-  return getNodeConfig(node).queryAdditionalTables(appState, node);
+  return getNodeConfig(node).queryAdditionalTables?.(appState, node);
 }
 
 export function getQueryAdditionalValues(appState, node) {
