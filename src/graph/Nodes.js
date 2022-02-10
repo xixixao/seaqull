@@ -54,6 +54,10 @@ export function current(graph, node) {
   return nodeWithID(graph, Node.id(node));
 }
 
+export function isDeleted(graph, node) {
+  return current(graph, node) == null;
+}
+
 export function currents(graph, nodes) {
   return nodesWithID(graph, nodes.map(Node.id));
 }

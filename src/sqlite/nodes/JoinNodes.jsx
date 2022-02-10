@@ -116,6 +116,9 @@ export const JoinNodeConfig = {
   ColumnControl({ node, columnName, isPrimary, columnIndex }) {
     const appState = useAppStateWithEditorConfig();
     const setNodeState = useSetNodeState(node);
+    if (Nodes.isDeleted(appState, node)) {
+      return null;
+    }
     const joined = joinedColumns(node);
     const parents = Nodes.parents(appState, node);
     const aOtherColumns = Arrays.subtractSets(
