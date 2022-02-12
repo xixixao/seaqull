@@ -2,7 +2,7 @@ import { useNode } from "editor/react-flow/components/Nodes/wrapNode";
 import { useSetNodeState } from "editor/state";
 import * as Nodes from "graph/Nodes";
 import * as Arrays from "js/Arrays";
-import { getColumnNames, getQuerySelectable } from "../sqliteNodes";
+import { getColumnNames, getQuerySelectableOrNull } from "../sqliteNodes";
 import SqliteInput from "../ui/SqliteInput";
 import SqliteNodeUI from "../ui/SqliteNodeUI";
 
@@ -66,7 +66,7 @@ function setUnionType(node, unionType) {
 
 function sql(appState, unionType, a, b) {
   return `
-  ${a != null ? getQuerySelectable(appState, a) : null}
+  ${getQuerySelectableOrNull(appState, a)}
   UNION ${unionType}
-  ${b != null ? getQuerySelectable(appState, b) : null}`;
+  ${getQuerySelectableOrNull(appState, b)}`;
 }

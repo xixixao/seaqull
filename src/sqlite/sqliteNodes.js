@@ -7,6 +7,8 @@ import { SelectNodeConfig } from "./nodes/SelectNodes";
 import { WhereNodeConfig } from "./nodes/WhereNodes";
 import { OrderNodeConfig } from "./nodes/OrderNodes";
 import { UnionNodeConfig } from "./nodes/UnionNodes";
+import { ExceptNodeConfig } from "./nodes/ExceptNodes";
+import { IntersectNodeConfig } from "./nodes/IntersectNodes";
 
 export function someOrNoneColumnList(columnNames) {
   return columnNames.length > 0 ? columnNames.join(", ") : "∅";
@@ -24,6 +26,8 @@ export const NODE_CONFIGS = {
   group: GroupNodeConfig,
   order: OrderNodeConfig,
   union: UnionNodeConfig,
+  except: ExceptNodeConfig,
+  intersect: IntersectNodeConfig,
 };
 
 export const TIGHT_CHILD_NODES = Maps.from({
@@ -51,6 +55,12 @@ export const MULTIPLE_PARENT_NODES = Maps.from({
   },
   union: {
     label: "UNION",
+  },
+  intersect: {
+    label: "INTERSECT",
+  },
+  except: {
+    label: "EXCEPT",
   },
 });
 
@@ -91,6 +101,13 @@ export function getQueryAdditionalValues(appState, node) {
 }
 
 export function getQuerySelectable(appState, node) {
+  return getNodeConfig(node).querySelectable(appState, node);
+}
+
+export function getQuerySelectableOrNull(appState, node) {
+  if (node == null) {
+    return null;
+  }
   return getNodeConfig(node).querySelectable(appState, node);
 }
 

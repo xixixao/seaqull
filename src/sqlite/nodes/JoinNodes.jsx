@@ -12,7 +12,7 @@ import * as Arrays from "js/Arrays";
 import * as Objects from "js/Objects";
 import { first, second } from "js/Arrays";
 import * as Sets from "js/Sets";
-import { getColumnNames, getQuerySelectable } from "../sqliteNodes";
+import { getColumnNames, getQuerySelectableOrNull } from "../sqliteNodes";
 import { useAppStateWithEditorConfig } from "../sqliteState";
 import ColumnCheckbox from "../ui/ColumnCheckbox";
 import SqliteInput from "../ui/SqliteInput";
@@ -345,8 +345,8 @@ function getSimpleJoin(filter) {
 function sql(appState, node, a, b, selected) {
   return `SELECT ${selected} FROM ${supportRightJoin(
     node,
-    `(${a != null ? getQuerySelectable(appState, a) : null}) AS a`,
-    `(${b != null ? getQuerySelectable(appState, b) : null}) AS b`
+    `(${getQuerySelectableOrNull(appState, a)}) AS a`,
+    `(${getQuerySelectableOrNull(appState, b)}) AS b`
   )} ${hasFilter(node) ? `ON ${nodeFilters(node)}` : ""}`;
 }
 
