@@ -16,7 +16,14 @@ export const IntersectNodeConfig = {
   query(appState, node) {
     const parents = Nodes.parents(appState, node);
     const [a, b] = parents;
-    return sql(appState, a, b);
+    return sql(appState, "INTERSECT", a, b);
+  },
+  queryAdditionalValues(appState, node) {
+    const parents = Nodes.parents(appState, node);
+    const [a, b] = parents;
+    return `SELECT * FROM (${sql(appState, "EXCEPT", a, b)})
+      UNION
+      SELECT * FROM (${sql(appState, "EXCEPT", b, a)})`;
   },
   querySelectable(appState, node) {
     return IntersectNodeConfig.query(appState, node);
@@ -37,9 +44,9 @@ function empty() {
   return {};
 }
 
-function sql(appState, a, b) {
+function sql(appState, operator, a, b) {
   return `
   ${getQuerySelectableOrNull(appState, a)}
-  INTERSECT
+  ${operator}
   ${getQuerySelectableOrNull(appState, b)}`;
 }

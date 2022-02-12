@@ -43,7 +43,7 @@ export function addTightNode(nodeData) {
 }
 
 export function replaceTightNode(nodeData) {
-  return (appState) => replaceNode(appState, nodeData, layoutTightChild);
+  return (appState) => replaceNode(appState, nodeData, Layout.layoutTightStack);
 }
 
 function layoutTightChild(appState, node) {
@@ -81,7 +81,7 @@ export function addDetachedNode(nodeData) {
 }
 
 export function replaceDetachedNode(nodeData) {
-  return (appState) => replaceNode(appState, nodeData, layoutChild);
+  return (appState) => replaceNode(appState, nodeData, Layout.layoutTightStack);
 }
 
 function layoutChild(appState, node) {
