@@ -12,7 +12,9 @@ function UnionNode() {
   const setNodeState = useSetNodeState(node);
   return (
     <SqliteNodeUI>
+      UNION{" "}
       <SqliteInput
+        displayValue={unionType === "" ? "DISTINCT" : null}
         value={unionType}
         onChange={(unionType) => {
           setNodeState((node) => {
@@ -31,27 +33,12 @@ export const UnionNodeConfig = {
     return Nodes.parents(appState, node).length !== 2;
   },
   query(appState, node) {
-    if (isIntersect(node)) {
-      return UnionNodeConfig.querySelectable(appState, node);
-    }
-    const parent = Arrays.first(Nodes.parents(appState, node));
-    return parent != null ? getQuerySelectable(appState, parent) : null;
-  },
-  queryAdditionalValues(appState, node) {
-    if (isIntersect(node)) {
-      const parents = Nodes.parents(appState, node);
-      const [a, b] = parents;
-      return `SELECT * FROM (${sql(appState, "EXCEPT", a, b)})
-      UNION
-      SELECT * FROM (${sql(appState, "EXCEPT", b, a)})`;
-    }
-    const parent = Arrays.second(Nodes.parents(appState, node));
-    return parent != null ? getQuerySelectable(appState, parent) : null;
-  },
-  querySelectable(appState, node) {
     const parents = Nodes.parents(appState, node);
     const [a, b] = parents;
     return sql(appState, nodeUnionType(node), a, b);
+  },
+  querySelectable(appState, node) {
+    return UnionNodeConfig.query(appState, node);
   },
   columnNames(appState, node) {
     const parent = Arrays.first(Nodes.parents(appState, node));
@@ -66,11 +53,7 @@ export const UnionNodeConfig = {
 };
 
 function empty() {
-  return { type: "UNION" };
-}
-
-function isIntersect(node) {
-  return /^\s*intersect/i.test(nodeUnionType(node));
+  return { type: "" };
 }
 
 function nodeUnionType(node) {
@@ -84,6 +67,6 @@ function setUnionType(node, unionType) {
 function sql(appState, unionType, a, b) {
   return `
   ${a != null ? getQuerySelectable(appState, a) : null}
-  ${unionType}
+  UNION ${unionType}
   ${b != null ? getQuerySelectable(appState, b) : null}`;
 }
