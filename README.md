@@ -71,3 +71,7 @@ You can merge nodes that were already linked together or not. Moving nodes this 
 To edit the code in a node click on it.
 
 To confirm the change either move the cursor outside of the node, or press <kbd>Ctrl</kbd>/<kbd>command</kbd>+<kbd>Enter</kbd>.
+
+### Additions to SQLite
+
+- `RIGHT JOIN`s are supported.

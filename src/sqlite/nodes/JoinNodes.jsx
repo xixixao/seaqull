@@ -343,12 +343,32 @@ function getSimpleJoin(filter) {
 }
 
 function sql(appState, node, a, b, selected) {
-  return `SELECT ${selected} FROM (${
-    a != null ? getQuerySelectable(appState, a) : null
-  }) AS a
-  ${joinType(node)} JOIN (${
-    b != null ? getQuerySelectable(appState, b) : null
-  }) AS b ${hasFilter(node) ? `ON ${nodeFilters(node)}` : ""}`;
+  return `SELECT ${selected} FROM ${supportRightJoin(
+    node,
+    `(${a != null ? getQuerySelectable(appState, a) : null}) AS a`,
+    `(${b != null ? getQuerySelectable(appState, b) : null}) AS b`
+  )} ${hasFilter(node) ? `ON ${nodeFilters(node)}` : ""}`;
+}
+
+function supportRightJoin(node, a, b) {
+  const [hasRight, operators] = convertJoinType(joinType(node));
+  const [left, right] = hasRight ? [b, a] : [a, b];
+  return `${left} ${operators} JOIN ${right}`;
+}
+
+function convertJoinType(joinType) {
+  const operators = joinType.split(/\s+/);
+  const hasRight = operators.find(isRightOperator);
+  return [
+    hasRight,
+    operators
+      .map((operator) => (isRightOperator(operator) ? "LEFT" : operator))
+      .join(" "),
+  ];
+}
+
+function isRightOperator(operator) {
+  return /\bright\b/i.test(operator);
 }
 
 function joinColumnsSchema(appState, node) {
