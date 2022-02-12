@@ -33,7 +33,7 @@ function JoinNode() {
           });
         }}
       />{" "}
-      ON{" "}
+      JOIN ON{" "}
       <SqliteInput
         displayValue={!hasFilter(node) ? "∅" : null}
         schema={joinColumnsSchema(appState, node)}
@@ -200,7 +200,7 @@ function JoinOnSelector({ columns, onChange }) {
 }
 
 function empty() {
-  return { type: "JOIN", where: "" };
+  return { type: "INNER", where: "" };
 }
 
 function hasFilter(node) {
@@ -346,7 +346,7 @@ function sql(appState, node, a, b, selected) {
   return `SELECT ${selected} FROM (${
     a != null ? getQuerySelectable(appState, a) : null
   }) AS a
-  ${joinType(node)} (${
+  ${joinType(node)} JOIN (${
     b != null ? getQuerySelectable(appState, b) : null
   }) AS b ${hasFilter(node) ? `ON ${nodeFilters(node)}` : ""}`;
 }
