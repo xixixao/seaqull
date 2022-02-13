@@ -75,3 +75,13 @@ To confirm the change either move the cursor outside of the node, or press <kbd>
 ### Additions to SQLite
 
 - `RIGHT JOIN`s are supported.
+
+## Acknowledgements
+
+- [Codemirror.next](https://codemirror.net/6/)
+- [React Flow](https://reactflow.dev/)
+- [Radix](radix-ui.com)
+- [SQLite](https://sqlite.org/)
+- [SQLite JS](https://sql.js.org/)
+- [Immer](https://immerjs.github.io/immer/)
+- [React](https://reactjs.org/)
