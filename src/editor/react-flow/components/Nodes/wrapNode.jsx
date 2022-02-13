@@ -23,6 +23,7 @@ import {
   useAddSelectedElements,
   useUpdateNodeDimensions,
 } from "../../store/reducer";
+import * as History from "editor/History";
 
 export default function wrapNode(NodeComponent) {
   const NodeWrapper = ({
@@ -168,13 +169,16 @@ export default function wrapNode(NodeComponent) {
                 Nodes.tightRoot(appState, node)
               )
             );
+            History.startOrContinueRecording(appState);
             draggedNodeRoots.forEach((node) => {
               Node.moveBy(appState, node, deltaX, deltaY);
               Layout.layoutTightStack(appState, node);
             });
+            History.endRecording(appState);
             return;
           }
 
+          History.startOrContinueRecording(appState);
           const tightGroups = Nodes.groupBy(Nodes.selected(appState), (node) =>
             Nodes.tightRoot(appState, node)
           ).map((nodes) => Nodes.sortTight(appState, nodes));
@@ -207,6 +211,7 @@ export default function wrapNode(NodeComponent) {
           appState.highlightedNodeIDs = Nodes.idSet(
             validPotentialTightParent != null ? [validPotentialTightParent] : []
           );
+          History.endRecording(appState);
         });
 
         // if (onNodeDrag) {
@@ -264,10 +269,12 @@ export default function wrapNode(NodeComponent) {
           if (validPotentialTightParent == null) {
             return;
           }
+          History.startRecording(appState);
           const firstNode = first(onlyDraggedGroup);
           Edges.removeAll(appState, Edges.parents(appState, firstNode));
           Edges.addTightChild(appState, validPotentialTightParent, firstNode);
           Layout.layoutTightStack(appState, validPotentialTightParent);
+          History.endRecording(appState);
         });
 
         // updateNodePosDiff({

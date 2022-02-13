@@ -6,10 +6,11 @@ import {
   produceWithPatches,
   current,
 } from "immer";
-import * as Arrays from "js/Arrays";
 
 enableMapSet();
 enablePatches();
+
+window.produce = produce;
 
 export function historyStack() {
   return {
@@ -23,6 +24,17 @@ export function startRecording(value) {
   value.history.content.inProgressRecording = [[], []];
 }
 
+export function startOrContinueRecording(value) {
+  const content = value.history.content;
+  if (content.existingRecording || content.continueRecording) {
+    content.inProgressRecording = content.patches[undoIndex(value)];
+  } else {
+    startRecording(value);
+    content.existingRecording = true;
+  }
+  content.continueRecording = true;
+}
+
 export function endRecording(value) {
   value.history.content.addRecording = true;
 }
@@ -32,7 +44,13 @@ export function produceWithoutRecording(value, updater) {
 }
 
 export function produceAndRecord(value, updater) {
-  const [appState, forwardSet, reverseSet] = produceWithPatches(value, updater);
+  const beforeValue = produce(value, (value) => {
+    value.history.content.continueRecording = false;
+  });
+  const [appState, forwardSet, reverseSet] = produceWithPatches(
+    beforeValue,
+    updater
+  );
   const [forward, reverse] = [
     forwardSet.filter(({ path }) => path[0] !== "history"),
     reverseSet.filter(({ path }) => path[0] !== "history"),
@@ -40,19 +58,25 @@ export function produceAndRecord(value, updater) {
 
   return produce(appState, (appState) => {
     const { content } = appState.history;
+    if (!content.continueRecording) {
+      content.existingRecording = false;
+    }
+    const hasExistingRecording =
+      content.inProgressRecording != null &&
+      content.inProgressRecording[0].length > 0;
     if (content.inProgressRecording != null) {
       content.inProgressRecording[0].push(...forward);
-      content.inProgressRecording[1].push(...Arrays.reverse(reverse));
+      content.inProgressRecording[1].unshift(...reverse);
     }
     if (content.addRecording) {
       if (content.reverseCursor > 0) {
         content.patches.splice(-content.reverseCursor);
         content.reverseCursor = 0;
       }
-      content.patches.push([
-        content.inProgressRecording[0],
-        Arrays.reverse(content.inProgressRecording[1]),
-      ]);
+      if (content.continueRecording && hasExistingRecording) {
+        content.patches.splice(-1);
+      }
+      content.patches.push(content.inProgressRecording);
       content.inProgressRecording = null;
       content.addRecording = false;
     }
