@@ -12,7 +12,14 @@ import * as Edges from "graph/Edges";
 import * as Node from "graph/Node";
 import * as Nodes from "graph/Nodes";
 import * as Arrays from "js/Arrays";
-import React, { useCallback, useContext, useLayoutEffect, useRef } from "react";
+import React, {
+  useCallback,
+  useContext,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+} from "react";
+import { buildKeyMap } from "./keybindings";
 import { LayoutRequestContext } from "./layoutRequest";
 import { positionToRendererPosition } from "./react-flow/utils/graph";
 
@@ -87,6 +94,16 @@ function Wrapper({ children, onKeyDown }) {
     layoutRequestRef.current = request;
   }, []);
 
+  const onKeyDownAppDefaults = useMemo(
+    () =>
+      buildKeyMap([
+        { key: "Backspace", run: deleteSelectedNodes },
+        { key: "ArrowUp", run: selectNodesViaArrow },
+        { key: "ArrowDown", run: selectNodesViaArrow },
+      ]),
+    []
+  );
+
   return (
     <LayoutRequestContext.Provider value={onRequestLayout}>
       <div
@@ -97,50 +114,14 @@ function Wrapper({ children, onKeyDown }) {
         }}
         onKeyDown={(event) => {
           setAppState((appState) => {
-            if (event.key === "Backspace") {
-              if (Nodes.countSelected(appState) === 0) {
-                return;
-              }
-
-              const tightGroups = Nodes.groupBy(
-                Nodes.selected(appState),
-                (node) => Nodes.tightRoot(appState, node)
-              ).map((nodes) => Nodes.sortTight(appState, nodes));
-              const toSelect = tightGroups.map((nodes) => {
-                const firstNode = Arrays.first(nodes);
-
-                const parent = Nodes.tightParent(appState, firstNode);
-                const lastNode = Arrays.last(nodes);
-                const child = Nodes.tightChild(appState, lastNode);
-
-                nodes.forEach((node) => Nodes.remove(appState, node));
-
-                if (parent != null && child != null) {
-                  Edges.addTightChild(appState, parent, child);
-                  Layout.layoutTightStack(appState, parent);
-                }
-
-                return child ?? parent;
-              });
-
-              Nodes.select(
-                appState,
-                toSelect.filter((node) => node != null)
-              );
-            } else if (event.key === "ArrowUp" || event.key === "ArrowDown") {
-              Nodes.select(
-                appState,
-                Nodes.selected(appState)
-                  .map(
-                    event.key === "ArrowUp"
-                      ? (node) => Nodes.tightParent(appState, node) ?? node
-                      : (node) => Nodes.tightChild(appState, node) ?? node
-                  )
-                  .filter((node) => node != null)
-              );
-            } else if (event.key === "Alt") {
+            const handled = onKeyDownAppDefaults(appState, event);
+            if (handled) {
+              return;
+            }
+            if (event.key === "Alt") {
               appState.modes.alt = true;
-            } else {
+            }
+            if (!handled) {
               onRequestLayout(onKeyDown(appState, event));
             }
           });
@@ -263,5 +244,53 @@ const EDGE_COMPONENTS = {
     return <></>;
   },
 };
+
+function deleteSelectedNodes(appState) {
+  if (Nodes.countSelected(appState) === 0) {
+    return;
+  }
+
+  const tightGroups = Nodes.groupBy(Nodes.selected(appState), (node) =>
+    Nodes.tightRoot(appState, node)
+  ).map((nodes) => Nodes.sortTight(appState, nodes));
+  const toSelect = tightGroups.map((nodes) => {
+    const firstNode = Arrays.first(nodes);
+
+    const parent = Nodes.tightParent(appState, firstNode);
+    const lastNode = Arrays.last(nodes);
+    const child = Nodes.tightChild(appState, lastNode);
+
+    nodes.forEach((node) => Nodes.remove(appState, node));
+
+    if (parent != null && child != null) {
+      Edges.addTightChild(appState, parent, child);
+      Layout.layoutTightStack(appState, parent);
+    }
+
+    return child ?? parent;
+  });
+
+  Nodes.select(
+    appState,
+    toSelect.filter((node) => node != null)
+  );
+}
+
+function selectNodesViaArrow(appState, event) {
+  Nodes.select(
+    appState,
+    Nodes.selected(appState)
+      .map(
+        event.key === "ArrowUp"
+          ? (node) => Nodes.tightParent(appState, node) ?? node
+          : (node) => Nodes.tightChild(appState, node) ?? node
+      )
+      .filter((node) => node != null)
+  );
+}
+
+function turnOnAltMode(appState) {
+  appState.modes.alt = true;
+}
 
 export default App;
