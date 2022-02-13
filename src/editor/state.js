@@ -72,7 +72,7 @@ export function useSetAppStateCallback(callbackToUpdater) {
   );
 }
 
-const { modes, ...PersistentContext } = AppStateContext;
+const { modes, history, ...PersistentContext } = AppStateContext;
 
 export function useAppStateContext() {
   return useCombinedContext(PersistentContext);
