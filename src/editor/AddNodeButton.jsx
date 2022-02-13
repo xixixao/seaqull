@@ -1,4 +1,5 @@
 import * as Layout from "editor/Layout";
+import * as History from "editor/History";
 import * as Edges from "graph/Edges";
 import * as Node from "graph/Node";
 import * as Nodes from "graph/Nodes";
@@ -33,6 +34,7 @@ export function addTightNode(nodeData) {
     if (selectedNode == null) {
       return;
     }
+    History.startRecording(appState);
     const newNode = Nodes.newNode(appState, nodeData);
     Nodes.moveTightChild(appState, selectedNode, newNode);
     Edges.addTightChild(appState, selectedNode, newNode);
@@ -49,22 +51,36 @@ export function replaceTightNode(nodeData) {
 function layoutTightChild(appState, node) {
   const parent = Nodes.tightParent(appState, node);
   Layout.layoutTightStack(appState, parent);
+  History.endRecording(appState);
 }
 
 export function addStandaloneNode(nodeData) {
   return (appState) => {
+    History.startRecording(appState);
     const newNode = Nodes.newNode(appState, nodeData);
     Nodes.add(appState, newNode);
     Nodes.select(appState, [newNode]);
-    return [Node.id(newNode), Layout.layoutStandalone];
+    return [Node.id(newNode), layoutStandalone];
   };
 }
 
+function layoutStandalone(appState, node) {
+  Layout.layoutStandalone(appState, node);
+  History.endRecording(appState);
+}
+
 export function addNodeAtPosition(appState, nodeData, position) {
+  History.startRecording(appState);
   const newNode = Nodes.newNode(appState, nodeData);
   Nodes.add(appState, newNode);
   Nodes.select(appState, [newNode]);
-  return [Node.id(newNode), Layout.centerAtPosition(position)];
+  return [
+    Node.id(newNode),
+    (appState, node) => {
+      Layout.centerAtPosition(appState, node, position);
+      History.endRecording(appState);
+    },
+  ];
 }
 
 export function addDetachedNode(nodeData) {

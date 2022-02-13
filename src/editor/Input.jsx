@@ -8,7 +8,13 @@ import { classHighlightStyle } from "@codemirror/highlight";
 import { EditorSelection, EditorState, StateEffect } from "@codemirror/state";
 import { tooltips } from "@codemirror/tooltip";
 import { drawSelection, EditorView, keymap } from "@codemirror/view";
-import { history, historyKeymap } from "@codemirror/history";
+import {
+  history,
+  redo,
+  redoSelection,
+  undo,
+  undoSelection,
+} from "@codemirror/history";
 import { commentKeymap } from "@codemirror/comment";
 import * as Node from "graph/Node";
 import * as Nodes from "graph/Nodes";
@@ -22,9 +28,13 @@ import {
 } from "react";
 import { useZoomPanHelper } from "./react-flow";
 import { useNode } from "./react-flow/components/Nodes/wrapNode";
-import { useSetAppStateContext } from "./state";
+import {
+  useSetAppStateContext,
+  useSetAppStateWithoutRecordingContext,
+} from "./state";
 import { Box } from "./ui/Box";
 import { codeMirrorStyles } from "./ui/codeMirrorStyles";
+import { useAppRedo, useAppUndo } from "./historyHooks";
 
 export default function Input({
   extensions,
@@ -51,12 +61,14 @@ export default function Input({
     }
   }, []);
   const stopEditing = useCallback(
-    (value) => {
+    (newValue) => {
       setEdited(null);
-      onChange(value);
+      if (newValue !== value) {
+        onChange(newValue);
+      }
       cleanup();
     },
-    [cleanup, onChange]
+    [cleanup, onChange, value]
   );
   const handleConfirm = useCallback(
     (value) => {
@@ -74,7 +86,6 @@ export default function Input({
   const nodeID = node?.id;
   useEffectUpdateNodeEdited(nodeID, edited);
   useEffectConfirmOnClickOutside(editorRef, edited, handleConfirm);
-  useSyncGivenValue(value, edited, handleGivenValueChanged);
   const { zoomTo } = useZoomPanHelper();
   const setAppState = useSetAppStateContext();
   const startEditing = useCallback(
@@ -91,10 +102,14 @@ export default function Input({
     },
     [value, nodeID, setAppState, zoomTo]
   );
+  const undoApp = useAppUndo();
+  const redoApp = useAppRedo();
   const setEditorRef = useRefEffectControlEditingViaFocus(editorRef, {
+    value,
     edited,
     startEditing,
     stopEditing,
+    handleGivenValueChanged,
   });
   const isEmpty = isBlank(emptyDisplayValue ?? value);
   return (
@@ -112,6 +127,8 @@ export default function Input({
           ref={setEditorRef}
           value={edited}
           editable={true}
+          onUndo={undoApp}
+          onRedo={redoApp}
           onMouseDown={stopEventPropagation}
           onTouchStart={stopEventPropagation}
           onChange={setEdited}
@@ -145,7 +162,10 @@ function stopEventPropagation(event) {
   event.stopPropagation();
 }
 
-function useSyncGivenValue(value, edited, handleGivenValueChanged) {
+function useRefEffectControlEditingViaFocus(
+  editorRef,
+  { value, edited, startEditing, stopEditing, handleGivenValueChanged }
+) {
   const [givenValue, updateGivenValue] = useState(value);
   useEffect(() => {
     if (value !== givenValue) {
@@ -155,10 +175,41 @@ function useSyncGivenValue(value, edited, handleGivenValueChanged) {
       }
     }
   }, [edited, givenValue, handleGivenValueChanged, value]);
+  const startEditingOnFocus = useCallback(() => {
+    if (edited == null) {
+      startEditing();
+    }
+  }, [edited, startEditing]);
+  const stopEditingOnFocusOut = useCallback(
+    (event) => {
+      // Need to make sure we're not being updated from outside
+      // while defocusing
+      if (edited != null && value === givenValue) {
+        stopEditing(edited);
+      }
+    },
+    [edited, givenValue, stopEditing, value]
+  );
+  return useCallback(
+    (current) => {
+      editorRef.current?.container?.removeEventListener(
+        "focusin",
+        startEditingOnFocus
+      );
+      current?.container?.addEventListener("focusin", startEditingOnFocus);
+      editorRef.current?.container?.removeEventListener(
+        "focusout",
+        stopEditingOnFocusOut
+      );
+      current?.container?.addEventListener("focusout", stopEditingOnFocusOut);
+      editorRef.current = current;
+    },
+    [editorRef, startEditingOnFocus, stopEditingOnFocusOut]
+  );
 }
 
 function useEffectUpdateNodeEdited(nodeID, edited) {
-  const setAppState = useSetAppStateContext();
+  const setAppState = useSetAppStateWithoutRecordingContext();
   useEffect(() => {
     if (nodeID != null) {
       setAppState((appState) => {
@@ -185,38 +236,6 @@ function useEffectConfirmOnClickOutside(editorRef, edited, handleConfirm) {
   }, [editorRef, edited, handleConfirm]);
 }
 
-function useRefEffectControlEditingViaFocus(
-  editorRef,
-  { edited, startEditing, stopEditing }
-) {
-  const startEditingOnFocus = useCallback(() => {
-    if (edited == null) {
-      startEditing();
-    }
-  }, [edited, startEditing]);
-  const stopEditingOnFocusOut = useCallback(() => {
-    if (edited != null) {
-      stopEditing(edited);
-    }
-  }, [edited, stopEditing]);
-  return useCallback(
-    (current) => {
-      editorRef.current?.container?.removeEventListener(
-        "focusin",
-        startEditingOnFocus
-      );
-      current?.container?.addEventListener("focusin", startEditingOnFocus);
-      editorRef.current?.container?.removeEventListener(
-        "focusout",
-        stopEditingOnFocusOut
-      );
-      current?.container?.addEventListener("focusout", stopEditingOnFocusOut);
-      editorRef.current = current;
-    },
-    [editorRef, startEditingOnFocus, stopEditingOnFocusOut]
-  );
-}
-
 function Label(props) {
   return <span style={{ fontSize: 12 }}>{props.children}</span>;
 }
@@ -230,6 +249,8 @@ const CodeEditor = forwardRef(function CodeEditor(props, ref) {
     onConfirm,
     editable,
     click,
+    onUndo,
+    onRedo,
     ...other
   } = props;
   const editor = useRef(null);
@@ -241,6 +262,8 @@ const CodeEditor = forwardRef(function CodeEditor(props, ref) {
     onConfirm,
     editable,
     click,
+    onUndo,
+    onRedo,
   });
   useImperativeHandle(ref, () => ({ container, state, view }), [
     container,
@@ -280,7 +303,16 @@ const CodeEditor = forwardRef(function CodeEditor(props, ref) {
 });
 
 export function useCodeMirror(props) {
-  const { value, extensions, onChange, onConfirm, editable, click } = props;
+  const {
+    value,
+    extensions,
+    onChange,
+    onConfirm,
+    editable,
+    click,
+    onUndo,
+    onRedo,
+  } = props;
   const [container, setContainer] = useState(props.container);
   const [view, setView] = useState();
   const [state, setState] = useState();
@@ -308,7 +340,6 @@ export function useCodeMirror(props) {
     autocomplete.slice(0, -1 /*remove theme*/),
     keymap.of([
       ...defaultKeymap.filter(({ key }) => key !== "Mod-Enter"),
-      ...historyKeymap,
       ...commentKeymap,
       {
         key: "Mod-Enter",
@@ -318,6 +349,32 @@ export function useCodeMirror(props) {
           const value = doc.toString();
           onConfirm(value);
         },
+      },
+      {
+        key: "Mod-z",
+        run: (view) => {
+          if (!undo(view)) {
+            onUndo();
+          }
+        },
+        preventDefault: true,
+      },
+      {
+        key: "Mod-y",
+        mac: "Mod-Shift-z",
+        run: (view) => {
+          if (!redo(view)) {
+            onRedo();
+          }
+        },
+        preventDefault: true,
+      },
+      { key: "Mod-u", run: undoSelection, preventDefault: true },
+      {
+        key: "Alt-u",
+        mac: "Mod-Shift-u",
+        run: redoSelection,
+        preventDefault: true,
       },
     ]),
     updateListener,

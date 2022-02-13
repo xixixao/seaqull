@@ -37,3 +37,17 @@ export function onlyWarns(array) {
 export function isEqual(a, b) {
   return a.length === b.length && a.every((x, i) => b[i] === x);
 }
+
+export function reverse(a) {
+  const copy = a.slice(0);
+  copy.reverse();
+  return copy;
+}
+
+// TODO: This is used to get optimized patches out of Immer, and should
+// be only called on proxies. Whether it has bad performance remains
+// to be seen.
+export function replace(a, b) {
+  a.splice(0);
+  a.push(...b);
+}

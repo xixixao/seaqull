@@ -4,11 +4,11 @@ export function buildKeyMap(commands) {
   const keyMapFacetProvider = keymap.of(
     commands.map((command) => ({
       ...command,
-      run: ({ appState, event }) => command.run(appState, event),
+      run: ({ value, event }) => command.run(value, event),
     }))
   );
   const runHandlers =
     keyMapFacetProvider.facet.extensions.fields[0].get().handlers.keydown;
   const state = { facet: () => keyMapFacetProvider.value };
-  return (appState, event) => runHandlers(event, { state, appState, event });
+  return (value, event) => runHandlers(event, { state, value, event });
 }

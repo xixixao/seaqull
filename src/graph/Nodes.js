@@ -1,13 +1,14 @@
 import { hasTargetHandle } from "editor/react-flow/components/Handle/handler";
 import * as Arrays from "js/Arrays";
+import * as Sets from "js/Sets";
 import { doNodesOverlap } from "../editor/react-flow/utils/graph";
 import * as Edge from "./Edge";
 import * as Edges from "./Edges";
 import * as Node from "./Node";
 
 export function select(graph, nodes) {
-  graph.lastSelectedNodeIDs = graph.selectedNodeIDs;
-  graph.selectedNodeIDs = idSet(nodes);
+  Sets.replace(graph.lastSelectedNodeIDs, graph.selectedNodeIDs);
+  Sets.replace(graph.selectedNodeIDs, idSet(nodes));
 }
 
 export function alsoSelect(graph, nodes) {

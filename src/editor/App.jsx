@@ -1,4 +1,5 @@
 import * as Layout from "editor/Layout";
+import * as History from "editor/History";
 import ReactFlow, { Background, ReactFlowProvider } from "editor/react-flow";
 import { useStore } from "editor/react-flow/store/hooks";
 import {
@@ -22,6 +23,8 @@ import React, {
 import { buildKeyMap } from "./keybindings";
 import { LayoutRequestContext } from "./layoutRequest";
 import { positionToRendererPosition } from "./react-flow/utils/graph";
+import { useEffect } from "react";
+import { useAppRedo, useAppUndo } from "./historyHooks";
 
 function App({
   initialState,
@@ -71,6 +74,8 @@ const PAN_SETTINGS = {
 function Wrapper({ children, onKeyDown }) {
   const appState = useAppStateContext();
   const setAppState = useSetAppStateContext();
+  const undo = useAppUndo();
+  const redo = useAppRedo();
 
   const layoutRequestRef = useRef(null);
   useLayoutEffect(() => {
@@ -100,9 +105,47 @@ function Wrapper({ children, onKeyDown }) {
         { key: "Backspace", run: deleteSelectedNodes },
         { key: "ArrowUp", run: selectNodesViaArrow },
         { key: "ArrowDown", run: selectNodesViaArrow },
+        { key: "Mod-z", run: undo, preventDefault: true },
+        { key: "Mod-y", mac: "Mod-Shift-z", run: redo, preventDefault: true },
       ]),
-    []
+    [redo, undo]
   );
+
+  const keyDownListener = useCallback(
+    (event) => {
+      const handled = onKeyDownAppDefaults({ setAppState }, event);
+      if (handled) {
+        return;
+      }
+      setAppState((appState) => {
+        if (event.key === "Alt") {
+          appState.modes.alt = true;
+        }
+        if (!handled) {
+          onRequestLayout(onKeyDown(appState, event));
+        }
+      });
+    },
+    [onKeyDown, onKeyDownAppDefaults, onRequestLayout, setAppState]
+  );
+  const keyUpListener = useCallback(
+    (event) => {
+      setAppState((appState) => {
+        if (event.key === "Alt") {
+          appState.modes.alt = false;
+        }
+      });
+    },
+    [setAppState]
+  );
+  useEffect(() => {
+    document.addEventListener("keydown", keyDownListener);
+    document.addEventListener("keyup", keyUpListener);
+    return () => {
+      document.removeEventListener("keydown", keyDownListener);
+      document.removeEventListener("keyup", keyUpListener);
+    };
+  });
 
   return (
     <LayoutRequestContext.Provider value={onRequestLayout}>
@@ -112,30 +155,9 @@ function Wrapper({ children, onKeyDown }) {
           flexDirection: "column",
           height: "100%",
         }}
-        onKeyDown={(event) => {
-          setAppState((appState) => {
-            const handled = onKeyDownAppDefaults(appState, event);
-            if (handled) {
-              return;
-            }
-            if (event.key === "Alt") {
-              appState.modes.alt = true;
-            }
-            if (!handled) {
-              onRequestLayout(onKeyDown(appState, event));
-            }
-          });
-        }}
-        onKeyUp={(event) => {
-          setAppState((appState) => {
-            if (event.key === "Alt") {
-              appState.modes.alt = false;
-            }
-          });
-        }}
       >
         {children}
-      </div>{" "}
+      </div>
     </LayoutRequestContext.Provider>
   );
 }
@@ -245,52 +267,54 @@ const EDGE_COMPONENTS = {
   },
 };
 
-function deleteSelectedNodes(appState) {
-  if (Nodes.countSelected(appState) === 0) {
-    return;
-  }
-
-  const tightGroups = Nodes.groupBy(Nodes.selected(appState), (node) =>
-    Nodes.tightRoot(appState, node)
-  ).map((nodes) => Nodes.sortTight(appState, nodes));
-  const toSelect = tightGroups.map((nodes) => {
-    const firstNode = Arrays.first(nodes);
-
-    const parent = Nodes.tightParent(appState, firstNode);
-    const lastNode = Arrays.last(nodes);
-    const child = Nodes.tightChild(appState, lastNode);
-
-    nodes.forEach((node) => Nodes.remove(appState, node));
-
-    if (parent != null && child != null) {
-      Edges.addTightChild(appState, parent, child);
-      Layout.layoutTightStack(appState, parent);
+function deleteSelectedNodes({ setAppState }) {
+  setAppState((appState) => {
+    if (Nodes.countSelected(appState) === 0) {
+      return;
     }
 
-    return child ?? parent;
+    History.startRecording(appState);
+    const tightGroups = Nodes.groupBy(Nodes.selected(appState), (node) =>
+      Nodes.tightRoot(appState, node)
+    ).map((nodes) => Nodes.sortTight(appState, nodes));
+    const toSelect = tightGroups.map((nodes) => {
+      const firstNode = Arrays.first(nodes);
+
+      const parent = Nodes.tightParent(appState, firstNode);
+      const lastNode = Arrays.last(nodes);
+      const child = Nodes.tightChild(appState, lastNode);
+
+      nodes.forEach((node) => Nodes.remove(appState, node));
+
+      if (parent != null && child != null) {
+        Edges.addTightChild(appState, parent, child);
+        Layout.layoutTightStack(appState, parent);
+      }
+
+      return child ?? parent;
+    });
+
+    Nodes.select(
+      appState,
+      toSelect.filter((node) => node != null)
+    );
+    History.endRecording(appState);
   });
-
-  Nodes.select(
-    appState,
-    toSelect.filter((node) => node != null)
-  );
 }
 
-function selectNodesViaArrow(appState, event) {
-  Nodes.select(
-    appState,
-    Nodes.selected(appState)
-      .map(
-        event.key === "ArrowUp"
-          ? (node) => Nodes.tightParent(appState, node) ?? node
-          : (node) => Nodes.tightChild(appState, node) ?? node
-      )
-      .filter((node) => node != null)
-  );
-}
-
-function turnOnAltMode(appState) {
-  appState.modes.alt = true;
+function selectNodesViaArrow({ setAppState }, event) {
+  setAppState((appState) => {
+    Nodes.select(
+      appState,
+      Nodes.selected(appState)
+        .map(
+          event.key === "ArrowUp"
+            ? (node) => Nodes.tightParent(appState, node) ?? node
+            : (node) => Nodes.tightChild(appState, node) ?? node
+        )
+        .filter((node) => node != null)
+    );
+  });
 }
 
 export default App;

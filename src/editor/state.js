@@ -3,10 +3,16 @@ import { onlyWarns } from "js/Arrays";
 import { useContext } from "react";
 import { useCallback } from "react";
 import { createContextState, useCombinedContext } from "../react/contextState";
+import {
+  historyStack,
+  produceAndRecord,
+  produceWithoutRecording,
+} from "./History";
+import * as History from "editor/History";
 
 export const {
   state: AppStateContext,
-  useSetState: useSetAppStateContext,
+  useSetState,
   provider: AppStateContextProvider,
 } = createContextState({
   nodes: new Map(),
@@ -16,7 +22,43 @@ export const {
   lastSelectedNodeIDs: new Set(),
   highlightedNodeIDs: new Set(),
   modes: { alt: false },
+  history: { content: historyStack() },
 });
+
+// function selectPatchesForRecording(forwardPatches, reversePatches, select) {
+//   const contentChange = [
+//     forwardPatches.filter(isContentPatch),
+//     reversePatches.filter(isContentPatch),
+//   ];
+//   if (contentChange[0].length > 0) {
+//     select("content", [forwardPatches, reversePatches]);
+//   }
+// }
+
+// const isContentPatch = ({ path }) => {
+//   const field = path[0];
+//   return field === "nodes" || field === "edges";
+// };
+
+export function useSetAppStateWithoutRecordingContext() {
+  const setState = useSetState();
+  return useCallback(
+    (updater) => {
+      setState((value) => produceWithoutRecording(value, updater));
+    },
+    [setState]
+  );
+}
+
+export function useSetAppStateContext() {
+  const setState = useSetState();
+  return useCallback(
+    (updater) => {
+      setState((value) => produceAndRecord(value, updater));
+    },
+    [setState]
+  );
+}
 
 export function useSetAppStateCallback(callbackToUpdater) {
   const setAppState = useSetAppStateContext();
@@ -60,7 +102,9 @@ export function useSetNodeState(node) {
   return useCallback(
     (producer) => {
       setAppState((appState) => {
+        History.startRecording(appState);
         producer(Nodes.current(appState, node));
+        History.endRecording(appState);
       });
     },
     [setAppState, node]
