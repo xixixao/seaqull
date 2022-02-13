@@ -8,6 +8,8 @@ import { classHighlightStyle } from "@codemirror/highlight";
 import { EditorSelection, EditorState, StateEffect } from "@codemirror/state";
 import { tooltips } from "@codemirror/tooltip";
 import { drawSelection, EditorView, keymap } from "@codemirror/view";
+import { history, historyKeymap } from "@codemirror/history";
+import { commentKeymap } from "@codemirror/comment";
 import * as Node from "graph/Node";
 import * as Nodes from "graph/Nodes";
 import {
@@ -300,10 +302,14 @@ export function useCodeMirror(props) {
   let getExtensions = [
     ...extensions,
     EditorState.allowMultipleSelections.of(true),
+    history(),
     editable ? drawSelection() : [],
     tooltips({ position: "absolute" }),
     autocomplete.slice(0, -1 /*remove theme*/),
     keymap.of([
+      ...defaultKeymap.filter(({ key }) => key !== "Mod-Enter"),
+      ...historyKeymap,
+      ...commentKeymap,
       {
         key: "Mod-Enter",
         run: (view) => {
@@ -313,7 +319,6 @@ export function useCodeMirror(props) {
           onConfirm(value);
         },
       },
-      ...defaultKeymap.filter(({ key }) => key !== "Mod-Enter"),
     ]),
     updateListener,
     ResetStyles,
