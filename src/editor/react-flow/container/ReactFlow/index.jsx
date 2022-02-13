@@ -1,27 +1,25 @@
-import React, { useMemo, forwardRef } from "react";
 import cc from "classcat";
-import GraphView from "../GraphView";
-import ElementUpdater from "../../components/ElementUpdater";
+import React, { forwardRef, useMemo } from "react";
+import {
+  BezierEdge,
+  SmoothStepEdge,
+  StepEdge,
+  StraightEdge,
+} from "../../components/Edges";
 import DefaultNode from "../../components/Nodes/DefaultNode";
 import InputNode from "../../components/Nodes/InputNode";
 import OutputNode from "../../components/Nodes/OutputNode";
-import { createNodeTypes } from "../NodeRenderer/utils";
-import SelectionListener from "../../components/SelectionListener";
-import {
-  BezierEdge,
-  StepEdge,
-  SmoothStepEdge,
-  StraightEdge,
-} from "../../components/Edges";
-import { createEdgeTypes } from "../EdgeRenderer/utils";
-import Wrapper from "./Wrapper";
-import {
-  ConnectionMode,
-  ConnectionLineType,
-  PanOnScrollMode,
-} from "../../types";
 import "../../style.css";
 import "../../theme-default.css";
+import {
+  ConnectionLineType,
+  ConnectionMode,
+  PanOnScrollMode,
+} from "../../types";
+import { createEdgeTypes } from "../EdgeRenderer/utils";
+import GraphView from "../GraphView";
+import { createNodeTypes } from "../NodeRenderer/utils";
+import Wrapper from "./Wrapper";
 const defaultNodeTypes = {
   input: InputNode,
   default: DefaultNode,
@@ -60,7 +58,6 @@ const ReactFlow = forwardRef(
       onNodeDragStart,
       onNodeDrag,
       onNodeDragStop,
-      onSelectionChange,
       onSelectionDragStart,
       onSelectionDrag,
       onSelectionDragStop,
@@ -196,9 +193,6 @@ const ReactFlow = forwardRef(
             onEdgeUpdateEnd={onEdgeUpdateEnd}
             edgeUpdaterRadius={edgeUpdaterRadius}
           />
-          {onSelectionChange && (
-            <SelectionListener onSelectionChange={onSelectionChange} />
-          )}
           {children}
         </Wrapper>
       </div>

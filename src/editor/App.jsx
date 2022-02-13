@@ -168,25 +168,6 @@ function NodesPane({ children, nodeTypes, onDoubleClick }) {
   const store = useStore();
   const onRequestLayout = useContext(LayoutRequestContext);
 
-  const onSelectionChange = useCallback(
-    (elements) => {
-      const nodes = (elements ?? []).filter(
-        (element) => element.source == null
-      );
-      setAppState((appState) => {
-        if (
-          !Arrays.isEqual(
-            nodes.map(Node.id),
-            Array.from(appState.selectedNodeIDs)
-          )
-        ) {
-          Nodes.select(appState, nodes);
-        }
-      });
-    },
-    [setAppState]
-  );
-
   return (
     <Div
       css={{
@@ -213,7 +194,6 @@ function NodesPane({ children, nodeTypes, onDoubleClick }) {
       <ReactFlow
         nodeTypes={nodeTypes}
         edgeTypes={EDGE_COMPONENTS}
-        onSelectionChange={onSelectionChange}
         zoomOnDoubleClick={false}
         {...PAN_SETTINGS.MAC}
         onEdgeUpdate={(edge, { source, target }) => {
