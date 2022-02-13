@@ -26,7 +26,7 @@ import { codeMirrorStyles } from "./ui/codeMirrorStyles";
 
 export default function Input({
   extensions,
-  displayValue,
+  emptyDisplayValue,
   autoFocus,
   label,
   value,
@@ -94,7 +94,7 @@ export default function Input({
     startEditing,
     stopEditing,
   });
-  const isEmpty = (displayValue ?? value) === "";
+  const isEmpty = isBlank(emptyDisplayValue ?? value);
   return (
     <div style={{ display: "inline-block" }}>
       {label != null ? <Label>{label}</Label> : null}
@@ -127,12 +127,16 @@ export default function Input({
           extensions={extensions}
           ref={setEditorRef}
           editable={false}
-          value={displayValue ?? value}
+          value={!isEmpty && isBlank(value) ? emptyDisplayValue : value}
           onClick={startEditing}
         />
       )}
     </div>
   );
+}
+
+function isBlank(string) {
+  return /^\s*$/.test(string);
 }
 
 function stopEventPropagation(event) {

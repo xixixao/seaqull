@@ -35,7 +35,7 @@ function GroupNode() {
     <SqliteNodeUI>
       GROUP BY{" "}
       <SqliteInput
-        displayValue={hasGrouped(node) ? null : "∅"}
+        emptyDisplayValue="∅"
         schema={columnSchema(appState, node)}
         value={groupedBy(node)}
         onChange={(groupedBy) => {
@@ -47,7 +47,7 @@ function GroupNode() {
       <Box css={{ color: !hasGrouped(node) ? "$slate11" : undefined }}>
         SELECT{" "}
         <SqliteInput
-          displayValue={hasSelected(node) ? null : "*"}
+          emptyDisplayValue="*"
           schema={columnSchema(appState, node)}
           value={aggregations(node)}
           onChange={(aggregations) => {

@@ -25,7 +25,7 @@ function OrderNode() {
     <SqliteNodeUI>
       ORDER BY{" "}
       <SqliteInput
-        displayValue={!hasOrdered(node) ? "∅" : null}
+        emptyDisplayValue="∅"
         schema={columnSchema(appState, node)}
         value={orderClause(node)}
         onChange={(orderClause) => {

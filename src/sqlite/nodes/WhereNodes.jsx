@@ -18,7 +18,7 @@ function WhereNode() {
     <SqliteNodeUI>
       WHERE{" "}
       <SqliteInput
-        displayValue={!hasFilter(node) ? "∅" : null}
+        emptyDisplayValue="∅"
         schema={columnSchema(appState, node)}
         value={filters}
         onChange={(filters) => {

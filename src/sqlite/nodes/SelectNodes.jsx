@@ -30,7 +30,7 @@ function SelectNode() {
     <SqliteNodeUI>
       SELECT{" "}
       <SqliteInput
-        displayValue={hasSelected(node) ? null : "*"}
+        emptyDisplayValue="*"
         schema={columnSchema(appState, node)}
         value={selected(node)}
         onChange={(selected) => {

@@ -26,6 +26,7 @@ function JoinNode() {
   return (
     <SqliteNodeUI>
       <SqliteInput
+        emptyDisplayValue="INNER"
         value={joinType(node)}
         onChange={(joinType) => {
           setNodeState((node) => {
@@ -35,7 +36,7 @@ function JoinNode() {
       />{" "}
       JOIN ON{" "}
       <SqliteInput
-        displayValue={!hasFilter(node) ? "∅" : null}
+        emptyDisplayValue="∅"
         schema={joinColumnsSchema(appState, node)}
         value={filters}
         onChange={(filters) => {

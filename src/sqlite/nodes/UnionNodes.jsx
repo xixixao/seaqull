@@ -14,7 +14,7 @@ function UnionNode() {
     <SqliteNodeUI>
       UNION{" "}
       <SqliteInput
-        displayValue={unionType === "" ? "DISTINCT" : null}
+        emptyDisplayValue="DISTINCT"
         value={unionType}
         onChange={(unionType) => {
           setNodeState((node) => {
