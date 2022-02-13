@@ -85,6 +85,7 @@ export function addNodeAtPosition(appState, nodeData, position) {
 
 export function addDetachedNode(nodeData) {
   return (appState) => {
+    History.startRecording(appState);
     const selected = Nodes.selected(appState);
     const newNode = Nodes.newNode(appState, nodeData);
     selected.forEach((node) => {
@@ -102,6 +103,7 @@ export function replaceDetachedNode(nodeData) {
 
 function layoutChild(appState, node) {
   Layout.layoutDetached(appState, Nodes.parents(appState, node), node);
+  History.endRecording(appState);
 }
 
 function replaceNode(appState, nodeData, layout) {

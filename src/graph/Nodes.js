@@ -43,6 +43,10 @@ export function wasOnlySelected(graph, node) {
   return Node.is(lastOnlySelected, node);
 }
 
+export function all(graph) {
+  return Array.from(nodes(graph).values());
+}
+
 export function nodesWithID(graph, ids) {
   return Arrays.map(ids, (id) => nodeWithID(graph, id));
 }

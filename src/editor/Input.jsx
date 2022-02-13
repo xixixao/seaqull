@@ -148,6 +148,7 @@ export default function Input({
           editable={false}
           value={!isEmpty && isBlank(value) ? emptyDisplayValue : value}
           onClick={startEditing}
+          onKeyDown={stopEventPropagation}
         />
       )}
     </div>
@@ -356,6 +357,7 @@ export function useCodeMirror(props) {
           if (!undo(view)) {
             onUndo();
           }
+          return true;
         },
         preventDefault: true,
       },
@@ -364,8 +366,10 @@ export function useCodeMirror(props) {
         mac: "Mod-Shift-z",
         run: (view) => {
           if (!redo(view)) {
+            console.log("redo from editor");
             onRedo();
           }
+          return true;
         },
         preventDefault: true,
       },

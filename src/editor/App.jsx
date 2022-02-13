@@ -105,8 +105,9 @@ function Wrapper({ children, onKeyDown }) {
         { key: "Backspace", run: deleteSelectedNodes },
         { key: "ArrowUp", run: selectNodesViaArrow },
         { key: "ArrowDown", run: selectNodesViaArrow },
-        { key: "Mod-z", run: undo, preventDefault: true },
-        { key: "Mod-y", mac: "Mod-Shift-z", run: redo, preventDefault: true },
+        { key: "Mod-a", run: selectAllNodes },
+        { key: "Mod-z", run: undo },
+        { key: "Mod-y", mac: "Mod-Shift-z", run: redo },
       ]),
     [redo, undo]
   );
@@ -315,6 +316,13 @@ function selectNodesViaArrow({ setAppState }, event) {
         .filter((node) => node != null)
     );
   });
+}
+
+function selectAllNodes({ setAppState }, event) {
+  setAppState((appState) => {
+    Nodes.select(appState, Nodes.all(appState));
+  });
+  event.preventDefault();
 }
 
 export default App;
