@@ -18,7 +18,7 @@ import React, {
 import { DraggableCore } from "react-draggable";
 import * as Layout from "../../../Layout";
 import { useSetAppStateContext } from "../../../state";
-import { useStoreActions, useStoreState } from "../../store/hooks";
+import { useStore, useStoreActions, useStoreState } from "../../store/hooks";
 import {
   useAddSelectedElements,
   useUpdateNodeDimensions,
@@ -68,7 +68,7 @@ export default function wrapNode(NodeComponent) {
     const unsetNodesSelection = useStoreActions(
       (actions) => actions.unsetNodesSelection
     );
-    const multiSelectionActive = useStoreState((s) => s.multiSelectionActive);
+    const store = useStore();
     const nodeElement = useRef(null);
     const node = useMemo(
       () => ({ id, type, position: { x: xPos, y: yPos }, data }),
@@ -150,7 +150,6 @@ export default function wrapNode(NodeComponent) {
         selected,
         unsetNodesSelection,
         addSelectedElements,
-        multiSelectionActive,
       ]
     );
     const onDrag = useCallback(
@@ -303,10 +302,11 @@ export default function wrapNode(NodeComponent) {
       [node, onNodeDoubleClick]
     );
     const selectNode = useCallback(() => {
+      const multiSelectionActive = store.getState().multiSelectionActive;
       if (!selected && !multiSelectionActive) {
         addSelectedElements([node]);
       }
-    }, [addSelectedElements, multiSelectionActive, node, selected]);
+    }, [addSelectedElements, node, selected, store]);
     const setNodeRef = useCallback(
       (current) => {
         nodeElement.current?.removeEventListener("focus", selectNode);

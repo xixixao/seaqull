@@ -126,8 +126,7 @@ function Wrapper({ children, onKeyDown }) {
         setAppState((appState) => {
           if (event.key === "Alt") {
             appState.modes.alt = true;
-          }
-          if (!handled) {
+          } else if (!handled) {
             onRequestLayout(onKeyDown(appState, event));
           }
         });
