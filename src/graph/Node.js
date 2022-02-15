@@ -35,6 +35,10 @@ function position(graph, node) {
   return graph.positions.get(node.id);
 }
 
+export function positionOnly({ x, y }) {
+  return { x, y };
+}
+
 export function moveBy(graph, node, x, y) {
   position(graph, node).x += x;
   position(graph, node).y += y;

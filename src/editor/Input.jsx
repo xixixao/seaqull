@@ -135,6 +135,7 @@ export default function Input({
           // onConfirm={onChange}
           onConfirm={handleConfirm}
           onKeyDown={stopEventPropagation}
+          onCopy={stopEventPropagation}
         />
       ) : (
         <CodeEditor
@@ -149,6 +150,7 @@ export default function Input({
           value={!isEmpty && isBlank(value) ? emptyDisplayValue : value}
           onClick={startEditing}
           onKeyDown={stopEventPropagation}
+          onCopy={stopEventPropagation}
         />
       )}
     </div>

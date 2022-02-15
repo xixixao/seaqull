@@ -70,6 +70,15 @@ export function of(graph, node) {
   );
 }
 
+export function between(graph, nodes) {
+  const nodeIDs = Nodes.idSet(nodes);
+  return Arrays.filter(
+    edges(graph),
+    (edge) =>
+      nodeIDs.has(Edge.childID(edge)) && nodeIDs.has(Edge.parentID(edge))
+  );
+}
+
 export function edges(graph) {
   return graph.edges;
 }

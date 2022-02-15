@@ -14,6 +14,13 @@ export function newTightEdge(parent, child) {
   return { ...newEdge(parent, child), type: "tight" };
 }
 
+export function replicateEdge(edge, nodeMapping) {
+  return (isTight(edge) ? newTightEdge : newEdge)(
+    nodeMapping.get(parentID(edge)),
+    nodeMapping.get(childID(edge))
+  );
+}
+
 export function id(edge) {
   return edge.id;
 }

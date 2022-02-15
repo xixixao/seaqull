@@ -75,6 +75,15 @@ export function positionOf(graph, node) {
   return positions(graph).get(Node.id(node));
 }
 
+export function positionsOf(graph, nodes) {
+  return new Map(
+    nodes.map((node) => [
+      Node.id(node),
+      Node.positionOnly(positions(graph).get(Node.id(node))),
+    ])
+  );
+}
+
 export function nodes(graph) {
   return graph.nodes;
 }
@@ -84,6 +93,13 @@ export function newNode(graph, nodeData) {
     id: newNodeID(graph),
     data: {},
     ...nodeData,
+  };
+}
+
+export function replicateNode(graph, node) {
+  return {
+    ...node,
+    id: newNodeID(graph),
   };
 }
 

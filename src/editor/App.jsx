@@ -1,5 +1,5 @@
-import * as Layout from "editor/Layout";
 import * as History from "editor/History";
+import * as Layout from "editor/Layout";
 import ReactFlow, { Background, ReactFlowProvider } from "editor/react-flow";
 import { useStore } from "editor/react-flow/store/hooks";
 import {
@@ -10,9 +10,11 @@ import {
 import { styled } from "editor/style";
 import { PaneControls } from "editor/ui/PaneControls";
 import * as Edges from "graph/Edges";
+import * as Edge from "graph/Edge";
 import * as Node from "graph/Node";
 import * as Nodes from "graph/Nodes";
 import * as Arrays from "js/Arrays";
+import * as Serialize from "js/Serialize";
 import React, {
   useCallback,
   useContext,
@@ -20,11 +22,11 @@ import React, {
   useMemo,
   useRef,
 } from "react";
+import { useEventListener } from "../react/useEventListener";
+import { useAppRedo, useAppUndo } from "./historyHooks";
 import { buildKeyMap } from "./keybindings";
 import { LayoutRequestContext } from "./layoutRequest";
 import { positionToRendererPosition } from "./react-flow/utils/graph";
-import { useEffect } from "react";
-import { useAppRedo, useAppUndo } from "./historyHooks";
 
 function App({
   initialState,
@@ -112,41 +114,64 @@ function Wrapper({ children, onKeyDown }) {
     [redo, undo]
   );
 
-  const keyDownListener = useCallback(
-    (event) => {
-      const handled = onKeyDownAppDefaults({ setAppState }, event);
-      if (handled) {
-        return;
-      }
-      setAppState((appState) => {
-        if (event.key === "Alt") {
-          appState.modes.alt = true;
+  useEventListener(
+    document,
+    "keydown",
+    useCallback(
+      (event) => {
+        const handled = onKeyDownAppDefaults({ setAppState }, event);
+        if (handled) {
+          return;
         }
-        if (!handled) {
-          onRequestLayout(onKeyDown(appState, event));
-        }
-      });
-    },
-    [onKeyDown, onKeyDownAppDefaults, onRequestLayout, setAppState]
+        setAppState((appState) => {
+          if (event.key === "Alt") {
+            appState.modes.alt = true;
+          }
+          if (!handled) {
+            onRequestLayout(onKeyDown(appState, event));
+          }
+        });
+      },
+      [onKeyDown, onKeyDownAppDefaults, onRequestLayout, setAppState]
+    )
   );
-  const keyUpListener = useCallback(
-    (event) => {
-      setAppState((appState) => {
-        if (event.key === "Alt") {
-          appState.modes.alt = false;
-        }
-      });
-    },
-    [setAppState]
+
+  useEventListener(
+    document,
+    "keyup",
+    useCallback(
+      (event) => {
+        setAppState((appState) => {
+          if (event.key === "Alt") {
+            appState.modes.alt = false;
+          }
+        });
+      },
+      [setAppState]
+    )
   );
-  useEffect(() => {
-    document.addEventListener("keydown", keyDownListener);
-    document.addEventListener("keyup", keyUpListener);
-    return () => {
-      document.removeEventListener("keydown", keyDownListener);
-      document.removeEventListener("keyup", keyUpListener);
-    };
-  });
+  useEventListener(
+    document,
+    "copy",
+    useCallback(
+      (event) => {
+        copySelectedNodes(event, appState);
+      },
+      [appState]
+    )
+  );
+  useEventListener(
+    document,
+    "paste",
+    useCallback(
+      (event) => {
+        setAppState((appState) => {
+          pasteSelectedNodes(event, appState);
+        });
+      },
+      [setAppState]
+    )
+  );
 
   return (
     <LayoutRequestContext.Provider value={onRequestLayout}>
@@ -303,6 +328,58 @@ function selectAllNodes({ setAppState }, event) {
     Nodes.select(appState, Nodes.all(appState));
   });
   event.preventDefault();
+}
+
+function copySelectedNodes(event, appState) {
+  (async () => {
+    const nodes = Nodes.selected(appState);
+    const edges = Edges.between(appState, nodes);
+    const positions = Nodes.positionsOf(appState, nodes);
+    event.clipboardData.setData(
+      "text/plain",
+      Serialize.stringify({
+        type: "seaqull/clipboard",
+        nodes,
+        edges,
+        positions,
+      })
+    );
+    event.preventDefault();
+  })();
+}
+
+function pasteSelectedNodes(event, appState) {
+  const pastedString = event.clipboardData.getData("text/plain");
+  let pastedData = null;
+  try {
+    pastedData = Serialize.parse(pastedString);
+  } catch (e) {
+    return;
+  }
+  if (pastedData?.type !== "seaqull/clipboard") {
+    return;
+  }
+  const { nodes, edges, positions } = pastedData;
+  History.startRecording(appState);
+  const newNodes = new Map(
+    nodes.map((node) => {
+      const newNode = Nodes.replicateNode(appState, node);
+      const originalPosition = positions.get(Node.id(node));
+      Nodes.add(appState, newNode);
+      Node.move(
+        appState,
+        newNode,
+        originalPosition.x + 40,
+        originalPosition.y + 40
+      );
+      return [Node.id(node), newNode];
+    })
+  );
+  edges.forEach((edge) => {
+    Edges.add(appState, Edge.replicateEdge(edge, newNodes));
+  });
+  Nodes.select(appState, Arrays.values(newNodes));
+  History.endRecording(appState);
 }
 
 export default App;
