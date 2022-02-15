@@ -13,7 +13,7 @@ import * as Objects from "js/Objects";
 import { first, second } from "js/Arrays";
 import * as Sets from "js/Sets";
 import { getColumnNames, getQuerySelectableOrNull } from "../sqliteNodes";
-import { useAppStateWithEditorConfig } from "../sqliteState";
+import { useAppGraphWithEditorConfig } from "../sqliteState";
 import ColumnCheckbox from "../ui/ColumnCheckbox";
 import SqliteInput from "../ui/SqliteInput";
 import SqliteNodeUI from "../ui/SqliteNodeUI";
@@ -22,7 +22,7 @@ function JoinNode() {
   const node = useNode();
   const filters = nodeFilters(node);
   const setNodeState = useSetNodeState(node);
-  const appState = useAppStateWithEditorConfig();
+  const appState = useAppGraphWithEditorConfig();
   return (
     <SqliteNodeUI>
       <SqliteInput
@@ -115,7 +115,7 @@ export const JoinNodeConfig = {
   },
   // TODO: Obviously refactor this
   ColumnControl({ node, columnName, isPrimary, columnIndex }) {
-    const appState = useAppStateWithEditorConfig();
+    const appState = useAppGraphWithEditorConfig();
     const setNodeState = useSetNodeState(node);
     if (Nodes.isDeleted(appState, node)) {
       return null;

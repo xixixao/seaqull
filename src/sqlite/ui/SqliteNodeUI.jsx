@@ -9,7 +9,10 @@ import {
 } from "editor/AddNodeButton";
 import NodeUI from "editor/NodeUI";
 import { useNode } from "editor/react-flow/components/Nodes/wrapNode";
-import { useAppModesContext, useAppStateDataContext } from "editor/state";
+import {
+  useAppGraphAndSelectionContext,
+  useAppModesContext,
+} from "editor/state";
 import { Column } from "editor/ui/Column";
 import HorizontalSpace from "editor/ui/HorizontalSpace";
 import { Row } from "editor/ui/Row";
@@ -23,7 +26,7 @@ import {
   MULTIPLE_PARENT_NODES,
   TIGHT_CHILD_NODES,
 } from "../sqliteNodes";
-import { useEditorConfig } from "../sqliteState";
+import { useAppGraphWithEditorConfig } from "../sqliteState";
 
 export default function SqliteNodeUI({ hideControls, type, children }) {
   return (
@@ -39,7 +42,7 @@ export default function SqliteNodeUI({ hideControls, type, children }) {
 }
 
 function useControls(node) {
-  const appState = useAppStateDataContext();
+  const appState = useAppGraphAndSelectionContext();
   const modes = useAppModesContext();
   if (Nodes.countSelected(appState) > 2) {
     return null;
@@ -88,10 +91,9 @@ function useControls(node) {
 }
 
 function useHasProblem() {
-  const appState = useAppStateDataContext();
-  const editorConfig = useEditorConfig();
+  const appState = useAppGraphWithEditorConfig();
   const node = useNode();
-  return getHasProblem({ ...appState, editorConfig }, node);
+  return getHasProblem(appState, node);
 }
 
 export function addOrReplaceQueryStep(appState, type) {

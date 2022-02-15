@@ -95,6 +95,7 @@ const NodeRenderer = (props) => {
               Nodes.countSelected(appState) === 1
             }
             wasOnlySelected={Nodes.wasOnlySelected(appState, node)}
+            isAnySelected={Nodes.isSelecting(appState)}
             highlight={appState.highlightedNodeIDs.has(node.id)}
             isDraggable={isDraggable}
             isSelectable={isSelectable}

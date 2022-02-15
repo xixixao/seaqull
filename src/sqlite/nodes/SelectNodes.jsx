@@ -7,7 +7,7 @@ import * as Arrays from "js/Arrays";
 import { only } from "js/Arrays";
 import React from "react";
 import { getColumnNames, getQuerySelectable } from "../sqliteNodes";
-import { useAppStateWithEditorConfig } from "../sqliteState";
+import { useAppGraphWithEditorConfig } from "../sqliteState";
 import ColumnCheckbox from "../ui/ColumnCheckbox";
 import SqliteInput from "../ui/SqliteInput";
 import SqliteNodeUI from "../ui/SqliteNodeUI";
@@ -25,7 +25,7 @@ import {
 function SelectNode() {
   const node = useNode();
   const setNodeState = useSetNodeState(node);
-  const appState = useAppStateWithEditorConfig();
+  const appState = useAppGraphWithEditorConfig();
   return (
     <SqliteNodeUI>
       SELECT{" "}

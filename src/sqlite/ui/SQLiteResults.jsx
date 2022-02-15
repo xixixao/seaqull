@@ -1,4 +1,4 @@
-import { useAppStateDataContext } from "editor/state";
+import { useAppGraphAndSelectionContext } from "editor/state";
 import { keyframes, styled } from "editor/style";
 import { Box } from "editor/ui/Box";
 import { Button } from "editor/ui/Button";
@@ -19,10 +19,10 @@ import {
   getQuerySelectable,
   getResults,
 } from "../sqliteNodes";
-import { useAppStateWithEditorConfig } from "../sqliteState";
+import { useAppGraphWithSelectionAndEditorConfig } from "../sqliteState";
 
 export function SQLiteResults() {
-  const appState = useAppStateDataContext();
+  const appState = useAppGraphAndSelectionContext();
   const selected = Nodes.selected(appState);
   const singleSelectedNode = only(selected);
   return (
@@ -41,7 +41,7 @@ export function SQLiteResults() {
 }
 
 function ResultsTable() {
-  const appState = useAppStateWithEditorConfig();
+  const appState = useAppGraphWithSelectionAndEditorConfig();
   const [resultsState, setResultsState] = useState(null);
   const [updated, setUpdated] = useState();
   const [isLoading, setIsLoading] = useState(false);

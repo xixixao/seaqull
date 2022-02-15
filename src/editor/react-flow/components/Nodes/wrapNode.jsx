@@ -18,7 +18,7 @@ import React, {
 import { DraggableCore } from "react-draggable";
 import * as Layout from "../../../Layout";
 import { useSetAppStateContext } from "../../../state";
-import { useStore, useStoreActions, useStoreState } from "../../store/hooks";
+import { useStore, useStoreActions } from "../../store/hooks";
 import {
   useAddSelectedElements,
   useUpdateNodeDimensions,
@@ -36,6 +36,7 @@ export default function wrapNode(NodeComponent) {
     selected,
     onlySelected,
     wasOnlySelected,
+    isAnySelected,
     highlight,
     onClick,
     onMouseEnter,
@@ -354,6 +355,7 @@ export default function wrapNode(NodeComponent) {
       yPos,
       selected,
       wasOnlySelected,
+      isAnySelected,
       highlight,
       isConnectable,
       sourcePosition,

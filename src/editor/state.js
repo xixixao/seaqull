@@ -73,6 +73,10 @@ export function useSetAppStateCallback(callbackToUpdater) {
 }
 
 const { modes, history, ...PersistentContext } = AppStateContext;
+const { positions, highlightedNodeIDs, ...GraphAndSelectionContext } =
+  PersistentContext;
+const { lastSelectedNodeIDs, selectedNodeIDs, ...GraphContext } =
+  GraphAndSelectionContext;
 
 export function useAppStateContext() {
   return useCombinedContext(PersistentContext);
@@ -82,10 +86,12 @@ export function useAppModesContext() {
   return useContext(modes);
 }
 
-const { positions, highlightedNodeIDs, ...DataContext } = PersistentContext;
+export function useAppGraphContext() {
+  return useCombinedContext(GraphContext);
+}
 
-export function useAppStateDataContext() {
-  return useCombinedContext(DataContext);
+export function useAppGraphAndSelectionContext() {
+  return useCombinedContext(GraphAndSelectionContext);
 }
 
 export function useSetSelectedNodeState() {

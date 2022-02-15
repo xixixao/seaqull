@@ -3,7 +3,7 @@ import * as Node from "graph/Node";
 import * as Nodes from "graph/Nodes";
 import { Handle } from "./react-flow";
 import { useNode } from "./react-flow/components/Nodes/wrapNode";
-import { useAppStateDataContext } from "./state";
+import { useAppGraphContext } from "./state";
 import { styled } from "./style";
 import { Box } from "./ui/Box";
 import FloatOnHover from "./ui/FloatOnHover";
@@ -19,14 +19,14 @@ export default function NodeUI({
 }) {
   const node = useNode();
   const hasProblem = useHasProblem();
-  const appState = useAppStateDataContext();
+  const appState = useAppGraphContext();
   return (
     <div>
       <NodeWrapper
         isHighlighted={node.highlight}
         isSelected={node.selected}
         wasSelected={
-          !node.selected && !Nodes.isSelecting(appState) && node.wasOnlySelected
+          !node.selected && !node.isAnySelected && node.wasOnlySelected
         }
         hasProblem={hasProblem}
         // hasTightChild={Nodes.hasTightChild(appState, node)}
@@ -87,7 +87,7 @@ function visibleIf(bool) {
 
 function NodeUIControls({ hideControls, useControls }) {
   const node = useNode();
-  const appState = useAppStateDataContext();
+  const appState = useAppGraphContext();
   const controls = useControls(node);
   if (controls == null || node.edited || node.isDragging) {
     return null;

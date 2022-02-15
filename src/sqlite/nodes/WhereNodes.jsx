@@ -4,7 +4,7 @@ import * as Nodes from "graph/Nodes";
 import { only } from "js/Arrays";
 import React from "react";
 import { getColumnNames, getQuerySelectable } from "../sqliteNodes";
-import { useAppStateWithEditorConfig } from "../sqliteState";
+import { useAppGraphWithEditorConfig } from "../sqliteState";
 import SqliteInput from "../ui/SqliteInput";
 import SqliteNodeUI from "../ui/SqliteNodeUI";
 import { columnSchema } from "./sqliteCompletions";
@@ -13,7 +13,7 @@ function WhereNode() {
   const node = useNode();
   const filters = nodeFilters(node);
   const setNodeState = useSetNodeState(node);
-  const appState = useAppStateWithEditorConfig();
+  const appState = useAppGraphWithEditorConfig();
   return (
     <SqliteNodeUI>
       WHERE{" "}

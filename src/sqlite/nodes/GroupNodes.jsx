@@ -13,7 +13,7 @@ import * as Arrays from "js/Arrays";
 import { only } from "js/Arrays";
 import React from "react";
 import { getColumnNames, getQuerySelectable } from "../sqliteNodes";
-import { useAppStateWithEditorConfig } from "../sqliteState";
+import { useAppGraphWithEditorConfig } from "../sqliteState";
 import SqliteInput from "../ui/SqliteInput";
 import SqliteNodeUI from "../ui/SqliteNodeUI";
 import { columnSchema } from "./sqliteCompletions";
@@ -30,7 +30,7 @@ import {
 function GroupNode() {
   const node = useNode();
   const setNodeState = useSetNodeState(node);
-  const appState = useAppStateWithEditorConfig();
+  const appState = useAppGraphWithEditorConfig();
   return (
     <SqliteNodeUI>
       GROUP BY{" "}
