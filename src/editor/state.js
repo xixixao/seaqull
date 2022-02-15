@@ -82,7 +82,7 @@ export function useAppModesContext() {
   return useContext(modes);
 }
 
-const { positions, highlightedNodeIDs, ...DataContext } = AppStateContext;
+const { positions, highlightedNodeIDs, ...DataContext } = PersistentContext;
 
 export function useAppStateDataContext() {
   return useCombinedContext(DataContext);
