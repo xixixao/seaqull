@@ -1,4 +1,5 @@
 import * as Nodes from "graph/Nodes";
+import * as Node from "graph/Node";
 import { onlyWarns } from "js/Arrays";
 import { useContext } from "react";
 import { useCallback } from "react";
@@ -105,14 +106,15 @@ export function useSetSelectedNodeState() {
 
 export function useSetNodeState(node) {
   const setAppState = useSetAppStateContext();
+  const nodeID = node.id;
   return useCallback(
     (producer) => {
       setAppState((appState) => {
         History.startRecording(appState);
-        producer(Nodes.current(appState, node));
+        producer(Nodes.current(appState, Node.fake(nodeID)));
         History.endRecording(appState);
       });
     },
-    [setAppState, node]
+    [setAppState, nodeID]
   );
 }

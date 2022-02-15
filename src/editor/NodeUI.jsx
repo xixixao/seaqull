@@ -46,7 +46,7 @@ export default function NodeUI({
           position="right"
         />
       </NodeWrapper>
-      <Box
+      {/* <Box
         css={{
           position: "absolute",
           left: "100%",
@@ -55,7 +55,7 @@ export default function NodeUI({
         }}
       >
         {Node.label(node)}
-      </Box>
+      </Box> */}
       <NodeUIControls hideControls={hideControls} useControls={useControls} />
       {/* <HorizontalSpace /> */}
       {/* todo: use right click menu instead <DeleteNodeButton node={node} /> */}
