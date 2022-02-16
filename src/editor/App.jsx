@@ -99,24 +99,24 @@ function NodesPane({ children, nodeTypes, onKeyDown, onDoubleClick }) {
         }}
         tabIndex="-1"
         {...mouseHandlers}
-        onDoubleClick={(event) => {
-          setAppState((appState) => {
-            onRequestLayout(
-              onDoubleClick(
-                appState,
-                positionToRendererPosition(store, {
-                  x: event.clientX,
-                  y: event.clientY,
-                })
-              )
-            );
-          });
-        }}
       >
         <ReactFlow
           nodeTypes={nodeTypes}
           edgeTypes={EDGE_COMPONENTS}
           zoomOnDoubleClick={false}
+          onPaneDoubleClick={(event) => {
+            setAppState((appState) => {
+              onRequestLayout(
+                onDoubleClick(
+                  appState,
+                  positionToRendererPosition(store, {
+                    x: event.clientX,
+                    y: event.clientY,
+                  })
+                )
+              );
+            });
+          }}
           {...PAN_SETTINGS.MAC}
           onEdgeUpdate={(edge, { source, target }) => {
             setAppState((appState) => {
@@ -144,7 +144,6 @@ function NodesPane({ children, nodeTypes, onKeyDown, onDoubleClick }) {
         }}
         nodeBorderRadius={2}
       /> */}
-
           <div
             style={{
               position: "absolute",

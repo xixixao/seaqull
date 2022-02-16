@@ -9,6 +9,7 @@ import { useResetSelectedElements } from "../../store/reducer";
 const FlowRenderer = ({
   children,
   onPaneClick,
+  onPaneDoubleClick,
   onPaneContextMenu,
   onPaneScroll,
   onElementsRemove,
@@ -102,6 +103,7 @@ const FlowRenderer = ({
       <div
         className="react-flow__pane"
         onClick={onClick}
+        onDoubleClick={onPaneDoubleClick}
         onContextMenu={onContextMenu}
         onWheel={onWheel}
       />

@@ -67,6 +67,7 @@ const GraphView = ({
   zoomOnDoubleClick,
   paneMoveable,
   onPaneClick,
+  onPaneDoubleClick,
   onPaneScroll,
   onPaneContextMenu,
   onEdgeUpdate,
@@ -201,6 +202,7 @@ const GraphView = ({
   return (
     <FlowRenderer
       onPaneClick={onPaneClick}
+      onPaneDoubleClick={onPaneDoubleClick}
       onPaneContextMenu={onPaneContextMenu}
       onPaneScroll={onPaneScroll}
       onElementsRemove={onElementsRemove}

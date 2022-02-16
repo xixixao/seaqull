@@ -94,6 +94,7 @@ const ReactFlow = forwardRef(
       zoomOnDoubleClick = true,
       paneMoveable = true,
       onPaneClick,
+      onPaneDoubleClick,
       onPaneScroll,
       onPaneContextMenu,
       children,
@@ -177,6 +178,7 @@ const ReactFlow = forwardRef(
             panOnScrollMode={panOnScrollMode}
             paneMoveable={paneMoveable}
             onPaneClick={onPaneClick}
+            onPaneDoubleClick={onPaneDoubleClick}
             onPaneScroll={onPaneScroll}
             onPaneContextMenu={onPaneContextMenu}
             onSelectionDragStart={onSelectionDragStart}
