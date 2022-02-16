@@ -26,6 +26,7 @@ import {
 import * as History from "editor/History";
 
 export default function wrapNode(NodeComponent) {
+  const MemoizedNodeComponent = memo(NodeComponent);
   const NodeWrapper = ({
     id,
     type,
@@ -335,6 +336,14 @@ export default function wrapNode(NodeComponent) {
         return () => resizeObserver?.unobserve(currNode);
       }
     }, [resizeObserver]);
+    const nodeData = useMemo(
+      () => ({
+        id,
+        data,
+        type,
+      }),
+      [data, id, type]
+    );
     if (isHidden) {
       return null;
     }
@@ -347,7 +356,7 @@ export default function wrapNode(NodeComponent) {
         selectable: isSelectable,
       },
     ]);
-    const nodeInfo = {
+    const nodeUIData = {
       id,
       data,
       type,
@@ -389,9 +398,11 @@ export default function wrapNode(NodeComponent) {
           data-id={id}
           tabIndex={0}
         >
-          <NodeContext.Provider value={nodeInfo}>
-            <NodeComponent />
-          </NodeContext.Provider>
+          <NodeUIContext.Provider value={nodeUIData}>
+            <NodeContext.Provider value={nodeData}>
+              <MemoizedNodeComponent />
+            </NodeContext.Provider>
+          </NodeUIContext.Provider>
         </div>
       </DraggableCore>
     );
@@ -400,7 +411,12 @@ export default function wrapNode(NodeComponent) {
   return memo(NodeWrapper);
 }
 
+const NodeUIContext = createContext();
 const NodeContext = createContext();
+
+export function useNodeUIProps() {
+  return useContext(NodeUIContext);
+}
 
 export function useNode() {
   return useContext(NodeContext);

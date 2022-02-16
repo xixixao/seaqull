@@ -1,14 +1,14 @@
 import { PlusIcon } from "@modulz/radix-icons";
-import * as Node from "graph/Node";
 import * as Nodes from "graph/Nodes";
 import { Handle } from "./react-flow";
-import { useNode } from "./react-flow/components/Nodes/wrapNode";
+import {
+  useNode,
+  useNodeUIProps,
+} from "./react-flow/components/Nodes/wrapNode";
 import { useAppGraphContext } from "./state";
 import { styled } from "./style";
-import { Box } from "./ui/Box";
 import FloatOnHover from "./ui/FloatOnHover";
 import { IconButton } from "./ui/IconButton";
-import { Row } from "./ui/Row";
 
 export default function NodeUI({
   hideControls,
@@ -17,7 +17,7 @@ export default function NodeUI({
   useControls,
   useHasProblem,
 }) {
-  const node = useNode();
+  const node = useNodeUIProps();
   const hasProblem = useHasProblem();
   const appState = useAppGraphContext();
   return (
@@ -86,7 +86,7 @@ function visibleIf(bool) {
 }
 
 function NodeUIControls({ hideControls, useControls }) {
-  const node = useNode();
+  const node = useNodeUIProps();
   const appState = useAppGraphContext();
   const controls = useControls(node);
   if (controls == null || node.edited || node.isDragging) {

@@ -4,10 +4,8 @@ import {
   closeCompletion,
 } from "@codemirror/autocomplete";
 import { defaultKeymap } from "@codemirror/commands";
+import { commentKeymap } from "@codemirror/comment";
 import { classHighlightStyle } from "@codemirror/highlight";
-import { EditorSelection, EditorState, StateEffect } from "@codemirror/state";
-import { tooltips } from "@codemirror/tooltip";
-import { drawSelection, EditorView, keymap } from "@codemirror/view";
 import {
   history,
   redo,
@@ -15,7 +13,9 @@ import {
   undo,
   undoSelection,
 } from "@codemirror/history";
-import { commentKeymap } from "@codemirror/comment";
+import { EditorSelection, EditorState, StateEffect } from "@codemirror/state";
+import { tooltips } from "@codemirror/tooltip";
+import { drawSelection, EditorView, keymap } from "@codemirror/view";
 import * as Node from "graph/Node";
 import * as Nodes from "graph/Nodes";
 import {
@@ -26,6 +26,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { useAppRedo, useAppUndo } from "./historyHooks";
 import { useZoomPanHelper } from "./react-flow";
 import { useNode } from "./react-flow/components/Nodes/wrapNode";
 import {
@@ -34,7 +35,6 @@ import {
 } from "./state";
 import { Box } from "./ui/Box";
 import { codeMirrorStyles } from "./ui/codeMirrorStyles";
-import { useAppRedo, useAppUndo } from "./historyHooks";
 
 export default function Input({
   extensions,
