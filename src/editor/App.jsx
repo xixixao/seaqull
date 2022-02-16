@@ -27,6 +27,7 @@ import { useAppRedo, useAppUndo } from "./historyHooks";
 import { buildKeyMap } from "./keybindings";
 import { LayoutRequestContext } from "./layoutRequest";
 import { positionToRendererPosition } from "./react-flow/utils/graph";
+import { useState } from "react";
 
 function App({
   initialState,
@@ -38,7 +39,13 @@ function App({
 }) {
   return (
     <AppStateContextProvider initialState={initialState}>
-      <Wrapper onKeyDown={onKeyDown}>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          height: "100%",
+        }}
+      >
         <ReactFlowProvider>
           <NodesPane
             nodeTypes={nodeTypes}
@@ -57,7 +64,7 @@ function App({
         >
           {children}
         </div>
-      </Wrapper>
+      </div>
     </AppStateContextProvider>
   );
 }
@@ -73,33 +80,149 @@ const PAN_SETTINGS = {
   WINDOWS: {},
 };
 
-function Wrapper({ children, onKeyDown }) {
+function NodesPane({ children, nodeTypes, onKeyDown, onDoubleClick }) {
+  const setAppState = useSetAppStateContext();
+  const store = useStore();
+  const onRequestLayout = useLayoutRequestEffect();
+  useKeyListeners(onRequestLayout, onKeyDown);
+  const [mousePosition, mouseHandlers] = useMousePosition();
+  useClipboardListeners(mousePosition);
+
+  return (
+    <LayoutRequestContext.Provider value={onRequestLayout}>
+      <Div
+        css={{
+          height: "65%",
+          borderBottom: "1px solid $slate7",
+          // borderTop: "1px solid $slate7",
+          outline: "none",
+        }}
+        tabIndex="-1"
+        {...mouseHandlers}
+        onDoubleClick={(event) => {
+          setAppState((appState) => {
+            onRequestLayout(
+              onDoubleClick(
+                appState,
+                positionToRendererPosition(store, {
+                  x: event.clientX,
+                  y: event.clientY,
+                })
+              )
+            );
+          });
+        }}
+      >
+        <ReactFlow
+          nodeTypes={nodeTypes}
+          edgeTypes={EDGE_COMPONENTS}
+          zoomOnDoubleClick={false}
+          {...PAN_SETTINGS.MAC}
+          onEdgeUpdate={(edge, { source, target }) => {
+            setAppState((appState) => {
+              Edges.remove(appState, edge);
+              Edges.addChild(appState, Node.fake(source), Node.fake(target));
+            });
+          }}
+          // onElementsRemove={onElementsRemove}
+          // onConnect={onConnect}
+          // onLoad={onLoad}
+        >
+          {/* <MiniMap
+        nodeStrokeColor={(n) => {
+          if (n.style?.background) return n.style.background;
+          if (n.type === "input") return "#0041d0";
+          if (n.type === "output") return "#ff0072";
+          if (n.type === "default") return "#1a192b";
+
+          return "#eee";
+        }}
+        nodeColor={(n) => {
+          if (n.style?.background) return n.style.background;
+
+          return "#fff";
+        }}
+        nodeBorderRadius={2}
+      /> */}
+
+          <div
+            style={{
+              position: "absolute",
+              padding: 4,
+              zIndex: 5,
+              transform: "translate(-50%, 0)",
+              top: 0,
+              left: "50%",
+            }}
+          >
+            {children}
+          </div>
+          <PaneControls showInteractive={false} />
+          <Background color="#aaa" gap={16} />
+        </ReactFlow>
+      </Div>
+    </LayoutRequestContext.Provider>
+  );
+}
+
+const EDGE_COMPONENTS = {
+  tight: function TightEdge() {
+    return <></>;
+  },
+};
+
+function useMousePosition() {
+  const [mousePosition, setMousePosition] = useState(null);
+  const onMouseMove = (event) => {
+    setMousePosition({ x: event.clientX, y: event.clientY });
+  };
+  const onMouseLeave = () => {
+    setMousePosition(null);
+  };
+  return [mousePosition, { onMouseMove, onMouseLeave }];
+}
+
+function useClipboardListeners(mousePosition) {
+  const store = useStore();
   const appState = useAppStateContext();
   const setAppState = useSetAppStateContext();
+
+  useEventListener(
+    document,
+    "copy",
+    useCallback(
+      (event) => {
+        copySelectedNodes(event, appState);
+      },
+      [appState]
+    )
+  );
+  useEventListener(
+    document,
+    "paste",
+    useCallback(
+      (event) => {
+        setAppState((appState) => {
+          pasteSelectedNodes(
+            event,
+            appState,
+            positionToRendererPosition(
+              store,
+              mousePosition ?? { x: 100, y: 100 }
+            )
+          );
+        });
+      },
+      [mousePosition, setAppState, store]
+    )
+  );
+}
+
+function useKeyListeners(onRequestLayout, onKeyDown) {
   const undo = useAppUndo();
   const redo = useAppRedo();
-
-  const layoutRequestRef = useRef(null);
-  useLayoutEffect(() => {
-    if (layoutRequestRef.current != null) {
-      const request = layoutRequestRef.current;
-      setAppState((appState) => {
-        const [nodeID, layoutCallback] = request;
-        if (Nodes.positionWithID(appState, nodeID).height != null) {
-          const node = Nodes.nodeWithID(appState, nodeID);
-          layoutCallback(appState, node);
-        }
-      });
-      layoutRequestRef.current = null;
-    }
-  }, [appState, setAppState]);
-
-  const onRequestLayout = useCallback((request) => {
-    if (request == null) {
-      return;
-    }
-    layoutRequestRef.current = request;
-  }, []);
+  const appState = useAppStateContext();
+  const setAppState = useSetAppStateContext();
 
   const onKeyDownAppDefaults = useMemo(
     () =>
@@ -149,128 +272,34 @@ function Wrapper({ children, onKeyDown }) {
       [setAppState]
     )
   );
-  useEventListener(
-    document,
-    "copy",
-    useCallback(
-      (event) => {
-        copySelectedNodes(event, appState);
-      },
-      [appState]
-    )
-  );
-  useEventListener(
-    document,
-    "paste",
-    useCallback(
-      (event) => {
-        setAppState((appState) => {
-          pasteSelectedNodes(event, appState);
-        });
-      },
-      [setAppState]
-    )
-  );
-
-  return (
-    <LayoutRequestContext.Provider value={onRequestLayout}>
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          height: "100%",
-        }}
-      >
-        {children}
-      </div>
-    </LayoutRequestContext.Provider>
-  );
+  return { appState, setAppState };
 }
 
-function NodesPane({ children, nodeTypes, onDoubleClick }) {
+function useLayoutRequestEffect() {
+  const appState = useAppStateContext();
   const setAppState = useSetAppStateContext();
-  const store = useStore();
-  const onRequestLayout = useContext(LayoutRequestContext);
+  const layoutRequestRef = useRef(null);
+  useLayoutEffect(() => {
+    if (layoutRequestRef.current != null) {
+      const request = layoutRequestRef.current;
+      setAppState((appState) => {
+        const [nodeID, layoutCallback] = request;
+        if (Nodes.positionWithID(appState, nodeID).height != null) {
+          const node = Nodes.nodeWithID(appState, nodeID);
+          layoutCallback(appState, node);
+        }
+      });
+      layoutRequestRef.current = null;
+    }
+  }, [appState, setAppState]);
 
-  return (
-    <Div
-      css={{
-        height: "65%",
-        borderBottom: "1px solid $slate7",
-        // borderTop: "1px solid $slate7",
-        outline: "none",
-      }}
-      tabIndex="-1"
-      onDoubleClick={(event) => {
-        setAppState((appState) => {
-          onRequestLayout(
-            onDoubleClick(
-              appState,
-              positionToRendererPosition(store, {
-                x: event.clientX,
-                y: event.clientY,
-              })
-            )
-          );
-        });
-      }}
-    >
-      <ReactFlow
-        nodeTypes={nodeTypes}
-        edgeTypes={EDGE_COMPONENTS}
-        zoomOnDoubleClick={false}
-        {...PAN_SETTINGS.MAC}
-        onEdgeUpdate={(edge, { source, target }) => {
-          setAppState((appState) => {
-            Edges.remove(appState, edge);
-            Edges.addChild(appState, Node.fake(source), Node.fake(target));
-          });
-        }}
-        // onElementsRemove={onElementsRemove}
-        // onConnect={onConnect}
-        // onLoad={onLoad}
-      >
-        {/* <MiniMap
-        nodeStrokeColor={(n) => {
-          if (n.style?.background) return n.style.background;
-          if (n.type === "input") return "#0041d0";
-          if (n.type === "output") return "#ff0072";
-          if (n.type === "default") return "#1a192b";
-
-          return "#eee";
-        }}
-        nodeColor={(n) => {
-          if (n.style?.background) return n.style.background;
-
-          return "#fff";
-        }}
-        nodeBorderRadius={2}
-      /> */}
-
-        <div
-          style={{
-            position: "absolute",
-            padding: 4,
-            zIndex: 5,
-            transform: "translate(-50%, 0)",
-            top: 0,
-            left: "50%",
-          }}
-        >
-          {children}
-        </div>
-        <PaneControls showInteractive={false} />
-        <Background color="#aaa" gap={16} />
-      </ReactFlow>
-    </Div>
-  );
+  return useCallback((request) => {
+    if (request == null) {
+      return;
+    }
+    layoutRequestRef.current = request;
+  }, []);
 }
-
-const EDGE_COMPONENTS = {
-  tight: function TightEdge() {
-    return <></>;
-  },
-};
 
 function deleteSelectedNodes({ setAppState }) {
   setAppState((appState) => {
@@ -332,6 +361,9 @@ function selectAllNodes({ setAppState }, event) {
 function copySelectedNodes(event, appState) {
   (async () => {
     const nodes = Nodes.selected(appState);
+    if (nodes.length === 0) {
+      return;
+    }
     const edges = Edges.between(appState, nodes);
     const positions = Nodes.positionsOf(appState, nodes);
     event.clipboardData.setData(
@@ -347,7 +379,7 @@ function copySelectedNodes(event, appState) {
   })();
 }
 
-function pasteSelectedNodes(event, appState) {
+function pasteSelectedNodes(event, appState, position) {
   const pastedString = event.clipboardData.getData("text/plain");
   let pastedData = null;
   try {
@@ -359,6 +391,8 @@ function pasteSelectedNodes(event, appState) {
     return;
   }
   const { nodes, edges, positions } = pastedData;
+  const anchor = positions.get(Node.id(Arrays.first(nodes)));
+  const offset = { x: position.x - anchor.x, y: position.y - anchor.y };
   History.startRecording(appState);
   const newNodes = new Map(
     nodes.map((node) => {
@@ -368,8 +402,8 @@ function pasteSelectedNodes(event, appState) {
       Node.move(
         appState,
         newNode,
-        originalPosition.x + 40,
-        originalPosition.y + 40
+        originalPosition.x + offset.x - 10,
+        originalPosition.y + offset.y - 10
       );
       return [Node.id(node), newNode];
     })
