@@ -452,6 +452,8 @@ globalCss({
     position: "absolute",
     top: 0,
     left: 0,
+    background: "rgba(0, 89, 220, 0.08)",
+    border: "1px dotted rgba(0, 89, 220, 0.8)",
   },
 
   ".react-flow__edges": {
@@ -478,16 +480,34 @@ globalCss({
 
   ".react-flow__edge-path": {
     fill: "none",
+    stroke: "#b1b1b7",
+    strokeWidth: 1,
+    "&.selected": {
+      ".react-flow__edge-path": {
+        stroke: "#555",
+      },
+    },
+
+    "&.animated path": {
+      strokeDasharray: 5,
+      animation: "dashdraw 0.5s linear infinite",
+    },
+
+    "&.updating": {
+      ".react-flow__edge-path": {
+        stroke: "#777",
+      },
+    },
   },
 
-  ".react-flow__edge-textwrapper": {
-    pointerEvents: "all",
-  },
+  // ".react-flow__edge-textwrapper": {
+  //   pointerEvents: "all",
+  // },
 
-  ".react-flow__edge-text": {
-    pointerEvents: "none",
-    userSelect: "none",
-  },
+  // ".react-flow__edge-text": {
+  //   pointerEvents: "none",
+  //   userSelect: "none",
+  // },
 
   ".react-flow__connection": {
     pointerEvents: "none",
@@ -500,6 +520,8 @@ globalCss({
 
   ".react-flow__connection-path": {
     fill: "none",
+    stroke: "#b1b1b7",
+    strokeWidth: 1,
   },
 
   ".react-flow__nodes": {
@@ -517,6 +539,7 @@ globalCss({
     pointerEvents: "all",
     transformOrigin: "0 0",
     outline: "none",
+    cursor: "grab",
   },
 
   ".react-flow__nodesselection": {
@@ -541,7 +564,15 @@ globalCss({
 
     "&.connectable": {
       pointerEvents: "all",
+      cursor: "crosshair",
     },
+
+    position: "absolute",
+    width: "6px",
+    height: "6px",
+    background: "#555",
+    border: "1px solid white",
+    borderRadius: "100%",
   },
 
   ".react-flow__handle-bottom": {
@@ -582,4 +613,163 @@ globalCss({
   //   bottom: '10px',
   //   right: '10px',
   // },
+
+  // TODO: Convert to proper components
+  // ".react-flow__selection": {
+  //   background: "rgba(0, 89, 220, 0.08)",
+  //   border: "1px dotted rgba(0, 89, 220, 0.8)",
+  // },
+
+  // Moved up
+  // ".react-flow__edge-path": {
+  //   stroke: "#b1b1b7",
+  //   strokeWidth: 1,
+  // },
+  // ".react-flow__edge-text": {
+  //   fontSize: "10px",
+  // },
+  // ".react-flow__edge-textbg": {
+  //   fill: "white",
+  // },
+  // ".react-flow__connection-path": {
+  //   stroke: "#b1b1b7",
+  //   strokeWidth: 1,
+  // },
+  // ".react-flow__node": {
+  //   cursor: "grab",
+  // },
+
+  // '.react-flow__node-input',
+  // '.react-flow__node-output'
+  // ".react-flow__node-default": {
+  //   padding: "10px",
+  //   borderRadius: "3px",
+  //   width: "150px",
+  //   fontSize: "12px",
+  //   color: "#222",
+  //   textAlign: "center",
+  //   borderWidth: "1px",
+  //   borderStyle: "solid",
+
+  //   background: "#fff",
+  //   borderColor: "#1a192b",
+
+  //   "&.selected": {
+  //     boxShadow: "0 0 0 0.5px #1a192b",
+  //   },
+  //   "&.selected:hover": {
+  //     boxShadow: "0 0 0 0.5px #1a192b",
+  //   },
+
+  //   ".react-flow__handle": {
+  //     background: "#1a192b",
+  //   },
+  // },
+
+  // '.react-flow__node-input.selectable',
+  // '.react-flow__node-output.selectable'
+  ".react-flow__node-default.selectable": {
+    "&:hover": {
+      // TODO: make it more prominent
+      boxShadow: "0 1px 4px 1px rgba(0, 0, 0, 0.08)",
+    },
+  },
+
+  // '.react-flow__node-input': {
+  //   background: '#fff',
+  //   borderColor: '#0041d0',
+
+  //   '&.selected': {
+  //     boxShadow: '0 0 0 0.5px #0041d0',
+  //   },
+  //   '&.selected:hover': {
+  //     boxShadow: '0 0 0 0.5px #0041d0',
+  //   },
+
+  //   '.react-flow__handle': {
+  //     background: '#0041d0',
+  //   },
+  // },
+
+  // ".react-flow__node-default": {
+  //   background: "#fff",
+  //   borderColor: "#1a192b",
+
+  //   "&.selected": {
+  //     boxShadow: "0 0 0 0.5px #1a192b",
+  //   },
+  //   "&.selected:hover": {
+  //     boxShadow: "0 0 0 0.5px #1a192b",
+  //   },
+
+  //   ".react-flow__handle": {
+  //     background: "#1a192b",
+  //   },
+  // },
+
+  // '.react-flow__node-output': {
+  //   background: '#fff',
+  //   borderColor: '#ff0072',
+
+  //   '&.selected': {
+  //     boxShadow: '0 0 0 0.5px #ff0072',
+  //   },
+  //   '&.selected:hover': {
+  //     boxShadow: '0 0 0 0.5px #ff0072',
+  //   },
+
+  //   '.react-flow__handle': {
+  //     background: '#ff0072',
+  //   },
+  // },
+
+  ".react-flow__nodesselection-rect": {
+    background: "rgba(0, 89, 220, 0.08)",
+    border: "1px dotted rgba(0, 89, 220, 0.8)",
+  },
+
+  // Moved up
+  // '.react-flow__handle': {
+  //   position: 'absolute',
+  //   width: '6px',
+  //   height: '6px',
+  //   background: '#555',
+  //   border: '1px solid white',
+  //   borderRadius: '100%',
+
+  //   '&.connectable': {
+  //     cursor: 'crosshair',
+  //   },
+  // },
+
+  // '.react-flow__minimap': {
+  //   backgroundColor: '#fff',
+  // },
+
+  ".react-flow__controls": {
+    boxShadow: "0 0 2px 1px rgba(0, 0, 0, 0.08)",
+  },
+
+  ".react-flow__controls-button": {
+    background: "#fefefe",
+    borderBottom: "1px solid #eee",
+    boxSizing: "content-box",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    width: "16px",
+    height: "16px",
+    cursor: "pointer",
+    userSelect: "none",
+    padding: "5px",
+  },
+
+  ".react-flow__controls-button svg": {
+    maxWidth: "12px",
+    maxHeight: "12px",
+  },
+
+  ".react-flow__controls-button:hover": {
+    background: "#f4f4f4",
+  },
 })();

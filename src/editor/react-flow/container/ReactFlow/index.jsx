@@ -9,7 +9,6 @@ import {
 import DefaultNode from "../../components/Nodes/DefaultNode";
 import InputNode from "../../components/Nodes/InputNode";
 import OutputNode from "../../components/Nodes/OutputNode";
-import "../../theme-default.css";
 import {
   ConnectionLineType,
   ConnectionMode,
