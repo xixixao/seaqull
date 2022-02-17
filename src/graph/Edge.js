@@ -1,12 +1,13 @@
 import * as Node from "./Node";
 
-export function newEdge(parent, child) {
+export function newEdge(parent, child, childHandleIndex) {
   const parentID = Node.id(parent);
   const childID = Node.id(child);
   return {
     id: `e${parentID}${childID}`,
     parentID,
     childID,
+    targetHandle: childHandleIndex,
   };
 }
 

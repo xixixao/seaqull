@@ -18,7 +18,11 @@ export function layoutStandalone(graph, node) {
   const NODE_HORIZONTAL_OFFSET = 30;
 
   const maxX = Math.max(
-    ...Arrays.map(Nodes.positions(graph), ({ x, width }) => x + width)
+    0,
+    ...Arrays.filter(
+      Nodes.positions(graph),
+      (_, id) => !Node.hasID(node, id)
+    ).map(({ x, width }) => x + width)
   );
 
   Node.move(graph, node, maxX + NODE_HORIZONTAL_OFFSET, INIT_Y);

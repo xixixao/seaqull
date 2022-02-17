@@ -88,8 +88,8 @@ export function addDetachedNode(nodeData) {
     History.startRecording(appState);
     const selected = Nodes.selected(appState);
     const newNode = Nodes.newNode(appState, nodeData);
-    selected.forEach((node) => {
-      Edges.addChild(appState, node, newNode);
+    selected.forEach((node, i) => {
+      Edges.addChild(appState, node, newNode, String(i));
     });
     Nodes.add(appState, newNode);
     Nodes.select(appState, [newNode]);

@@ -1,10 +1,8 @@
 import { PlusIcon } from "@modulz/radix-icons";
 import * as Nodes from "graph/Nodes";
+import * as Edges from "graph/Edges";
 import { Handle } from "./react-flow";
-import {
-  useNode,
-  useNodeUIProps,
-} from "./react-flow/components/Nodes/wrapNode";
+import { useNodeUIProps } from "./react-flow/components/Nodes/wrapNode";
 import { useAppGraphContext } from "./state";
 import { styled } from "./style";
 import FloatOnHover from "./ui/FloatOnHover";
@@ -20,6 +18,7 @@ export default function NodeUI({
   const node = useNodeUIProps();
   const hasProblem = useHasProblem();
   const appState = useAppGraphContext();
+  const hasMoreParents = Edges.detachedParents(appState, node).length > 1;
   return (
     <div>
       <NodeWrapper
@@ -34,11 +33,26 @@ export default function NodeUI({
       >
         {children}
         {type !== "output" ? (
-          <Handle
-            style={visibleIf(Nodes.hasDetachedParents(appState, node))}
-            type="target"
-            position="left"
-          />
+          <>
+            <Handle
+              id="0"
+              style={{
+                ...visibleIf(Nodes.hasDetachedParents(appState, node)),
+                top: hasMoreParents ? "8px" : "50%",
+              }}
+              type="target"
+              position="left"
+            />
+            <Handle
+              id="1"
+              style={{
+                ...visibleIf(hasMoreParents),
+                top: "calc(100% - 8px)",
+              }}
+              type="target"
+              position="left"
+            />
+          </>
         ) : null}
         <Handle
           style={visibleIf(Nodes.hasDetachedChildren(appState, node))}

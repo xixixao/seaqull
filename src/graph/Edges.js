@@ -99,8 +99,8 @@ export function addChildren(graph, parent, children) {
   });
 }
 
-export function addChild(graph, parent, child) {
-  add(graph, Edge.newEdge(parent, child));
+export function addChild(graph, parent, child, childHandleIndex) {
+  add(graph, Edge.newEdge(parent, child, childHandleIndex));
 }
 
 export function addTightChild(graph, parent, child) {
