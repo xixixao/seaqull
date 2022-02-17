@@ -377,6 +377,14 @@ export const darkTheme = createTheme("dark-theme", {
   },
 });
 
+const absoluteFill = {
+  width: "100%",
+  height: "100%",
+  position: "absolute",
+  top: 0,
+  left: 0,
+};
+
 globalCss({
   // Reset CSS: https://www.joshwcomeau.com/css/custom-css-reset/
   "*, *::before, *::after": {
@@ -429,4 +437,149 @@ globalCss({
   "tbody tr": {
     borderBottom: "1px solid $slate3",
   },
+
+  // TODO: Convert to proper components
+  ".react-flow": {
+    width: "100%",
+    height: "100%",
+    position: "relative",
+    overflow: "hidden",
+  },
+  ".react-flow__renderer": { ...absoluteFill, zIndex: 4 },
+  ".react-flow__pane": { ...absoluteFill, zIndex: 1 },
+  ".react-flow__selectionpane": { ...absoluteFill, zIndex: 5 },
+  ".react-flow__selection": {
+    position: "absolute",
+    top: 0,
+    left: 0,
+  },
+
+  ".react-flow__edges": {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    pointerEvents: "none",
+    zIndex: 2,
+  },
+
+  ".react-flow__edge": {
+    pointerEvents: "visibleStroke",
+
+    "&.inactive": {
+      pointerEvents: "none",
+    },
+  },
+
+  // @keyframes dashdraw {
+  //   from {
+  //     stroke-dashoffset: 10,
+  //   },
+  // },
+
+  ".react-flow__edge-path": {
+    fill: "none",
+  },
+
+  ".react-flow__edge-textwrapper": {
+    pointerEvents: "all",
+  },
+
+  ".react-flow__edge-text": {
+    pointerEvents: "none",
+    userSelect: "none",
+  },
+
+  ".react-flow__connection": {
+    pointerEvents: "none",
+
+    ".animated": {
+      strokeDasharray: 5,
+      animation: "dashdraw 0.5s linear infinite",
+    },
+  },
+
+  ".react-flow__connection-path": {
+    fill: "none",
+  },
+
+  ".react-flow__nodes": {
+    position: "absolute",
+    width: "100%",
+    height: "100%",
+    pointerEvents: "none",
+    transformOrigin: "0 0",
+    zIndex: 3,
+  },
+
+  ".react-flow__node": {
+    position: "absolute",
+    userSelect: "none",
+    pointerEvents: "all",
+    transformOrigin: "0 0",
+    outline: "none",
+  },
+
+  ".react-flow__nodesselection": {
+    zIndex: 3,
+    position: "absolute",
+    width: "100%",
+    height: "100%",
+    top: 0,
+    left: 0,
+    transformOrigin: "left top",
+    pointerEvents: "none",
+
+    // ".react-flow__nodesselection-rect": {
+    //   position: "absolute",
+    //   pointerEvents: "all",
+    //   cursor: "grab",
+    // },
+  },
+
+  ".react-flow__handle": {
+    pointerEvents: "none",
+
+    "&.connectable": {
+      pointerEvents: "all",
+    },
+  },
+
+  ".react-flow__handle-bottom": {
+    top: "auto",
+    left: "50%",
+    bottom: "-4px",
+    transform: "translate(-50%, 0)",
+  },
+
+  ".react-flow__handle-top": {
+    left: "50%",
+    top: "-4px",
+    transform: "translate(-50%, 0)",
+  },
+
+  ".react-flow__handle-left": {
+    top: "50%",
+    left: "-4px",
+    transform: "translate(0, -50%)",
+  },
+
+  ".react-flow__handle-right": {
+    right: "-4px",
+    top: "50%",
+    transform: "translate(0, -50%)",
+  },
+
+  ".react-flow__edgeupdater": {
+    cursor: "move",
+    pointerEvents: "all",
+  },
+
+  ".react-flow__background": absoluteFill,
+
+  // '.react-flow__minimap': {
+  //   position: 'absolute',
+  //   zIndex: 5,
+  //   bottom: '10px',
+  //   right: '10px',
+  // },
 })();
