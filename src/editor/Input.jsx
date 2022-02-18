@@ -335,7 +335,7 @@ export function useCodeMirror(props) {
   });
   const autocomplete = autocompletion();
   let getExtensions = [
-    ...extensions,
+    ...(extensions ?? []),
     EditorState.allowMultipleSelections.of(true),
     history(),
     editable ? drawSelection() : [],

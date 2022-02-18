@@ -9,14 +9,13 @@ import FloatOnHover from "./ui/FloatOnHover";
 import { IconButton } from "./ui/IconButton";
 
 export default function NodeUI({
+  hasProblem,
   hideControls,
   children,
   type,
   useControls,
-  useHasProblem,
 }) {
   const node = useNodeUIProps();
-  const hasProblem = useHasProblem();
   const appState = useAppGraphContext();
   const hasMoreParents = Edges.detachedParents(appState, node).length > 1;
   return (

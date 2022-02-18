@@ -1,13 +1,13 @@
 import * as Nodes from "graph/Nodes";
 import * as Arrays from "js/Arrays";
-import { getColumnNames, getQuerySelectableOrNull } from "../sqliteNodes";
-import SqliteNodeUI from "../ui/SqliteNodeUI";
+import { getColumnNames, getQuerySelectableOrNull } from "../sqlNodes";
+import SQLNodeUI from "../ui/SQLNodeUI";
 
 function ExceptNode() {
-  return <SqliteNodeUI>EXCEPT</SqliteNodeUI>;
+  return <SQLNodeUI>EXCEPT</SQLNodeUI>;
 }
 
-export const ExceptNodeConfig = {
+export const SQLExceptNodeConfig = {
   Component: ExceptNode,
   emptyNodeData: empty,
   hasProblem(appState, node) {
@@ -24,7 +24,7 @@ export const ExceptNodeConfig = {
     return sql(appState, "INTERSECT", a, b);
   },
   querySelectable(appState, node) {
-    return ExceptNodeConfig.query(appState, node);
+    return SQLExceptNodeConfig.query(appState, node);
   },
   columnNames(appState, node) {
     const parent = Arrays.first(Nodes.parents(appState, node));

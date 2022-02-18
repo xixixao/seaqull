@@ -1,19 +1,19 @@
 import { useNode } from "editor/react-flow/components/Nodes/wrapNode";
-import { useSetNodeState } from "editor/state";
+import { useAppGraphContext, useSetNodeState } from "editor/state";
 import * as Nodes from "graph/Nodes";
 import * as Arrays from "js/Arrays";
-import { getColumnNames, getQuerySelectableOrNull } from "../sqliteNodes";
-import SqliteInput from "../ui/SqliteInput";
-import SqliteNodeUI from "../ui/SqliteNodeUI";
+import { getColumnNames, getQuerySelectableOrNull } from "../sqlNodes";
+import Input from "editor/Input";
+import SQLNodeUI from "../ui/SQLNodeUI";
 
 function UnionNode() {
   const node = useNode();
   const unionType = nodeUnionType(node);
   const setNodeState = useSetNodeState(node);
   return (
-    <SqliteNodeUI>
+    <SQLNodeUI>
       UNION{" "}
-      <SqliteInput
+      <Input
         emptyDisplayValue="DISTINCT"
         value={unionType}
         onChange={(unionType) => {
@@ -22,14 +22,16 @@ function UnionNode() {
           });
         }}
       />
-    </SqliteNodeUI>
+    </SQLNodeUI>
   );
 }
 
-export const UnionNodeConfig = {
+export const SQLUnionNodeConfig = {
   Component: UnionNode,
   emptyNodeData: empty,
-  hasProblem(appState, node) {
+  useHasProblem() {
+    const appState = useAppGraphContext();
+    const node = useNode();
     return Nodes.parents(appState, node).length !== 2;
   },
   query(appState, node) {
@@ -38,7 +40,7 @@ export const UnionNodeConfig = {
     return sql(appState, nodeUnionType(node), a, b);
   },
   querySelectable(appState, node) {
-    return UnionNodeConfig.query(appState, node);
+    return SQLUnionNodeConfig.query(appState, node);
   },
   columnNames(appState, node) {
     const parent = Arrays.first(Nodes.parents(appState, node));

@@ -184,6 +184,7 @@ function useMousePosition() {
 function useClipboardListeners(mousePosition) {
   const store = useStore();
   const appState = useAppStateContext();
+  console.log(appState);
   const setAppState = useSetAppStateContext();
 
   useEventListener(

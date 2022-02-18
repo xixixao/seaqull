@@ -126,6 +126,10 @@ export function hasParents(graph, node) {
   return Edges.parents(graph, node).length > 0;
 }
 
+export function hasOnlyParent(graph, node) {
+  return Edges.parents(graph, node).length === 1;
+}
+
 export function hasDetachedParents(graph, node) {
   return Edges.detachedParents(graph, node).length > 0;
 }

@@ -1,13 +1,13 @@
 import * as Nodes from "graph/Nodes";
 import * as Arrays from "js/Arrays";
-import { getColumnNames, getQuerySelectableOrNull } from "../sqliteNodes";
-import SqliteNodeUI from "../ui/SqliteNodeUI";
+import { getColumnNames, getQuerySelectableOrNull } from "../sqlNodes";
+import SQLNodeUI from "../ui/SQLNodeUI";
 
 function IntersectNode() {
-  return <SqliteNodeUI>INTERSECT</SqliteNodeUI>;
+  return <SQLNodeUI>INTERSECT</SQLNodeUI>;
 }
 
-export const IntersectNodeConfig = {
+export const SQLIntersectNodeConfig = {
   Component: IntersectNode,
   emptyNodeData: empty,
   hasProblem(appState, node) {
@@ -26,7 +26,7 @@ export const IntersectNodeConfig = {
       SELECT * FROM (${sql(appState, "EXCEPT", b, a)})`;
   },
   querySelectable(appState, node) {
-    return IntersectNodeConfig.query(appState, node);
+    return SQLIntersectNodeConfig.query(appState, node);
   },
   columnNames(appState, node) {
     const parent = Arrays.first(Nodes.parents(appState, node));

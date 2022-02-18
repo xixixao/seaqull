@@ -20,21 +20,23 @@ import VerticalSpace from "editor/ui/VerticalSpace";
 import * as Nodes from "graph/Nodes";
 import * as Arrays from "js/Arrays";
 import { Fragment } from "react";
+import { useNodeConfigs } from "../SQLNodeConfigsProvider";
 import {
   getEmptyNode,
-  getHasProblem,
   MULTIPLE_PARENT_NODES,
   TIGHT_CHILD_NODES,
-} from "../sqliteNodes";
-import { useAppGraphWithEditorConfig } from "../sqliteState";
+  useNodeConfig,
+} from "../sqlNodes";
 
-export default function SqliteNodeUI({ hideControls, type, children }) {
+export default function SQLNodeUI({ hideControls, type, children }) {
+  const node = useNode();
+  const hasProblem = useNodeConfig(node).useHasProblem?.(node);
   return (
     <NodeUI
+      hasProblem={hasProblem}
       hideControls={hideControls}
       type={type}
       useControls={useControls}
-      useHasProblem={useHasProblem}
     >
       {children}
     </NodeUI>
@@ -90,24 +92,16 @@ function useControls(node) {
   );
 }
 
-function useHasProblem() {
-  const appState = useAppGraphWithEditorConfig();
-  const node = useNode();
-  return getHasProblem(appState, node);
-}
-
-export function addOrReplaceQueryStep(appState, type) {
-  return (
-    isShouldReplaceMode(appState.modes) ? replaceTightNode : addTightNode
-  )(getEmptyNode(type))(appState);
-}
-
 function TightChildStepButtons({ action, icon }) {
+  const nodeConfigs = useNodeConfigs();
   return (
     <>
       {Arrays.map(TIGHT_CHILD_NODES, ({ label }, type) => (
         <Fragment key={type}>
-          <AddNodeButton icon={icon} onAdd={action(getEmptyNode(type))}>
+          <AddNodeButton
+            icon={icon}
+            onAdd={action(getEmptyNode({ nodeConfigs }, type))}
+          >
             {label}
           </AddNodeButton>
           <HorizontalSpace />
@@ -118,11 +112,15 @@ function TightChildStepButtons({ action, icon }) {
 }
 
 function MultipleParentStepButtons({ action, icon }) {
+  const nodeConfigs = useNodeConfigs();
   return (
     <>
       {Arrays.map(MULTIPLE_PARENT_NODES, ({ label }, type) => (
         <Fragment key={type}>
-          <AddNodeButton icon={icon} onAdd={action(getEmptyNode(type))}>
+          <AddNodeButton
+            icon={icon}
+            onAdd={action(getEmptyNode({ nodeConfigs }, type))}
+          >
             {label}
           </AddNodeButton>
           <HorizontalSpace />
@@ -133,14 +131,41 @@ function MultipleParentStepButtons({ action, icon }) {
 }
 
 export function AddFromNodeButton() {
+  const nodeConfigs = useNodeConfigs();
   return (
     <AddNodeButton
       icon={<PlusIcon />}
-      onAdd={addStandaloneNode(getEmptyNode("from"))}
+      onAdd={addStandaloneNode(getEmptyNode({ nodeConfigs }, "from"))}
     >
       FROM
     </AddNodeButton>
   );
+}
+
+const KEY_LOOKUP = new Map(
+  Arrays.map(TIGHT_CHILD_NODES, ({ key }, type) => [key, type])
+);
+
+export function addNodeFromKey(nodeConfigs) {
+  return (appState, event) => {
+    const selectedNode = Arrays.only(Nodes.selected(appState));
+    if (selectedNode == null) {
+      return;
+    }
+    const type = KEY_LOOKUP.get(
+      event.altKey ? event.code.substr(3, 1).toLowerCase() : event.key
+    );
+    if (type == null) {
+      return;
+    }
+    return addOrReplaceQueryStep(appState, nodeConfigs, type);
+  };
+}
+
+function addOrReplaceQueryStep(appState, nodeConfigs, type) {
+  return (
+    isShouldReplaceMode(appState.modes) ? replaceTightNode : addTightNode
+  )(getEmptyNode({ nodeConfigs }, type))(appState);
 }
 
 function isShouldReplaceMode(modes) {

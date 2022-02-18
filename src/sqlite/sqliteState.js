@@ -4,6 +4,7 @@ import {
 } from "editor/state";
 import { useContext, useMemo } from "react";
 import { createContextState } from "../react/contextState";
+import { NODE_CONFIGS } from "./sqliteNodes";
 
 export const {
   state: SQLiteStateContext,
@@ -29,7 +30,7 @@ export function useAppGraphWithEditorConfig() {
   const appStateData = useAppGraphContext();
   const editorConfig = useEditorConfig();
   return useMemo(
-    () => ({ ...appStateData, editorConfig }),
+    () => ({ ...appStateData, editorConfig, nodeConfigs: NODE_CONFIGS }),
     [appStateData, editorConfig]
   );
 }
@@ -38,7 +39,7 @@ export function useAppGraphWithSelectionAndEditorConfig() {
   const appStateData = useAppGraphAndSelectionContext();
   const editorConfig = useEditorConfig();
   return useMemo(
-    () => ({ ...appStateData, editorConfig }),
+    () => ({ ...appStateData, editorConfig, nodeConfigs: NODE_CONFIGS }),
     [appStateData, editorConfig]
   );
 }
