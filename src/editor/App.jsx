@@ -9,25 +9,24 @@ import {
 } from "editor/state";
 import { styled } from "editor/style";
 import { PaneControls } from "editor/ui/PaneControls";
-import * as Edges from "graph/Edges";
 import * as Edge from "graph/Edge";
+import * as Edges from "graph/Edges";
 import * as Node from "graph/Node";
 import * as Nodes from "graph/Nodes";
 import * as Arrays from "js/Arrays";
 import * as Serialize from "js/Serialize";
 import React, {
   useCallback,
-  useContext,
   useLayoutEffect,
   useMemo,
   useRef,
+  useState,
 } from "react";
 import { useEventListener } from "../react/useEventListener";
 import { useAppRedo, useAppUndo } from "./historyHooks";
 import { buildKeyMap } from "./keybindings";
 import { LayoutRequestContext } from "./layoutRequest";
 import { positionToRendererPosition } from "./react-flow/utils/graph";
-import { useState } from "react";
 
 function App({
   initialState,
@@ -121,7 +120,12 @@ function NodesPane({ children, nodeTypes, onKeyDown, onDoubleClick }) {
           onEdgeUpdate={(edge, { source, target }) => {
             setAppState((appState) => {
               Edges.remove(appState, edge);
-              Edges.addChild(appState, Node.fake(source), Node.fake(target));
+              Edges.addChild(
+                appState,
+                Node.fake(source),
+                Node.fake(target),
+                Edge.childHandleIndex(edge)
+              );
             });
           }}
           // onElementsRemove={onElementsRemove}
@@ -184,7 +188,6 @@ function useMousePosition() {
 function useClipboardListeners(mousePosition) {
   const store = useStore();
   const appState = useAppStateContext();
-  console.log(appState);
   const setAppState = useSetAppStateContext();
 
   useEventListener(

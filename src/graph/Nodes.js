@@ -122,6 +122,17 @@ export function parents(graph, node) {
   );
 }
 
+export function parentsOrdered(graph, node) {
+  let ordered = [];
+  Edges.parents(graph, node).forEach((edge) => {
+    ordered[Edge.childHandleIndex(edge)] = nodeWithID(
+      graph,
+      Edge.parentID(edge)
+    );
+  });
+  return ordered;
+}
+
 export function hasParents(graph, node) {
   return Edges.parents(graph, node).length > 0;
 }

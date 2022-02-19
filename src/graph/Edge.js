@@ -18,7 +18,8 @@ export function newTightEdge(parent, child) {
 export function replicateEdge(edge, nodeMapping) {
   return (isTight(edge) ? newTightEdge : newEdge)(
     nodeMapping.get(parentID(edge)),
-    nodeMapping.get(childID(edge))
+    nodeMapping.get(childID(edge)),
+    childHandleIndex(edge)
   );
 }
 
@@ -32,6 +33,10 @@ export function parentID(edge) {
 
 export function childID(edge) {
   return edge.childID;
+}
+
+export function childHandleIndex(edge) {
+  return edge.targetHandle;
 }
 
 export function isTight(edge) {

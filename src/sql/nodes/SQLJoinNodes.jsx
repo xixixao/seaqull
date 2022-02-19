@@ -59,7 +59,7 @@ export const SQLJoinNodeConfig = {
     return Nodes.parents(appState, node).length !== 2;
   },
   query(appState, node) {
-    const parents = Nodes.parents(appState, node);
+    const parents = Nodes.parentsOrdered(appState, node);
     const [a, b] = parents;
     const joined = joinedColumns(node);
     const aOtherColumns = Arrays.subtractSets(
@@ -96,7 +96,7 @@ export const SQLJoinNodeConfig = {
     return null;
   },
   querySelectable(appState, node) {
-    const parents = Nodes.parents(appState, node);
+    const parents = Nodes.parentsOrdered(appState, node);
     const [a, b] = parents;
     const parentsColumnNames = parents.map((parent) =>
       getColumnNames(appState, parent)
@@ -110,7 +110,7 @@ export const SQLJoinNodeConfig = {
     );
   },
   columnNames(appState, node) {
-    const parents = Nodes.parents(appState, node);
+    const parents = Nodes.parentsOrdered(appState, node);
     const parentsColumnNames = parents.map((parent) =>
       getColumnNames(appState, parent)
     );
@@ -123,7 +123,7 @@ export const SQLJoinNodeConfig = {
       return null;
     }
     const joined = joinedColumns(node);
-    const parents = Nodes.parents(appState, node);
+    const parents = Nodes.parentsOrdered(appState, node);
     const aOtherColumns = Arrays.subtractSets(
       getColumnNames(appState, first(parents)),
       // TODO: Fix this logic
