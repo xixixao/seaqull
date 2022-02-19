@@ -316,6 +316,9 @@ function deleteSelectedNodes({ setAppState }) {
     ).map((nodes) => Nodes.sortTight(appState, nodes));
     const toSelect = tightGroups.map((nodes) => {
       const firstNode = Arrays.first(nodes);
+      const detachedChildEdges = Arrays.merge(
+        nodes.map((node) => Edges.detachedChildren(appState, node))
+      );
 
       const parent = Nodes.tightParent(appState, firstNode);
       const lastNode = Arrays.last(nodes);
@@ -326,6 +329,18 @@ function deleteSelectedNodes({ setAppState }) {
       if (parent != null && child != null) {
         Edges.addTightChild(appState, parent, child);
         Layout.layoutTightStack(appState, parent);
+      }
+
+      const newParent = parent ?? child;
+      if (newParent != null) {
+        detachedChildEdges.forEach((edge) => {
+          Edges.addChild(
+            appState,
+            newParent,
+            Node.fake(Edge.childID(edge)),
+            Edge.childHandleIndex(edge)
+          );
+        });
       }
 
       return child ?? parent;

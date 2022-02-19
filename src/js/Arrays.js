@@ -13,6 +13,10 @@ export function values(iterable) {
   return Array.from(iterable.values());
 }
 
+export function merge(arrays) {
+  return [].concat(...arrays);
+}
+
 export function subtractSets(a, b) {
   return filter(a, (item) => !b.has(item));
 }
