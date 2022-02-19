@@ -368,7 +368,6 @@ export function useCodeMirror(props) {
         mac: "Mod-Shift-z",
         run: (view) => {
           if (!redo(view)) {
-            console.log("redo from editor");
             onRedo();
           }
           return true;
