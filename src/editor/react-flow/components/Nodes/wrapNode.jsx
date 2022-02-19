@@ -24,6 +24,7 @@ import {
   useUpdateNodeDimensions,
 } from "../../store/reducer";
 import * as History from "editor/History";
+import { hasTargetHandle } from "../Handle/handler";
 
 export default function wrapNode(NodeComponent) {
   const MemoizedNodeComponent = memo(NodeComponent);
@@ -162,15 +163,27 @@ export default function wrapNode(NodeComponent) {
             Nodes.positionOf(appState, node).isDragging = true;
           });
 
-          const isDetachMode = event.altKey;
           appState.highlightedNodeIDs = new Set();
+          History.startOrContinueRecording(appState);
+
+          const tightGroups = Nodes.groupBy(Nodes.selected(appState), (node) =>
+            Nodes.tightRoot(appState, node)
+          ).map((nodes) => Nodes.sortTight(appState, nodes));
+          const onlyDraggedGroup = only(tightGroups);
+          const firstDraggedNode =
+            onlyDraggedGroup != null ? first(onlyDraggedGroup) : null;
+          const isDetachMode =
+            event.altKey ||
+            (firstDraggedNode != null &&
+              !Nodes.hasParents(appState, firstDraggedNode) &&
+              hasTargetHandle(firstDraggedNode, event));
+
           if (!isDetachMode) {
             const draggedNodeRoots = Nodes.dedupe(
               Nodes.selected(appState).map((node) =>
                 Nodes.tightRoot(appState, node)
               )
             );
-            History.startOrContinueRecording(appState);
             draggedNodeRoots.forEach((node) => {
               Node.moveBy(appState, node, deltaX, deltaY);
               Layout.layoutTightStack(appState, node);
@@ -179,10 +192,6 @@ export default function wrapNode(NodeComponent) {
             return;
           }
 
-          History.startOrContinueRecording(appState);
-          const tightGroups = Nodes.groupBy(Nodes.selected(appState), (node) =>
-            Nodes.tightRoot(appState, node)
-          ).map((nodes) => Nodes.sortTight(appState, nodes));
           tightGroups.forEach((nodes) => {
             const firstNode = first(nodes);
             const parentEdge = Edges.tightParent(appState, firstNode);
@@ -198,16 +207,9 @@ export default function wrapNode(NodeComponent) {
             Node.moveBy(appState, firstNode, deltaX, deltaY);
             Layout.layoutTightStack(appState, firstNode);
           });
-          const onlyDraggedGroup = only(tightGroups);
           const validPotentialTightParent =
-            onlyDraggedGroup != null
-              ? only(
-                  Nodes.overlappingLeafs(
-                    appState,
-                    first(onlyDraggedGroup),
-                    event
-                  )
-                )
+            firstDraggedNode != null
+              ? only(Nodes.overlappingLeafs(appState, firstDraggedNode, event))
               : null;
           appState.highlightedNodeIDs = Nodes.idSet(
             validPotentialTightParent != null ? [validPotentialTightParent] : []
@@ -253,10 +255,6 @@ export default function wrapNode(NodeComponent) {
           });
           appState.highlightedNodeIDs = new Set();
 
-          const isDetachMode = event.altKey;
-          if (!isDetachMode) {
-            return;
-          }
           const tightGroups = Nodes.groupBy(Nodes.selected(appState), (node) =>
             Nodes.tightRoot(appState, node)
           ).map((nodes) => Nodes.sortTight(appState, nodes));
@@ -264,8 +262,16 @@ export default function wrapNode(NodeComponent) {
           if (onlyDraggedGroup == null) {
             return;
           }
+          const firstDraggedNode = first(onlyDraggedGroup);
+          const isDetachMode =
+            event.altKey ||
+            (!Nodes.hasParents(appState, firstDraggedNode) &&
+              hasTargetHandle(firstDraggedNode, event));
+          if (!isDetachMode) {
+            return;
+          }
           const validPotentialTightParent = only(
-            Nodes.overlappingLeafs(appState, first(onlyDraggedGroup), event)
+            Nodes.overlappingLeafs(appState, firstDraggedNode, event)
           );
           if (validPotentialTightParent == null) {
             return;
