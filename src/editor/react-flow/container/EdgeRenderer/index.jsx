@@ -48,8 +48,7 @@ const EdgeRenderer = (props) => {
   if (!width) {
     return null;
   }
-  const { connectionLineType, arrowHeadColor, onlyRenderVisibleElements } =
-    props;
+  const { arrowHeadColor, onlyRenderVisibleElements } = props;
   const transformStyle = `translate(${transform[0]},${transform[1]}) scale(${transform[2]})`;
   const renderConnectionLine = connectionNodeId && connectionHandleType;
   return (
@@ -80,7 +79,6 @@ const EdgeRenderer = (props) => {
             connectionPositionX={connectionPosition.x}
             connectionPositionY={connectionPosition.y}
             transform={transform}
-            connectionLineType={connectionLineType}
             isConnectable={nodesConnectable}
           />
         )}
@@ -199,7 +197,7 @@ function Edge({
       labelBgStyle={edge.labelBgStyle}
       labelBgPadding={edge.labelBgPadding}
       labelBgBorderRadius={edge.labelBgBorderRadius}
-      style={edge.style}
+      // style={edge.style}
       arrowHeadType={edge.arrowHeadType}
       source={edge.parentID}
       target={edge.childID}

@@ -1,31 +1,6 @@
-import {
-  BezierEdge,
-  StepEdge,
-  SmoothStepEdge,
-  StraightEdge,
-} from "../../components/Edges";
-import wrapEdge from "../../components/Edges/wrapEdge";
-import { rectToBox } from "../../utils/graph";
 import { Position } from "../../types";
-export function createEdgeTypes(edgeTypes) {
-  const standardTypes = {
-    default: wrapEdge(edgeTypes.default || BezierEdge),
-    straight: wrapEdge(edgeTypes.bezier || StraightEdge),
-    step: wrapEdge(edgeTypes.step || StepEdge),
-    smoothstep: wrapEdge(edgeTypes.step || SmoothStepEdge),
-  };
-  const wrappedTypes = {};
-  const specialTypes = Object.keys(edgeTypes)
-    .filter((k) => !["default", "bezier"].includes(k))
-    .reduce((res, key) => {
-      res[key] = wrapEdge(edgeTypes[key] || BezierEdge);
-      return res;
-    }, wrappedTypes);
-  return {
-    ...standardTypes,
-    ...specialTypes,
-  };
-}
+import { rectToBox } from "../../utils/graph";
+
 export function getHandlePosition(position, pos, handle = null) {
   const x = (handle?.x || 0) + pos.x;
   const y = (handle?.y || 0) + pos.y;

@@ -2,16 +2,6 @@ import ReactFlow from "./container/ReactFlow";
 export default ReactFlow;
 export { default as Handle } from "./components/Handle";
 export { default as EdgeText } from "./components/Edges/EdgeText";
-export { default as StraightEdge } from "./components/Edges/StraightEdge";
-export { default as StepEdge } from "./components/Edges/StepEdge";
-export {
-  default as BezierEdge,
-  getBezierPath,
-} from "./components/Edges/BezierEdge";
-export {
-  default as SmoothStepEdge,
-  getSmoothStepPath,
-} from "./components/Edges/SmoothStepEdge";
 export {
   getMarkerEnd,
   getCenter as getEdgeCenter,

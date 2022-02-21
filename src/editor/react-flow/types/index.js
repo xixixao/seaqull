@@ -21,12 +21,6 @@ export var ConnectionMode;
   ConnectionMode["Loose"] = "loose";
 })(ConnectionMode || (ConnectionMode = {}));
 export var ConnectionLineType;
-(function (ConnectionLineType) {
-  ConnectionLineType["Bezier"] = "default";
-  ConnectionLineType["Straight"] = "straight";
-  ConnectionLineType["Step"] = "step";
-  ConnectionLineType["SmoothStep"] = "smoothstep";
-})(ConnectionLineType || (ConnectionLineType = {}));
 export var PanOnScrollMode;
 (function (PanOnScrollMode) {
   PanOnScrollMode["Free"] = "free";

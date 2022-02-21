@@ -1,7 +1,80 @@
 import React, { memo } from "react";
-import EdgeText from "./EdgeText";
+// import EdgeText from "./EdgeText";
 import { getMarkerEnd, getCenter } from "./utils";
 import { Position } from "../../types";
+import { Path } from "../Path";
+
+export const BezierEdge = memo(function BezierEdge({
+  sourceX,
+  sourceY,
+  targetX,
+  targetY,
+  sourcePosition = Position.Bottom,
+  targetPosition = Position.Top,
+  // label,
+  // labelStyle,
+  // labelShowBg,
+  // labelBgStyle,
+  // labelBgPadding,
+  // labelBgBorderRadius,
+  // style,
+  arrowHeadType,
+  markerEndId,
+}) {
+  const path = getBezierPath({
+    sourceX,
+    sourceY,
+    sourcePosition,
+    targetX,
+    targetY,
+    targetPosition,
+  });
+  // const [centerX, centerY] = getCenter({
+  //   sourceX,
+  //   sourceY,
+  //   targetX,
+  //   targetY,
+  //   sourcePosition,
+  //   targetPosition,
+  // });
+  // TODO: In case we need labels, possible to label LEFT and RIGHT
+  // in JOIN / LEFT?
+  // const text = label ? (
+  //   <EdgeText
+  //     x={centerX}
+  //     y={centerY}
+  //     label={label}
+  //     labelStyle={labelStyle}
+  //     labelShowBg={labelShowBg}
+  //     labelBgStyle={labelBgStyle}
+  //     labelBgPadding={labelBgPadding}
+  //     labelBgBorderRadius={labelBgBorderRadius}
+  //   />
+  // ) : null;
+  const markerEnd = getMarkerEnd(arrowHeadType, markerEndId);
+  return (
+    <>
+      <Path
+        css={{
+          fill: "none",
+          stroke: "$slate9",
+          strokeWidth: 1,
+          // TODO: Dont use classes, use React props instead
+          ".updating &": {
+            stroke: "$slate12",
+          },
+          // ".selected &": {
+          //   stroke: "red",
+          // },
+        }}
+        d={path}
+        markerEnd={markerEnd}
+      />
+      {/* text */}
+    </>
+  );
+});
+
 export function getBezierPath({
   sourceX,
   sourceY,
@@ -34,63 +107,3 @@ export function getBezierPath({
   }
   return path;
 }
-export default memo(
-  ({
-    sourceX,
-    sourceY,
-    targetX,
-    targetY,
-    sourcePosition = Position.Bottom,
-    targetPosition = Position.Top,
-    label,
-    labelStyle,
-    labelShowBg,
-    labelBgStyle,
-    labelBgPadding,
-    labelBgBorderRadius,
-    style,
-    arrowHeadType,
-    markerEndId,
-  }) => {
-    const [centerX, centerY] = getCenter({
-      sourceX,
-      sourceY,
-      targetX,
-      targetY,
-      sourcePosition,
-      targetPosition,
-    });
-    const path = getBezierPath({
-      sourceX,
-      sourceY,
-      sourcePosition,
-      targetX,
-      targetY,
-      targetPosition,
-    });
-    const text = label ? (
-      <EdgeText
-        x={centerX}
-        y={centerY}
-        label={label}
-        labelStyle={labelStyle}
-        labelShowBg={labelShowBg}
-        labelBgStyle={labelBgStyle}
-        labelBgPadding={labelBgPadding}
-        labelBgBorderRadius={labelBgBorderRadius}
-      />
-    ) : null;
-    const markerEnd = getMarkerEnd(arrowHeadType, markerEndId);
-    return (
-      <>
-        <path
-          style={style}
-          d={path}
-          className="react-flow__edge-path"
-          markerEnd={markerEnd}
-        />
-        {text}
-      </>
-    );
-  }
-);

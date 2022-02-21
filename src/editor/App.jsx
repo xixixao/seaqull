@@ -27,6 +27,7 @@ import { useAppRedo, useAppUndo } from "./historyHooks";
 import { buildKeyMap } from "./keybindings";
 import { LayoutRequestContext } from "./layoutRequest";
 import { positionToRendererPosition } from "./react-flow/utils/graph";
+import { BezierEdge } from "./react-flow/components/Edges/BezierEdge";
 
 function App({
   initialState,
@@ -169,6 +170,7 @@ function NodesPane({ children, nodeTypes, onKeyDown, onDoubleClick }) {
 }
 
 const EDGE_COMPONENTS = {
+  default: BezierEdge,
   tight: function TightEdge() {
     return <></>;
   },

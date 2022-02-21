@@ -478,28 +478,6 @@ globalCss({
   //   },
   // },
 
-  ".react-flow__edge-path": {
-    fill: "none",
-    stroke: "#b1b1b7",
-    strokeWidth: 1,
-    "&.selected": {
-      ".react-flow__edge-path": {
-        stroke: "#555",
-      },
-    },
-
-    "&.animated path": {
-      strokeDasharray: 5,
-      animation: "dashdraw 0.5s linear infinite",
-    },
-
-    "&.updating": {
-      ".react-flow__edge-path": {
-        stroke: "#777",
-      },
-    },
-  },
-
   // ".react-flow__edge-textwrapper": {
   //   pointerEvents: "all",
   // },
@@ -606,10 +584,6 @@ globalCss({
   // },
 
   // Moved up
-  // ".react-flow__edge-path": {
-  //   stroke: "#b1b1b7",
-  //   strokeWidth: 1,
-  // },
   // ".react-flow__edge-text": {
   //   fontSize: "10px",
   // },

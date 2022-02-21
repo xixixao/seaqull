@@ -1,33 +1,19 @@
 import cc from "classcat";
+import wrapEdge from "editor/react-flow/components/Edges/wrapEdge";
+import * as Objects from "js/Objects";
 import React, { forwardRef, useMemo } from "react";
-import {
-  BezierEdge,
-  SmoothStepEdge,
-  StepEdge,
-  StraightEdge,
-} from "../../components/Edges";
 import DefaultNode from "../../components/Nodes/DefaultNode";
 import InputNode from "../../components/Nodes/InputNode";
 import OutputNode from "../../components/Nodes/OutputNode";
-import {
-  ConnectionLineType,
-  ConnectionMode,
-  PanOnScrollMode,
-} from "../../types";
-import { createEdgeTypes } from "../EdgeRenderer/utils";
+import { ConnectionMode, PanOnScrollMode } from "../../types";
 import GraphView from "../GraphView";
 import { createNodeTypes } from "../NodeRenderer/utils";
 import Wrapper from "./Wrapper";
+
 const defaultNodeTypes = {
   input: InputNode,
   default: DefaultNode,
   output: OutputNode,
-};
-const defaultEdgeTypes = {
-  default: BezierEdge,
-  straight: StraightEdge,
-  step: StepEdge,
-  smoothstep: SmoothStepEdge,
 };
 
 const snapGridDefault = [15, 15];
@@ -37,7 +23,7 @@ const ReactFlow = forwardRef(
       elements = [],
       className,
       nodeTypes = defaultNodeTypes,
-      edgeTypes = defaultEdgeTypes,
+      edgeTypes,
       onElementClick,
       onLoad,
       onMove,
@@ -61,7 +47,6 @@ const ReactFlow = forwardRef(
       onSelectionDragStop,
       onSelectionContextMenu,
       connectionMode = ConnectionMode.Strict,
-      connectionLineType = ConnectionLineType.Bezier,
       deleteKeyCode = "Backspace",
       selectionKeyCode = "Shift",
       multiSelectionKeyCode = "Meta",
@@ -114,7 +99,7 @@ const ReactFlow = forwardRef(
       [nodeTypesId]
     );
     const edgeTypesParsed = useMemo(
-      () => createEdgeTypes(edgeTypes),
+      () => Objects.map(edgeTypes, wrapEdge),
       [edgeTypesId]
     );
     const reactFlowClasses = cc(["react-flow", className]);
@@ -138,7 +123,6 @@ const ReactFlow = forwardRef(
             nodeTypes={nodeTypesParsed}
             edgeTypes={edgeTypesParsed}
             connectionMode={connectionMode}
-            connectionLineType={connectionLineType}
             selectionKeyCode={selectionKeyCode}
             onElementsRemove={onElementsRemove}
             deleteKeyCode={deleteKeyCode}
