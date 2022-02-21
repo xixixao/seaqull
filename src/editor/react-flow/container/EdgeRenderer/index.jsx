@@ -7,7 +7,6 @@ import ConnectionLine from "../../components/ConnectionLine";
 import { useStoreState } from "../../store/hooks";
 import { Position } from "../../types";
 import { isEdge } from "../../utils/graph";
-import MarkerDefinitions from "./MarkerDefinitions";
 import { getEdgePositions, getHandle, isEdgeVisible } from "./utils";
 
 const EdgeRenderer = (props) => {
@@ -48,12 +47,11 @@ const EdgeRenderer = (props) => {
   if (!width) {
     return null;
   }
-  const { arrowHeadColor, onlyRenderVisibleElements } = props;
+  const { onlyRenderVisibleElements } = props;
   const transformStyle = `translate(${transform[0]},${transform[1]}) scale(${transform[2]})`;
   const renderConnectionLine = connectionNodeId && connectionHandleType;
   return (
     <svg width={width} height={height} className="react-flow__edges">
-      <MarkerDefinitions color={arrowHeadColor} />
       <g transform={transformStyle}>
         {Array.from(edges.values()).map((edge) => (
           <Edge
@@ -108,11 +106,12 @@ function Edge({
   const sourceNode = Edges.parentNode(appState, edge);
   const targetNode = Edges.childNode(appState, edge);
   // const { sourceNode, targetNode } = getSourceTargetNodes(edge, nodes);
+  const { onEdgeUpdate } = props;
   const onConnectEdge = useCallback(
     (connection) => {
-      props.onEdgeUpdate?.(edge, connection);
+      onEdgeUpdate?.(edge, connection);
     },
-    [edge, props.onEdgeUpdate]
+    [edge, onEdgeUpdate]
   );
   if (!sourceNode) {
     console.warn(

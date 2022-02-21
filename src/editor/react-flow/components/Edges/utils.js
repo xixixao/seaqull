@@ -1,12 +1,5 @@
 import { Position } from "../../types";
-export const getMarkerEnd = (arrowHeadType, markerEndId) => {
-  if (typeof markerEndId !== "undefined" && markerEndId) {
-    return `url(#${markerEndId})`;
-  }
-  return typeof arrowHeadType !== "undefined"
-    ? `url(#react-flow__${arrowHeadType})`
-    : "none";
-};
+
 const LeftOrRight = [Position.Left, Position.Right];
 export const getCenter = ({
   sourceX,

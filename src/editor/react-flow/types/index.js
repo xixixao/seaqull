@@ -5,11 +5,6 @@ export var Position;
   Position["Right"] = "right";
   Position["Bottom"] = "bottom";
 })(Position || (Position = {}));
-export var ArrowHeadType;
-(function (ArrowHeadType) {
-  ArrowHeadType["Arrow"] = "arrow";
-  ArrowHeadType["ArrowClosed"] = "arrowclosed";
-})(ArrowHeadType || (ArrowHeadType = {}));
 export var BackgroundVariant;
 (function (BackgroundVariant) {
   BackgroundVariant["Lines"] = "lines";

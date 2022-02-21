@@ -1,8 +1,8 @@
 import React, { memo } from "react";
 // import EdgeText from "./EdgeText";
-import { getMarkerEnd, getCenter } from "./utils";
+import { getCenter } from "./utils";
 import { Position } from "../../types";
-import { Path } from "../Path";
+import { Group } from "../Group";
 
 export const BezierEdge = memo(function BezierEdge({
   sourceX,
@@ -51,25 +51,29 @@ export const BezierEdge = memo(function BezierEdge({
   //     labelBgBorderRadius={labelBgBorderRadius}
   //   />
   // ) : null;
-  const markerEnd = getMarkerEnd(arrowHeadType, markerEndId);
   return (
     <>
-      <Path
+      <Group
         css={{
-          fill: "none",
-          stroke: "$slate9",
-          strokeWidth: 1,
+          color: "$slate9",
           // TODO: Dont use classes, use React props instead
           ".updating &": {
-            stroke: "$slate12",
+            color: "$slate12",
           },
-          // ".selected &": {
-          //   stroke: "red",
-          // },
         }}
-        d={path}
-        markerEnd={markerEnd}
-      />
+      >
+        <path fill="none" stroke="currentColor" strokeWidth={1} d={path} />
+        <g transform={`translate(${targetX},${targetY})`}>
+          <polyline
+            stroke="currentColor"
+            fill="currentColor"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="1"
+            points="-5,-4 0,0 -5,4 -5,-4"
+          />
+        </g>
+      </Group>
       {/* text */}
     </>
   );
@@ -94,16 +98,16 @@ export function getBezierPath({
   const leftAndRight = [Position.Left, Position.Right];
   const cX = typeof centerX !== "undefined" ? centerX : _centerX;
   const cY = typeof centerY !== "undefined" ? centerY : _centerY;
-  let path = `M${sourceX},${sourceY} C${sourceX},${cY} ${targetX},${cY} ${targetX},${targetY}`;
   if (
     leftAndRight.includes(sourcePosition) &&
     leftAndRight.includes(targetPosition)
   ) {
-    path = `M${sourceX},${sourceY} C${cX},${sourceY} ${cX},${targetY} ${targetX},${targetY}`;
+    return `M${sourceX},${sourceY} C${cX},${sourceY} ${cX},${targetY} ${targetX},${targetY}`;
   } else if (leftAndRight.includes(targetPosition)) {
-    path = `M${sourceX},${sourceY} Q${sourceX},${targetY} ${targetX},${targetY}`;
+    return `M${sourceX},${sourceY} Q${sourceX},${targetY} ${targetX},${targetY}`;
   } else if (leftAndRight.includes(sourcePosition)) {
-    path = `M${sourceX},${sourceY} Q${targetX},${sourceY} ${targetX},${targetY}`;
+    return `M${sourceX},${sourceY} Q${targetX},${sourceY} ${targetX},${targetY}`;
+  } else {
+    return `M${sourceX},${sourceY} C${sourceX},${cY} ${targetX},${cY} ${targetX},${targetY}`;
   }
-  return path;
 }

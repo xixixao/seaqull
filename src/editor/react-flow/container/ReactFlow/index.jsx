@@ -65,7 +65,6 @@ const ReactFlow = forwardRef(
       translateExtent,
       preventScrolling = true,
       nodeExtent,
-      arrowHeadColor = "#b1b1b7",
       markerEndId,
       zoomOnScroll = true,
       zoomOnPinch = true,
@@ -146,7 +145,6 @@ const ReactFlow = forwardRef(
             translateExtent={translateExtent}
             preventScrolling={preventScrolling}
             nodeExtent={nodeExtent}
-            arrowHeadColor={arrowHeadColor}
             markerEndId={markerEndId}
             zoomOnScroll={zoomOnScroll}
             zoomOnPinch={zoomOnPinch}
