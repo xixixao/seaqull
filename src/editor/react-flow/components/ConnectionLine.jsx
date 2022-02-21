@@ -1,8 +1,7 @@
 import React from "react";
 import { Position } from "../types";
-import { getBezierPath } from "./Edges/BezierEdge";
+import { BezierEdge } from "./Edges/BezierEdge";
 import { Group } from "./Group";
-import { Path } from "./Path";
 
 export default function ConnectionLine({
   connectionNodeId,
@@ -36,22 +35,16 @@ export default function ConnectionLine({
   const isRightOrLeft =
     sourceHandle?.position === Position.Left ||
     sourceHandle?.position === Position.Right;
-  // TODO: Use the same smart path as edges
   return (
     <Group css={{ pointerEvents: "none" }}>
-      <Path
-        d={getBezierPath({
+      <BezierEdge
+        {...{
           sourceX,
           sourceY,
           sourcePosition: sourceHandle?.position,
           targetX,
           targetY,
           targetPosition: isRightOrLeft ? Position.Left : Position.Top,
-        })}
-        css={{
-          fill: "none",
-          stroke: "$slate9",
-          strokeWidth: 1,
         }}
       />
     </Group>

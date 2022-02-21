@@ -18,17 +18,7 @@ export const BezierEdge = memo(function BezierEdge({
   // labelBgPadding,
   // labelBgBorderRadius,
   // style,
-  arrowHeadType,
-  markerEndId,
 }) {
-  const path = getBezierPath({
-    sourceX,
-    sourceY,
-    sourcePosition,
-    targetX,
-    targetY,
-    targetPosition,
-  });
   // const [centerX, centerY] = getCenter({
   //   sourceX,
   //   sourceY,
@@ -62,7 +52,19 @@ export const BezierEdge = memo(function BezierEdge({
           },
         }}
       >
-        <path fill="none" stroke="currentColor" strokeWidth={1} d={path} />
+        <path
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={1}
+          d={getBezierPath({
+            sourceX,
+            sourceY,
+            sourcePosition,
+            targetX,
+            targetY,
+            targetPosition,
+          })}
+        />
         <g transform={`translate(${targetX},${targetY})`}>
           <polyline
             stroke="currentColor"
@@ -79,7 +81,7 @@ export const BezierEdge = memo(function BezierEdge({
   );
 });
 
-export function getBezierPath({
+function getBezierPath({
   sourceX,
   sourceY,
   sourcePosition = Position.Bottom,
