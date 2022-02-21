@@ -116,6 +116,7 @@ import {
   bronzeDarkA,
   goldDarkA,
 } from "@radix-ui/colors";
+import { styleUtils } from "./styleUtils";
 
 const { styled, css, createTheme, globalCss, keyframes } = createStitches({
   theme: {
@@ -187,6 +188,7 @@ const { styled, css, createTheme, globalCss, keyframes } = createStitches({
       canvas: "hsl(0 0% 93%)",
       panel: "white",
       transparentPanel: "hsl(0 0% 0% / 97%)",
+      subtleShadow: "rgb(126, 134, 140, 0.08)",
       shadowLight: "hsl(206 22% 7% / 35%)",
       shadowDark: "hsl(206 22% 7% / 20%)",
     },
@@ -252,6 +254,12 @@ const { styled, css, createTheme, globalCss, keyframes } = createStitches({
       64: "64px",
       80: "80px",
     },
+    zIndices: {
+      nodeEditor: 3,
+      uiAboveNodes: 5,
+      selectedNodes: 10,
+      aboveSelectedNodes: 11,
+    },
   },
   media: {
     bp1: "(min-width: 520px)",
@@ -263,45 +271,7 @@ const { styled, css, createTheme, globalCss, keyframes } = createStitches({
     dark: "(prefers-color-scheme: dark)",
     light: "(prefers-color-scheme: light)",
   },
-  utils: {
-    font: (name) => ({
-      fontSize: name,
-      fontWeight: name,
-      lineHeight: name,
-    }),
-    paddingHori: (value) => ({
-      paddingLeft: value,
-      paddingRight: value,
-    }),
-    paddingVert: (value) => ({
-      paddingTop: value,
-      paddingBottom: value,
-    }),
-    marginHori: (value) => ({
-      marginLeft: value,
-      marginRight: value,
-    }),
-    marginVert: (value) => ({
-      marginTop: value,
-      marginBottom: value,
-    }),
-    size: (value) => ({
-      width: value,
-      height: value,
-    }),
-    userSelect: (value) => ({
-      WebkitUserSelect: value,
-      userSelect: value,
-    }),
-    appearance: (value) => ({
-      WebkitAppearance: value,
-      appearance: value,
-    }),
-    backgroundClip: (value) => ({
-      WebkitBackgroundClip: value,
-      backgroundClip: value,
-    }),
-  },
+  utils: styleUtils,
 });
 
 export { styled, css, keyframes };
@@ -373,6 +343,7 @@ export const darkTheme = createTheme("dark-theme", {
     panel: "$slate1",
     transparentPanel: "hsl(0 100% 100% / 97%)",
     shadowLight: "hsl(206 22% 7% / 35%)",
+    subtleShadow: "rgb(120, 127, 133, 0.08)",
     shadowDark: "hsl(206 22% 7% / 20%)",
   },
 });
@@ -445,6 +416,7 @@ globalCss({
     position: "relative",
     overflow: "hidden",
   },
+  // TODO: Not sure why 4 is here
   ".react-flow__renderer": { ...absoluteFill, zIndex: 4 },
   ".react-flow__pane": { ...absoluteFill, zIndex: 1 },
   ".react-flow__selectionpane": { ...absoluteFill, zIndex: 5 },
@@ -454,14 +426,6 @@ globalCss({
     left: 0,
     background: "rgba(0, 89, 220, 0.08)",
     border: "1px dotted rgba(0, 89, 220, 0.8)",
-  },
-
-  ".react-flow__edges": {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    pointerEvents: "none",
-    zIndex: 2,
   },
 
   ".react-flow__edge": {
@@ -516,47 +480,6 @@ globalCss({
     // },
   },
 
-  ".react-flow__handle": {
-    pointerEvents: "none",
-
-    "&.connectable": {
-      pointerEvents: "all",
-      cursor: "crosshair",
-    },
-
-    position: "absolute",
-    width: "1px",
-    height: "1px",
-    // background: "#555",
-    // border: "1px solid white",
-    // borderRadius: "100%",
-  },
-
-  ".react-flow__handle-bottom": {
-    top: "auto",
-    left: "50%",
-    bottom: "-4px",
-    transform: "translate(-50%, 0)",
-  },
-
-  ".react-flow__handle-top": {
-    left: "50%",
-    top: "-4px",
-    transform: "translate(-50%, 0)",
-  },
-
-  ".react-flow__handle-left": {
-    top: "50%",
-    left: "0px",
-    transform: "translate(0, -50%)",
-  },
-
-  ".react-flow__handle-right": {
-    right: "0px",
-    top: "50%",
-    transform: "translate(0, -50%)",
-  },
-
   ".react-flow__background": absoluteFill,
 
   // '.react-flow__minimap': {
@@ -572,100 +495,11 @@ globalCss({
   //   border: "1px dotted rgba(0, 89, 220, 0.8)",
   // },
 
-  // Moved up
-  // ".react-flow__edge-text": {
-  //   fontSize: "10px",
-  // },
-  // ".react-flow__edge-textbg": {
-  //   fill: "white",
-  // },
-  // ".react-flow__node": {
-  //   cursor: "grab",
-  // },
-
-  // '.react-flow__node-input',
-  // '.react-flow__node-output'
-  // ".react-flow__node-default": {
-  //   padding: "10px",
-  //   borderRadius: "3px",
-  //   width: "150px",
-  //   fontSize: "12px",
-  //   color: "#222",
-  //   textAlign: "center",
-  //   borderWidth: "1px",
-  //   borderStyle: "solid",
-
-  //   background: "#fff",
-  //   borderColor: "#1a192b",
-
-  //   "&.selected": {
-  //     boxShadow: "0 0 0 0.5px #1a192b",
-  //   },
-  //   "&.selected:hover": {
-  //     boxShadow: "0 0 0 0.5px #1a192b",
-  //   },
-
-  //   ".react-flow__handle": {
-  //     background: "#1a192b",
-  //   },
-  // },
-
   // '.react-flow__node-input.selectable',
   // '.react-flow__node-output.selectable'
-  ".react-flow__node-default.selectable": {
-    "&:hover": {
-      // TODO: make it more prominent
-      boxShadow: "0 1px 4px 1px rgba(0, 0, 0, 0.08)",
-    },
+  ".react-flow__node.selectable:not(.selected):hover > div": {
+    boxShadow: "0 1px 4px 1px $colors$subtleShadow",
   },
-
-  // '.react-flow__node-input': {
-  //   background: '#fff',
-  //   borderColor: '#0041d0',
-
-  //   '&.selected': {
-  //     boxShadow: '0 0 0 0.5px #0041d0',
-  //   },
-  //   '&.selected:hover': {
-  //     boxShadow: '0 0 0 0.5px #0041d0',
-  //   },
-
-  //   '.react-flow__handle': {
-  //     background: '#0041d0',
-  //   },
-  // },
-
-  // ".react-flow__node-default": {
-  //   background: "#fff",
-  //   borderColor: "#1a192b",
-
-  //   "&.selected": {
-  //     boxShadow: "0 0 0 0.5px #1a192b",
-  //   },
-  //   "&.selected:hover": {
-  //     boxShadow: "0 0 0 0.5px #1a192b",
-  //   },
-
-  //   ".react-flow__handle": {
-  //     background: "#1a192b",
-  //   },
-  // },
-
-  // '.react-flow__node-output': {
-  //   background: '#fff',
-  //   borderColor: '#ff0072',
-
-  //   '&.selected': {
-  //     boxShadow: '0 0 0 0.5px #ff0072',
-  //   },
-  //   '&.selected:hover': {
-  //     boxShadow: '0 0 0 0.5px #ff0072',
-  //   },
-
-  //   '.react-flow__handle': {
-  //     background: '#ff0072',
-  //   },
-  // },
 
   ".react-flow__nodesselection-rect": {
     background: "rgba(0, 89, 220, 0.08)",
@@ -673,13 +507,6 @@ globalCss({
   },
 
   // Moved up
-  // '.react-flow__handle': {
-  //   position: 'absolute',
-  //   width: '6px',
-  //   height: '6px',
-  //   background: '#555',
-  //   border: '1px solid white',
-  //   borderRadius: '100%',
 
   //   '&.connectable': {
   //     cursor: 'crosshair',

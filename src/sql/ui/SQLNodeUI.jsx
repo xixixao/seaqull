@@ -28,14 +28,14 @@ import {
   useNodeConfig,
 } from "../sqlNodes";
 
-export default function SQLNodeUI({ hideControls, type, children }) {
+export default function SQLNodeUI({ hideControls, parentLimit, children }) {
   const node = useNode();
   const hasProblem = useNodeConfig(node).useHasProblem?.(node);
   return (
     <NodeUI
       hasProblem={hasProblem}
       hideControls={hideControls}
-      type={type}
+      parentLimit={parentLimit}
       useControls={useControls}
     >
       {children}

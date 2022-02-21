@@ -31,7 +31,7 @@ function GroupNode() {
   const groupByExtensions = useNodeConfig(node).useGroupByInputExtensions();
   const selectExtensions = useNodeConfig(node).useSelectInputExtensions();
   return (
-    <SQLNodeUI>
+    <SQLNodeUI parentLimit={1}>
       GROUP BY{" "}
       <Input
         emptyDisplayValue="∅"

@@ -1,6 +1,6 @@
 import ReactFlow from "./container/ReactFlow";
 export default ReactFlow;
-export { default as Handle } from "./components/Handle";
+export { Handle } from "./components/Handle";
 export { default as EdgeText } from "./components/Edges/EdgeText";
 export { getCenter as getEdgeCenter } from "./components/Edges/utils";
 export {

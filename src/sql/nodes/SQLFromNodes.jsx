@@ -10,7 +10,7 @@ function SQLFromNode() {
   const setNodeState = useSetNodeState(node);
   const extensions = useNodeConfig(node).useFromInputExtensions(node);
   return (
-    <SQLNodeUI hideControls={name.length === 0} type="output">
+    <SQLNodeUI hideControls={name.length === 0} parentLimit={0}>
       FROM{" "}
       <Input
         autoFocus={true}

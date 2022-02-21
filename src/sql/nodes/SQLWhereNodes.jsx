@@ -13,7 +13,7 @@ function WhereNode() {
   const setNodeState = useSetNodeState(node);
   const orderExtensions = useNodeConfig(node).useWhereInputExtensions();
   return (
-    <SQLNodeUI>
+    <SQLNodeUI parentLimit={1}>
       WHERE{" "}
       <Input
         emptyDisplayValue="∅"

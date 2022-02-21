@@ -20,7 +20,7 @@ function OrderNode() {
   const setNodeState = useSetNodeState(node);
   const orderExtensions = useNodeConfig(node).useOrderInputExtensions?.();
   return (
-    <SQLNodeUI>
+    <SQLNodeUI parentLimit={1}>
       ORDER BY{" "}
       <Input
         emptyDisplayValue="∅"

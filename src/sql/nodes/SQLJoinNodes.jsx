@@ -27,7 +27,7 @@ function JoinNode() {
   const setNodeState = useSetNodeState(node);
   const onExtensions = useNodeConfig(node).useOnInputExtensions();
   return (
-    <SQLNodeUI>
+    <SQLNodeUI parentLimit={2}>
       <Input
         emptyDisplayValue="INNER"
         value={joinType(node)}

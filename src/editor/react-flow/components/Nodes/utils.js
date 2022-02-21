@@ -1,4 +1,5 @@
 import { getDimensions } from "../../utils";
+
 export const getHandleBounds = (nodeElement, scale) => {
   const bounds = nodeElement.getBoundingClientRect();
   return {
@@ -6,6 +7,7 @@ export const getHandleBounds = (nodeElement, scale) => {
     target: getHandleBoundsByHandleType(".target", nodeElement, bounds, scale),
   };
 };
+
 export const getHandleBoundsByHandleType = (
   selector,
   nodeElement,

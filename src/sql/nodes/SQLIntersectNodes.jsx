@@ -4,7 +4,7 @@ import { getColumnNames, getQuerySelectableOrNull } from "../sqlNodes";
 import SQLNodeUI from "../ui/SQLNodeUI";
 
 function IntersectNode() {
-  return <SQLNodeUI>INTERSECT</SQLNodeUI>;
+  return <SQLNodeUI parentLimit={2}>INTERSECT</SQLNodeUI>;
 }
 
 export const SQLIntersectNodeConfig = {

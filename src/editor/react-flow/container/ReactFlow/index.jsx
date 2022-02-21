@@ -1,20 +1,11 @@
 import cc from "classcat";
 import wrapEdge from "editor/react-flow/components/Edges/wrapEdge";
+import wrapNode from "editor/react-flow/components/Nodes/wrapNode";
 import * as Objects from "js/Objects";
 import React, { forwardRef, useMemo } from "react";
-import DefaultNode from "../../components/Nodes/DefaultNode";
-import InputNode from "../../components/Nodes/InputNode";
-import OutputNode from "../../components/Nodes/OutputNode";
 import { ConnectionMode, PanOnScrollMode } from "../../types";
 import GraphView from "../GraphView";
-import { createNodeTypes } from "../NodeRenderer/utils";
 import Wrapper from "./Wrapper";
-
-const defaultNodeTypes = {
-  input: InputNode,
-  default: DefaultNode,
-  output: OutputNode,
-};
 
 const snapGridDefault = [15, 15];
 const ReactFlow = forwardRef(
@@ -22,7 +13,7 @@ const ReactFlow = forwardRef(
     {
       elements = [],
       className,
-      nodeTypes = defaultNodeTypes,
+      nodeTypes,
       edgeTypes,
       onElementClick,
       onLoad,
@@ -85,19 +76,17 @@ const ReactFlow = forwardRef(
       onEdgeMouseMove,
       onEdgeMouseLeave,
       edgeUpdaterRadius = 10,
-      nodeTypesId = "1",
-      edgeTypesId = "1",
       ...rest
     },
     ref
   ) => {
     const nodeTypesParsed = useMemo(
-      () => createNodeTypes(nodeTypes),
-      [nodeTypesId]
+      () => Objects.map(nodeTypes, wrapNode),
+      [nodeTypes]
     );
     const edgeTypesParsed = useMemo(
       () => Objects.map(edgeTypes, wrapEdge),
-      [edgeTypesId]
+      [edgeTypes]
     );
     const reactFlowClasses = cc(["react-flow", className]);
     return (

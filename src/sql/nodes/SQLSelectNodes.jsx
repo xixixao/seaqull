@@ -25,7 +25,7 @@ function SelectNode() {
   const setNodeState = useSetNodeState(node);
   const selectExtensions = useNodeConfig(node).useSelectInputExtensions();
   return (
-    <SQLNodeUI>
+    <SQLNodeUI parentLimit={1}>
       SELECT{" "}
       <Input
         emptyDisplayValue="*"

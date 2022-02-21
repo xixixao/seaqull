@@ -11,15 +11,15 @@ import { IconButton } from "./ui/IconButton";
 export default function NodeUI({
   hasProblem,
   hideControls,
-  children,
-  type,
+  parentLimit,
   useControls,
+  children,
 }) {
   const node = useNodeUIProps();
   const appState = useAppGraphContext();
-  const hasMoreParents = Edges.detachedParents(appState, node).length > 1;
+  const parentCount = Edges.parents(appState, node).length;
   return (
-    <div>
+    <>
       <NodeWrapper
         isHighlighted={node.highlight}
         isSelected={node.selected}
@@ -31,33 +31,31 @@ export default function NodeUI({
         // hasTightParent={Nodes.hasTightParent(appState, node)}
       >
         {children}
-        {type !== "output" ? (
+        {parentLimit === 0 ? null : parentLimit === 1 ? (
+          <Handle
+            isConnectable={parentCount < 1}
+            position="left"
+            type="target"
+          />
+        ) : (
           <>
             <Handle
               id="0"
-              style={{
-                ...visibleIf(Nodes.hasDetachedParents(appState, node)),
-                top: hasMoreParents ? "8px" : "50%",
-              }}
-              type="target"
+              isConnectable={parentCount < 1}
+              style={{ top: "8px" }}
               position="left"
+              type="target"
             />
             <Handle
               id="1"
-              style={{
-                ...visibleIf(hasMoreParents),
-                top: "calc(100% - 8px)",
-              }}
-              type="target"
+              isConnectable={parentCount < 2}
+              style={{ top: "calc(100% - 8px)" }}
               position="left"
+              type="target"
             />
           </>
-        ) : null}
-        <Handle
-          style={visibleIf(Nodes.hasDetachedChildren(appState, node))}
-          type="source"
-          position="right"
-        />
+        )}
+        <Handle type="source" position="right" />
       </NodeWrapper>
       {/* <Box
         css={{
@@ -90,12 +88,8 @@ export default function NodeUI({
           </div>
         </>
       ) : null} */}
-    </div>
+    </>
   );
-}
-
-function visibleIf(bool) {
-  return { visibility: bool ? "visible" : "hidden" };
 }
 
 function NodeUIControls({ hideControls, useControls }) {

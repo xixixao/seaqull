@@ -11,7 +11,7 @@ function UnionNode() {
   const unionType = nodeUnionType(node);
   const setNodeState = useSetNodeState(node);
   return (
-    <SQLNodeUI>
+    <SQLNodeUI parentLimit={2}>
       UNION{" "}
       <Input
         emptyDisplayValue="DISTINCT"

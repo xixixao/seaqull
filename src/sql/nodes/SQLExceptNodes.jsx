@@ -4,7 +4,7 @@ import { getColumnNames, getQuerySelectableOrNull } from "../sqlNodes";
 import SQLNodeUI from "../ui/SQLNodeUI";
 
 function ExceptNode() {
-  return <SQLNodeUI>EXCEPT</SQLNodeUI>;
+  return <SQLNodeUI parentLimit={2}>EXCEPT</SQLNodeUI>;
 }
 
 export const SQLExceptNodeConfig = {

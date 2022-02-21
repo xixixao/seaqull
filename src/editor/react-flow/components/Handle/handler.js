@@ -9,6 +9,7 @@ export function hasTargetHandle(node, event) {
   return nodeElement?.querySelector(".react-flow__handle.target") != null;
 }
 
+// Handles mouse down on Handles and EdgeAnchors
 export function onMouseDown(
   event,
   handleId,
@@ -131,13 +132,14 @@ function checkElementBelowIsValid(
 ) {
   // TODO: why does this throw an error? elementFromPoint should be available for ShadowRoot too
   // @ts-ignore
-  const elementBelow = doc.elementFromPoint(event.clientX, event.clientY);
-  const elementBelowIsTarget =
-    elementBelow?.classList.contains("target") || false;
-  const elementBelowIsSource =
-    elementBelow?.classList.contains("source") || false;
+  const elementsBelow = doc.elementsFromPoint(event.clientX, event.clientY);
+  // TODO: Support dragging edges
+  // const elementBelowIsTarget =
+  //   elementBelow?.classList.contains("target") || false;
+  // const elementBelowIsSource =
+  //   elementBelow?.classList.contains("source") || false;
   const result = {
-    elementBelow,
+    // elementBelow,
     isValid: false,
     connection: {
       source: null,
@@ -147,36 +149,38 @@ function checkElementBelowIsValid(
     },
     isHoveringHandle: false,
   };
-  if (elementBelow && (elementBelowIsTarget || elementBelowIsSource)) {
-    result.isHoveringHandle = true;
-    // in strict mode we don't allow target to target or source to source connections
-    const isValid =
-      connectionMode === ConnectionMode.Strict
-        ? (isTarget && elementBelowIsSource) ||
-          (!isTarget && elementBelowIsTarget)
-        : true;
-    if (isValid) {
-      const elementBelowNodeId = elementBelow.getAttribute("data-nodeid");
-      const elementBelowHandleId = elementBelow.getAttribute("data-handleid");
-      const connection = isTarget
-        ? {
-            source: elementBelowNodeId,
-            sourceHandle: elementBelowHandleId,
-            target: nodeId,
-            targetHandle: handleId,
-          }
-        : {
-            source: nodeId,
-            sourceHandle: handleId,
-            target: elementBelowNodeId,
-            targetHandle: elementBelowHandleId,
-          };
-      result.connection = connection;
-      result.isValid = isValidConnection(connection);
-    }
-  }
+  // if (elementBelow && (elementBelowIsTarget || elementBelowIsSource)) {
+  //   result.isHoveringHandle = true;
+  //   // in strict mode we don't allow target to target or source to source connections
+  //   const isValid =
+  //     connectionMode === ConnectionMode.Strict
+  //       ? (isTarget && elementBelowIsSource) ||
+  //         (!isTarget && elementBelowIsTarget)
+  //       : true;
+  //   if (isValid) {
+  //     const elementBelowNodeId = elementBelow.getAttribute("data-nodeid");
+  //     const elementBelowHandleId = elementBelow.getAttribute("data-handleid");
+  //     const connection = isTarget
+  //       ? {
+  //           source: elementBelowNodeId,
+  //           sourceHandle: elementBelowHandleId,
+  //           target: nodeId,
+  //           targetHandle: handleId,
+  //         }
+  //       : {
+  //           source: nodeId,
+  //           sourceHandle: handleId,
+  //           target: elementBelowNodeId,
+  //           targetHandle: elementBelowHandleId,
+  //         };
+  //     result.connection = connection;
+  //     result.isValid = isValidConnection(connection);
+  //   }
+  // }
   // const nodeBelow = findAncestorWithAttribute(elementBelow, "data-id");
-  const nodeBelow = elementBelow.closest("[data-id]");
+  const nodeBelow = elementsBelow.find((element) =>
+    element.matches("[data-id]")
+  );
   if (nodeBelow != null) {
     const nodeBelowID = nodeBelow.getAttribute("data-id");
     const connection = isTarget

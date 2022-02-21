@@ -8,6 +8,7 @@ import { useStoreState } from "../../store/hooks";
 import { Position } from "../../types";
 import { isEdge } from "../../utils/graph";
 import { getEdgePositions, getHandle, isEdgeVisible } from "./utils";
+import { styled } from "editor/style";
 
 export const EdgeRenderer = memo(function EdgeRenderer(props) {
   const transform = useStoreState((state) => state.transform);
@@ -51,8 +52,14 @@ export const EdgeRenderer = memo(function EdgeRenderer(props) {
   const transformStyle = `translate(${transform[0]},${transform[1]}) scale(${transform[2]})`;
   const renderConnectionLine = connectionNodeId && connectionHandleType;
   return (
-    <svg width={width} height={height} className="react-flow__edges">
-      <g transform={transformStyle}>
+    <>
+      <SVGLayer
+        width={width}
+        height={height}
+        pointerEvents="none"
+        transform={transformStyle}
+        zIndex={2}
+      >
         {Array.from(edges.values()).map((edge) => (
           <Edge
             key={edge.id}
@@ -68,7 +75,14 @@ export const EdgeRenderer = memo(function EdgeRenderer(props) {
             isValidConnection={isValidConnection}
           />
         ))}
-        {renderConnectionLine && (
+      </SVGLayer>
+      {renderConnectionLine && (
+        <SVGLayer
+          width={width}
+          height={height}
+          transform={transformStyle}
+          zIndex={11}
+        >
           <ConnectionLine
             sourceNode={Nodes.positionOf(appState, Node.fake(connectionNodeId))}
             connectionNodeId={connectionNodeId}
@@ -79,11 +93,38 @@ export const EdgeRenderer = memo(function EdgeRenderer(props) {
             transform={transform}
             isConnectable={nodesConnectable}
           />
-        )}
-      </g>
-    </svg>
+        </SVGLayer>
+      )}
+    </>
   );
 });
+
+function SVGLayer({
+  width,
+  height,
+  transform,
+  pointerEvents,
+  zIndex,
+  children,
+}) {
+  return (
+    <SVG
+      width={width}
+      height={height}
+      css={{
+        position: "absolute",
+        top: 0,
+        left: 0,
+        pointerEvents,
+        zIndex,
+      }}
+    >
+      <g transform={transform}>{children}</g>
+    </SVG>
+  );
+}
+
+const SVG = styled("svg");
 
 function Edge({
   edge,

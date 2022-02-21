@@ -16,6 +16,8 @@ import { SQLiteLocalStorage } from "./ui/SQLiteLocalStorage";
 import { SQLiteResults } from "./ui/SQLiteResults";
 import { WelcomeDialog } from "./ui/SQLiteWelcomeDialog";
 
+const NODE_TYPES = Objects.map(NODE_CONFIGS, (type) => type.Component);
+
 export default function SQLiteLanguage() {
   return (
     <SQLNodeConfigsProvider value={NODE_CONFIGS}>
@@ -23,7 +25,7 @@ export default function SQLiteLanguage() {
         <Editor
           topRightUI={<Help />}
           topUI={<AddFromNodeButton />}
-          nodeTypes={Objects.map(NODE_CONFIGS, (type) => type.Component)}
+          nodeTypes={NODE_TYPES}
           onDoubleClick={addFromNodeOnDoubleClick}
           onKeyDown={addNodeFromKey(NODE_CONFIGS)}
         >

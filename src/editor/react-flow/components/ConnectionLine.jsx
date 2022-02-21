@@ -1,7 +1,6 @@
 import React from "react";
 import { Position } from "../types";
 import { BezierEdge } from "./Edges/BezierEdge";
-import { Group } from "./Group";
 
 export default function ConnectionLine({
   connectionNodeId,
@@ -35,19 +34,32 @@ export default function ConnectionLine({
   const isRightOrLeft =
     sourceHandle?.position === Position.Left ||
     sourceHandle?.position === Position.Right;
+
   return (
-    <Group css={{ pointerEvents: "none" }}>
-      <BezierEdge
-        {...{
-          sourceX,
-          sourceY,
-          sourcePosition: sourceHandle?.position,
-          targetX,
-          targetY,
-          targetPosition: isRightOrLeft ? Position.Left : Position.Top,
-        }}
-      />
-    </Group>
+    <OrientedConnectionLine
+      source={[sourceX, sourceY, sourceHandle?.position]}
+      target={[targetX, targetY, isRightOrLeft ? Position.Left : Position.Top]}
+      connectionHandleType={connectionHandleType}
+    />
+  );
+}
+
+function OrientedConnectionLine({ source, target, connectionHandleType }) {
+  const [
+    [sourceX, sourceY, sourcePosition],
+    [targetX, targetY, targetPosition],
+  ] = connectionHandleType === "source" ? [source, target] : [target, source];
+  return (
+    <BezierEdge
+      {...{
+        sourceX,
+        sourceY,
+        sourcePosition,
+        targetX,
+        targetY,
+        targetPosition,
+      }}
+    />
   );
 }
 
