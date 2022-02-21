@@ -3,7 +3,7 @@ import * as Edges from "graph/Edges";
 import * as Nodes from "graph/Nodes";
 import * as Node from "graph/Node";
 import { AppStateContext, useAppStateContext } from "../../../state";
-import ConnectionLine from "../../components/ConnectionLine/index";
+import ConnectionLine from "../../components/ConnectionLine";
 import { useStoreState } from "../../store/hooks";
 import { Position } from "../../types";
 import { isEdge } from "../../utils/graph";
@@ -48,13 +48,8 @@ const EdgeRenderer = (props) => {
   if (!width) {
     return null;
   }
-  const {
-    connectionLineType,
-    arrowHeadColor,
-    connectionLineStyle,
-    connectionLineComponent,
-    onlyRenderVisibleElements,
-  } = props;
+  const { connectionLineType, arrowHeadColor, onlyRenderVisibleElements } =
+    props;
   const transformStyle = `translate(${transform[0]},${transform[1]}) scale(${transform[2]})`;
   const renderConnectionLine = connectionNodeId && connectionHandleType;
   return (
@@ -85,10 +80,8 @@ const EdgeRenderer = (props) => {
             connectionPositionX={connectionPosition.x}
             connectionPositionY={connectionPosition.y}
             transform={transform}
-            connectionLineStyle={connectionLineStyle}
             connectionLineType={connectionLineType}
             isConnectable={nodesConnectable}
-            CustomConnectionLineComponent={connectionLineComponent}
           />
         )}
       </g>

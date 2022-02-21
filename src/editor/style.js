@@ -509,21 +509,6 @@ globalCss({
   //   userSelect: "none",
   // },
 
-  ".react-flow__connection": {
-    pointerEvents: "none",
-
-    ".animated": {
-      strokeDasharray: 5,
-      animation: "dashdraw 0.5s linear infinite",
-    },
-  },
-
-  ".react-flow__connection-path": {
-    fill: "none",
-    stroke: "#b1b1b7",
-    strokeWidth: 1,
-  },
-
   ".react-flow__nodes": {
     position: "absolute",
     width: "100%",
@@ -630,10 +615,6 @@ globalCss({
   // },
   // ".react-flow__edge-textbg": {
   //   fill: "white",
-  // },
-  // ".react-flow__connection-path": {
-  //   stroke: "#b1b1b7",
-  //   strokeWidth: 1,
   // },
   // ".react-flow__node": {
   //   cursor: "grab",

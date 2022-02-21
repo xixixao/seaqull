@@ -32,8 +32,6 @@ const GraphView = ({
   onSelectionContextMenu,
   connectionMode,
   connectionLineType,
-  connectionLineStyle,
-  connectionLineComponent,
   selectionKeyCode,
   multiSelectionKeyCode,
   zoomActivationKeyCode,
@@ -251,8 +249,6 @@ const GraphView = ({
         onElementClick={onElementClick}
         onEdgeDoubleClick={onEdgeDoubleClick}
         connectionLineType={connectionLineType}
-        connectionLineStyle={connectionLineStyle}
-        connectionLineComponent={connectionLineComponent}
         connectionMode={connectionMode}
         arrowHeadColor={arrowHeadColor}
         markerEndId={markerEndId}

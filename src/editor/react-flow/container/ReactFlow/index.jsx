@@ -62,8 +62,6 @@ const ReactFlow = forwardRef(
       onSelectionContextMenu,
       connectionMode = ConnectionMode.Strict,
       connectionLineType = ConnectionLineType.Bezier,
-      connectionLineStyle,
-      connectionLineComponent,
       deleteKeyCode = "Backspace",
       selectionKeyCode = "Shift",
       multiSelectionKeyCode = "Meta",
@@ -141,8 +139,6 @@ const ReactFlow = forwardRef(
             edgeTypes={edgeTypesParsed}
             connectionMode={connectionMode}
             connectionLineType={connectionLineType}
-            connectionLineStyle={connectionLineStyle}
-            connectionLineComponent={connectionLineComponent}
             selectionKeyCode={selectionKeyCode}
             onElementsRemove={onElementsRemove}
             deleteKeyCode={deleteKeyCode}
