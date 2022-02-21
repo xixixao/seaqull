@@ -66,13 +66,13 @@ export const BezierEdge = memo(function BezierEdge({
           })}
         />
         <g transform={`translate(${targetX},${targetY})`}>
-          <polyline
+          <polygon
             stroke="currentColor"
             fill="currentColor"
             strokeLinecap="round"
             strokeLinejoin="round"
             strokeWidth="1"
-            points="-5,-4 0,0 -5,4 -5,-4"
+            points="-4,-3 0,0 -4,3"
           />
         </g>
       </Group>
