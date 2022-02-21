@@ -531,11 +531,11 @@ globalCss({
     },
 
     position: "absolute",
-    width: "6px",
-    height: "6px",
-    background: "#555",
-    border: "1px solid white",
-    borderRadius: "100%",
+    width: "1px",
+    height: "1px",
+    // background: "#555",
+    // border: "1px solid white",
+    // borderRadius: "100%",
   },
 
   ".react-flow__handle-bottom": {
@@ -553,19 +553,14 @@ globalCss({
 
   ".react-flow__handle-left": {
     top: "50%",
-    left: "-4px",
+    left: "0px",
     transform: "translate(0, -50%)",
   },
 
   ".react-flow__handle-right": {
-    right: "-4px",
+    right: "0px",
     top: "50%",
     transform: "translate(0, -50%)",
-  },
-
-  ".react-flow__edgeupdater": {
-    cursor: "move",
-    pointerEvents: "all",
   },
 
   ".react-flow__background": absoluteFill,
