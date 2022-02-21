@@ -472,12 +472,6 @@ globalCss({
     },
   },
 
-  // @keyframes dashdraw {
-  //   from {
-  //     stroke-dashoffset: 10,
-  //   },
-  // },
-
   // ".react-flow__edge-textwrapper": {
   //   pointerEvents: "all",
   // },

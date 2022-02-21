@@ -2,7 +2,7 @@ import React, { useEffect, useRef, memo } from "react";
 import { useStoreActions, useStore } from "../../store/hooks";
 import FlowRenderer from "../FlowRenderer";
 import NodeRenderer from "../NodeRenderer";
-import EdgeRenderer from "../EdgeRenderer";
+import { EdgeRenderer } from "../EdgeRenderer";
 import {
   onLoadProject,
   onLoadGetElements,
@@ -72,8 +72,6 @@ const GraphView = ({
   onEdgeMouseMove,
   onEdgeMouseLeave,
   edgeUpdaterRadius,
-  onEdgeUpdateStart,
-  onEdgeUpdateEnd,
 }) => {
   const isInitialized = useRef(false);
   const setOnConnect = useStoreActions((actions) => actions.setOnConnect);
@@ -254,8 +252,6 @@ const GraphView = ({
         onEdgeMouseEnter={onEdgeMouseEnter}
         onEdgeMouseMove={onEdgeMouseMove}
         onEdgeMouseLeave={onEdgeMouseLeave}
-        onEdgeUpdateStart={onEdgeUpdateStart}
-        onEdgeUpdateEnd={onEdgeUpdateEnd}
         edgeUpdaterRadius={edgeUpdaterRadius}
       />
     </FlowRenderer>

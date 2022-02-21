@@ -3,6 +3,7 @@ import cc from "classcat";
 import { useStoreActions, useStoreState } from "../../store/hooks";
 import { onMouseDown } from "../Handle/handler";
 import { EdgeAnchor } from "./EdgeAnchor";
+import { useSetAppStateContext } from "editor/state";
 
 export default function wrapEdge(EdgeComponent) {
   const EdgeWrapper = ({
@@ -43,9 +44,8 @@ export default function wrapEdge(EdgeComponent) {
     onMouseMove,
     onMouseLeave,
     edgeUpdaterRadius,
-    onEdgeUpdateStart,
-    onEdgeUpdateEnd,
   }) => {
+    const [isDragged, setIsDragged] = useState(false);
     const addSelectedElements = useStoreActions(
       (actions) => actions.addSelectedElements
     );
@@ -131,10 +131,11 @@ export default function wrapEdge(EdgeComponent) {
         const nodeId = isSourceHandle ? target : source;
         const handleId = isSourceHandle ? targetHandleId : sourceHandleId;
         const isTarget = isSourceHandle;
-        onEdgeUpdateStart?.(event, edgeElement);
-        const _onEdgeUpdate = onEdgeUpdateEnd
-          ? (evt) => onEdgeUpdateEnd(evt, edgeElement)
-          : undefined;
+
+        setIsDragged(true);
+        const onEdgeUpdateEnd = () => {
+          setIsDragged(false);
+        };
         onMouseDown(
           event,
           handleId,
@@ -146,7 +147,7 @@ export default function wrapEdge(EdgeComponent) {
           isValidConnection,
           connectionMode,
           isSourceHandle ? "target" : "source",
-          _onEdgeUpdate
+          onEdgeUpdateEnd
         );
       },
       [
@@ -202,6 +203,7 @@ export default function wrapEdge(EdgeComponent) {
           target={target}
           selected={selected}
           animated={animated}
+          isDragged={isDragged}
           label={label}
           labelStyle={labelStyle}
           labelShowBg={labelShowBg}

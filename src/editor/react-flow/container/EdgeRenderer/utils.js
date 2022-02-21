@@ -27,6 +27,7 @@ export function getHandlePosition(position, pos, handle = null) {
         x,
         y: y + height / 2,
       };
+    default:
   }
 }
 

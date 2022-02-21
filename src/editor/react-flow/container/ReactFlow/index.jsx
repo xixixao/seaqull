@@ -84,8 +84,6 @@ const ReactFlow = forwardRef(
       onEdgeMouseEnter,
       onEdgeMouseMove,
       onEdgeMouseLeave,
-      onEdgeUpdateStart,
-      onEdgeUpdateEnd,
       edgeUpdaterRadius = 10,
       nodeTypesId = "1",
       edgeTypesId = "1",
@@ -167,8 +165,6 @@ const ReactFlow = forwardRef(
             onEdgeMouseEnter={onEdgeMouseEnter}
             onEdgeMouseMove={onEdgeMouseMove}
             onEdgeMouseLeave={onEdgeMouseLeave}
-            onEdgeUpdateStart={onEdgeUpdateStart}
-            onEdgeUpdateEnd={onEdgeUpdateEnd}
             edgeUpdaterRadius={edgeUpdaterRadius}
           />
           {children}

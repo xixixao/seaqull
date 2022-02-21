@@ -9,7 +9,7 @@ import { Position } from "../../types";
 import { isEdge } from "../../utils/graph";
 import { getEdgePositions, getHandle, isEdgeVisible } from "./utils";
 
-const EdgeRenderer = (props) => {
+export const EdgeRenderer = memo(function EdgeRenderer(props) {
   const transform = useStoreState((state) => state.transform);
   const appState = useAppStateContext();
   const edges = useContext(AppStateContext.edges);
@@ -83,9 +83,7 @@ const EdgeRenderer = (props) => {
       </g>
     </svg>
   );
-};
-EdgeRenderer.displayName = "EdgeRenderer";
-export default memo(EdgeRenderer);
+});
 
 function Edge({
   edge,
@@ -220,8 +218,6 @@ function Edge({
       onMouseLeave={props.onEdgeMouseLeave}
       edgeUpdaterRadius={props.edgeUpdaterRadius}
       onEdgeDoubleClick={props.onEdgeDoubleClick}
-      onEdgeUpdateStart={props.onEdgeUpdateStart}
-      onEdgeUpdateEnd={props.onEdgeUpdateEnd}
     />
   );
 }

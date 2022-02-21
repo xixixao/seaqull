@@ -3,6 +3,8 @@ import React, { memo } from "react";
 import { getCenter } from "./utils";
 import { Position } from "../../types";
 import { Group } from "../Group";
+import { Path } from "../Path";
+import { keyframes } from "editor/style";
 
 export const BezierEdge = memo(function BezierEdge({
   sourceX,
@@ -11,6 +13,7 @@ export const BezierEdge = memo(function BezierEdge({
   targetY,
   sourcePosition = Position.Bottom,
   targetPosition = Position.Top,
+  isDragged,
   // label,
   // labelStyle,
   // labelShowBg,
@@ -46,13 +49,25 @@ export const BezierEdge = memo(function BezierEdge({
       <Group
         css={{
           color: "$slate9",
-          // TODO: Dont use classes, use React props instead
-          ".updating &": {
-            color: "$slate12",
-          },
+          ...(isDragged
+            ? {}
+            : {
+                // TODO: Dont use classes, use React props instead
+                ".updating &": {
+                  color: "$slate12",
+                },
+              }),
         }}
       >
-        <path
+        <Path
+          css={
+            isDragged
+              ? {
+                  strokeDasharray: 5,
+                  animation: `${dashDraw} 0.5s linear infinite`,
+                }
+              : {}
+          }
           fill="none"
           stroke="currentColor"
           strokeWidth={1}
@@ -113,3 +128,7 @@ function getBezierPath({
     return `M${sourceX},${sourceY} C${sourceX},${cY} ${targetX},${cY} ${targetX},${targetY}`;
   }
 }
+
+const dashDraw = keyframes({
+  from: { strokeDashoffset: 10 },
+});
