@@ -463,23 +463,6 @@ globalCss({
     cursor: "grab",
   },
 
-  ".react-flow__nodesselection": {
-    zIndex: 3,
-    position: "absolute",
-    width: "100%",
-    height: "100%",
-    top: 0,
-    left: 0,
-    transformOrigin: "left top",
-    pointerEvents: "none",
-
-    // ".react-flow__nodesselection-rect": {
-    //   position: "absolute",
-    //   pointerEvents: "all",
-    //   cursor: "grab",
-    // },
-  },
-
   ".react-flow__background": absoluteFill,
 
   // '.react-flow__minimap': {
@@ -500,13 +483,6 @@ globalCss({
   ".react-flow__node.selectable:not(.selected):hover > div": {
     boxShadow: "0 1px 4px 1px $colors$subtleShadow",
   },
-
-  ".react-flow__nodesselection-rect": {
-    background: "rgba(0, 89, 220, 0.08)",
-    border: "1px dotted rgba(0, 89, 220, 0.8)",
-  },
-
-  // Moved up
 
   //   '&.connectable': {
   //     cursor: 'crosshair',

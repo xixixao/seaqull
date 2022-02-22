@@ -4,7 +4,7 @@ import useGlobalKeyHandler from "../../hooks/useGlobalKeyHandler";
 import useKeyPress from "../../hooks/useKeyPress";
 import ZoomPane from "../ZoomPane";
 import UserSelection from "../../components/UserSelection";
-import NodesSelection from "../../components/NodesSelection";
+import { NodesSelection } from "../../components/NodesSelection";
 import { useResetSelectedElements } from "../../store/reducer";
 const FlowRenderer = ({
   children,

@@ -2,16 +2,18 @@
  * The nodes selection rectangle gets displayed when a user
  * made a selectio  with on or several nodes
  */
+import { Box } from "editor/ui/Box";
 import React, { useMemo, useCallback, useRef } from "react";
 import ReactDraggable from "react-draggable";
-import { useStoreState, useStoreActions } from "../../store/hooks";
-import { isNode } from "../../utils/graph";
-export default ({
+import { useStoreState, useStoreActions } from "../store/hooks";
+import { isNode } from "../utils/graph";
+
+export function NodesSelection({
   onSelectionDragStart,
   onSelectionDrag,
   onSelectionDragStop,
   onSelectionContextMenu,
-}) => {
+}) {
   const [tX, tY, tScale] = useStoreState((state) => state.transform);
   const selectedNodesBbox = useStoreState((state) => state.selectedNodesBbox);
   const selectionActive = useStoreState((state) => state.selectionActive);
@@ -41,12 +43,6 @@ export default ({
           })
         : [],
     [selectedElements, nodes]
-  );
-  const style = useMemo(
-    () => ({
-      transform: `translate(${tX}px,${tY}px) scale(${tScale})`,
-    }),
-    [tX, tY, tScale]
   );
   const innerStyle = useMemo(
     () => ({
@@ -104,7 +100,19 @@ export default ({
     return null;
   }
   return (
-    <div className="react-flow__nodesselection" style={style}>
+    <Box
+      css={{
+        zIndex: "$nodeEditor",
+        position: "absolute",
+        width: "100%",
+        height: "100%",
+        top: 0,
+        left: 0,
+        transformOrigin: "left top",
+        pointerEvents: "none",
+        transform: `translate(${tX}px,${tY}px) scale(${tScale})`,
+      }}
+    >
       <ReactDraggable
         scale={tScale}
         grid={grid}
@@ -114,13 +122,17 @@ export default ({
         nodeRef={nodeRef}
         enableUserSelectHack={false}
       >
-        <div
+        <Box
+          css={{
+            background: "rgba(0, 89, 220, 0.08)",
+            border: "1px dotted rgba(0, 89, 220, 0.8)",
+          }}
           ref={nodeRef}
           className="react-flow__nodesselection-rect"
           onContextMenu={onContextMenu}
           style={innerStyle}
         />
       </ReactDraggable>
-    </div>
+    </Box>
   );
-};
+}
