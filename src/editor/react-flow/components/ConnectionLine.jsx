@@ -2,7 +2,7 @@ import React from "react";
 import { Position } from "../types";
 import { BezierEdge } from "./Edges/BezierEdge";
 
-export default function ConnectionLine({
+export function ConnectionLine({
   connectionNodeId,
   connectionHandleId,
   connectionHandleType,

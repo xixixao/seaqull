@@ -4,7 +4,7 @@ import * as Node from "graph/Node";
 import * as Nodes from "graph/Nodes";
 import React, { memo, useCallback, useContext } from "react";
 import { AppStateContext, useAppStateContext } from "../../state";
-import ConnectionLine from "../components/ConnectionLine";
+import { ConnectionLine } from "../components/ConnectionLine";
 import { useStoreState } from "../store/hooks";
 import { Position } from "../types";
 import { isEdge, rectToBox } from "../utils/graph";
