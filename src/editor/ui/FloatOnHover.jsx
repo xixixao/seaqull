@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-export default function FloatOnHover({ style, trigger, children }) {
+export default function FloatOnHover({ className, style, trigger, children }) {
   const [isFloating, setIsFloating] = useState(false);
   // const floated = React.cloneElement(React.Children.only(children), {
   //   onMouseLeave: () => setIsFloating(false),
@@ -11,7 +11,9 @@ export default function FloatOnHover({ style, trigger, children }) {
         {trigger}
       </div>
       {isFloating ? (
-        <div onMouseLeave={() => setIsFloating(false)}>{children}</div>
+        <div className={className} onMouseLeave={() => setIsFloating(false)}>
+          {children}
+        </div>
       ) : null}
     </>
   );

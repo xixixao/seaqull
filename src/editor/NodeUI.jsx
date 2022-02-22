@@ -111,6 +111,7 @@ function NodeUIControls({ hideControls, useControls }) {
 
   const controlsPositioned = (
     <div
+      className="nodrag"
       style={{
         position: "absolute",
         top: "calc(100% + 4px)",
@@ -126,6 +127,7 @@ function NodeUIControls({ hideControls, useControls }) {
     controlsPositioned
   ) : (
     <FloatOnHover
+      className="nodrag"
       style={{
         position: "absolute",
         top: "50%",
