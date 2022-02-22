@@ -3,8 +3,7 @@ import { useStoreActions, useStoreState } from "../../store/hooks";
 import useGlobalKeyHandler from "../../hooks/useGlobalKeyHandler";
 import useKeyPress from "../../hooks/useKeyPress";
 import ZoomPane from "../ZoomPane";
-import UserSelection from "../../components/UserSelection";
-import { NodesSelection } from "../../components/NodesSelection";
+import { BoxSelection } from "../../components/BoxSelection";
 import { useResetSelectedElements } from "../../store/reducer";
 const FlowRenderer = ({
   children,
@@ -41,9 +40,6 @@ const FlowRenderer = ({
     (actions) => actions.unsetNodesSelection
   );
   const resetSelectedElements = useResetSelectedElements();
-  const nodesSelectionActive = useStoreState(
-    (state) => state.nodesSelectionActive
-  );
   const selectionKeyPressed = useKeyPress(selectionKeyCode);
   useGlobalKeyHandler({
     onElementsRemove,
@@ -91,15 +87,7 @@ const FlowRenderer = ({
       preventScrolling={preventScrolling}
     >
       {children}
-      <UserSelection selectionKeyPressed={selectionKeyPressed} />
-      {nodesSelectionActive && (
-        <NodesSelection
-          onSelectionDragStart={onSelectionDragStart}
-          onSelectionDrag={onSelectionDrag}
-          onSelectionDragStop={onSelectionDragStop}
-          onSelectionContextMenu={onSelectionContextMenu}
-        />
-      )}
+      <BoxSelection selectionKeyPressed={selectionKeyPressed} />
       <div
         className="react-flow__pane"
         onClick={onClick}

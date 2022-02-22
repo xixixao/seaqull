@@ -1,39 +1,17 @@
 /**
  * The user selection rectangle gets displayed when a user drags the mouse while pressing shift
  */
+import { Box } from "editor/ui/Box";
+import { FillParent } from "editor/ui/FillParent";
 import React, { memo } from "react";
-import { useAppStateContext } from "../../../state";
-import { useStoreActions, useStoreState } from "../../store/hooks";
-import { useAddSelectedElements } from "../../store/reducer";
-import { getNodesInside } from "../../utils/graph";
-function getMousePosition(event) {
-  const reactFlowNode = event.target.closest(".react-flow");
-  if (!reactFlowNode) {
-    return;
-  }
-  const containerBounds = reactFlowNode.getBoundingClientRect();
-  return {
-    x: event.clientX - containerBounds.left,
-    y: event.clientY - containerBounds.top,
-  };
-}
-const SelectionRect = () => {
-  const userSelectionRect = useStoreState((state) => state.userSelectionRect);
-  if (!userSelectionRect.draw) {
-    return null;
-  }
-  return (
-    <div
-      className="react-flow__selection"
-      style={{
-        width: userSelectionRect.width,
-        height: userSelectionRect.height,
-        transform: `translate(${userSelectionRect.x}px, ${userSelectionRect.y}px)`,
-      }}
-    />
-  );
-};
-export default memo(({ selectionKeyPressed }) => {
+import { useAppStateContext } from "../../state";
+import { useStoreActions, useStoreState } from "../store/hooks";
+import { useAddSelectedElements } from "../store/reducer";
+import { getNodesInside } from "../utils/graph";
+
+export const BoxSelection = memo(function BoxSelection({
+  selectionKeyPressed,
+}) {
   const selectionActive = useStoreState((state) => state.selectionActive);
   const elementsSelectable = useStoreState((state) => state.elementsSelectable);
   const setUserSelection = useStoreActions(
@@ -100,14 +78,47 @@ export default memo(({ selectionKeyPressed }) => {
     unsetNodesSelection();
   };
   return (
-    <div
-      className="react-flow__selectionpane"
+    <FillParent
+      css={{ zIndex: "$uiAboveNodes" }}
       onMouseDown={onMouseDown}
       onMouseMove={onMouseMove}
       onMouseUp={onMouseUp}
       onMouseLeave={onMouseLeave}
     >
       <SelectionRect />
-    </div>
+    </FillParent>
   );
 });
+
+const SelectionRect = () => {
+  const userSelectionRect = useStoreState((state) => state.userSelectionRect);
+  if (!userSelectionRect.draw) {
+    return null;
+  }
+  return (
+    <Box
+      css={{
+        position: "absolute",
+        top: 0,
+        left: 0,
+        background: "rgba(0, 89, 220, 0.08)",
+        border: "1px dotted rgba(0, 89, 220, 0.8)",
+        width: userSelectionRect.width,
+        height: userSelectionRect.height,
+        transform: `translate(${userSelectionRect.x}px, ${userSelectionRect.y}px)`,
+      }}
+    />
+  );
+};
+
+function getMousePosition(event) {
+  const reactFlowNode = event.target.closest(".react-flow");
+  if (!reactFlowNode) {
+    return;
+  }
+  const containerBounds = reactFlowNode.getBoundingClientRect();
+  return {
+    x: event.clientX - containerBounds.left,
+    y: event.clientY - containerBounds.top,
+  };
+}

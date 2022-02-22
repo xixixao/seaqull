@@ -419,14 +419,6 @@ globalCss({
   // TODO: Not sure why 4 is here
   ".react-flow__renderer": { ...absoluteFill, zIndex: 4 },
   ".react-flow__pane": { ...absoluteFill, zIndex: 1 },
-  ".react-flow__selectionpane": { ...absoluteFill, zIndex: 5 },
-  ".react-flow__selection": {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    background: "rgba(0, 89, 220, 0.08)",
-    border: "1px dotted rgba(0, 89, 220, 0.8)",
-  },
 
   ".react-flow__edge": {
     pointerEvents: "visibleStroke",
