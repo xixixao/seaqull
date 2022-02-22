@@ -2,7 +2,11 @@ import { useNode } from "editor/react-flow/components/Nodes/wrapNode";
 import { useAppGraphContext, useSetNodeState } from "editor/state";
 import * as Nodes from "graph/Nodes";
 import * as Arrays from "js/Arrays";
-import { getColumnNames, getQuerySelectableOrNull } from "../sqlNodes";
+import {
+  getColumnNames,
+  getQuerySelectableOrNull,
+  useNodeConfig,
+} from "../sqlNodes";
 import Input from "editor/Input";
 import SQLNodeUI from "../ui/SQLNodeUI";
 
@@ -10,11 +14,13 @@ function UnionNode() {
   const node = useNode();
   const unionType = nodeUnionType(node);
   const setNodeState = useSetNodeState(node);
+  const typeExtensions = useNodeConfig(node).useTypeInputExtensions();
   return (
     <SQLNodeUI parentLimit={2}>
       UNION{" "}
       <Input
         emptyDisplayValue="DISTINCT"
+        extensions={typeExtensions}
         value={unionType}
         onChange={(unionType) => {
           setNodeState((node) => {

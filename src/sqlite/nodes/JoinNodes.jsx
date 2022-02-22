@@ -4,10 +4,11 @@ import {
   SQLJoinNodeConfig,
 } from "../../sql/nodes/SQLJoinNodes";
 import { useAppGraphWithEditorConfig } from "../sqliteState";
-import { sqlite } from "./sqliteCompletions";
+import { sqlite, useColumnSchema } from "./sqliteCompletions";
 
 export const JoinNodeConfig = {
   ...SQLJoinNodeConfig,
+  useTypeInputExtensions: useColumnSchema,
   useOnInputExtensions() {
     const appState = useAppGraphWithEditorConfig();
     const node = useNode();

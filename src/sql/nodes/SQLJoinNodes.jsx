@@ -25,11 +25,13 @@ function JoinNode() {
   const node = useNode();
   const filters = nodeFilters(node);
   const setNodeState = useSetNodeState(node);
+  const typeExtensions = useNodeConfig(node).useTypeInputExtensions();
   const onExtensions = useNodeConfig(node).useOnInputExtensions();
   return (
     <SQLNodeUI parentLimit={2}>
       <Input
         emptyDisplayValue="INNER"
+        extensions={typeExtensions}
         value={joinType(node)}
         onChange={(joinType) => {
           setNodeState((node) => {
