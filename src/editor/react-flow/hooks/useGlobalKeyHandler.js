@@ -10,9 +10,6 @@ export default function useGlobalKeyHandler({
   onElementsRemove,
 }) {
   const store = useStore();
-  const unsetNodesSelection = useStoreActions(
-    (actions) => actions.unsetNodesSelection
-  );
   const setMultiSelectionActive = useStoreActions(
     (actions) => actions.setMultiSelectionActive
   );
@@ -29,7 +26,6 @@ export default function useGlobalKeyHandler({
         new Map()
       );
       onElementsRemove(Array.from(elementsToRemove.values()));
-      unsetNodesSelection();
       resetSelectedElements();
     }
   }, [deleteKeyPressed]);

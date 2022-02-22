@@ -46,14 +46,8 @@ export default function wrapEdge(EdgeComponent) {
     edgeUpdaterRadius,
   }) => {
     const [isDragged, setIsDragged] = useState(false);
-    const addSelectedElements = useStoreActions(
-      (actions) => actions.addSelectedElements
-    );
     const setConnectionNodeId = useStoreActions(
       (actions) => actions.setConnectionNodeId
-    );
-    const unsetNodesSelection = useStoreActions(
-      (actions) => actions.unsetNodesSelection
     );
     const setPosition = useStoreActions(
       (actions) => actions.setConnectionPosition
@@ -89,7 +83,6 @@ export default function wrapEdge(EdgeComponent) {
       (event) => {
         // TODO: This is for supporting edge selection
         // if (elementsSelectable) {
-        //   unsetNodesSelection();
         //   addSelectedElements(edgeElement);
         // }
         onClick?.(event, edgeElement);

@@ -68,9 +68,6 @@ export default function wrapNode(NodeComponent) {
     const setAppState = useSetAppStateContext();
     const updateNodeDimensions = useUpdateNodeDimensions();
     const addSelectedElements = useAddSelectedElements();
-    const unsetNodesSelection = useStoreActions(
-      (actions) => actions.unsetNodesSelection
-    );
     const store = useStore();
     const nodeElement = useRef(null);
     const node = useMemo(
@@ -134,14 +131,12 @@ export default function wrapNode(NodeComponent) {
       (event) => {
         onNodeDragStart?.(event, node);
         if (selectNodesOnDrag && isSelectable) {
-          unsetNodesSelection();
           if (!selected) {
             // TODO: Remove multiSelectionActive from state and use event
             // props directly
             addSelectedElements([node], event.metaKey);
           }
         } else if (!selectNodesOnDrag && !selected && isSelectable) {
-          unsetNodesSelection();
           addSelectedElements([]);
         }
       },
@@ -151,7 +146,6 @@ export default function wrapNode(NodeComponent) {
         selectNodesOnDrag,
         isSelectable,
         selected,
-        unsetNodesSelection,
         addSelectedElements,
       ]
     );

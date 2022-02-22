@@ -36,9 +36,6 @@ const FlowRenderer = ({
   onSelectionDragStop,
   onSelectionContextMenu,
 }) => {
-  const unsetNodesSelection = useStoreActions(
-    (actions) => actions.unsetNodesSelection
-  );
   const resetSelectedElements = useResetSelectedElements();
   const selectionKeyPressed = useKeyPress(selectionKeyCode);
   useGlobalKeyHandler({
@@ -49,7 +46,6 @@ const FlowRenderer = ({
   const onClick = useCallback(
     (event) => {
       onPaneClick?.(event);
-      unsetNodesSelection();
       resetSelectedElements();
     },
     [onPaneClick]

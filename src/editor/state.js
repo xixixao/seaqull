@@ -95,6 +95,12 @@ export function useAppGraphAndSelectionContext() {
   return useCombinedContext(GraphAndSelectionContext);
 }
 
+const NodesAndPositionsContext = { positions, nodes: AppStateContext.nodes };
+
+export function useNodesPositionsContext() {
+  return useCombinedContext(NodesAndPositionsContext);
+}
+
 export function useSetSelectedNodeState() {
   return useSetAppStateCallback((producer) => (appState) => {
     const selected = onlyWarns(Nodes.selected(appState));

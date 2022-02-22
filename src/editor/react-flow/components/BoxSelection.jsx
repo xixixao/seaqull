@@ -3,36 +3,23 @@
  */
 import { Box } from "editor/ui/Box";
 import { FillParent } from "editor/ui/FillParent";
-import React, { memo } from "react";
-import { useAppStateContext } from "../../state";
-import { useStoreActions, useStoreState } from "../store/hooks";
+import React, { memo, useState } from "react";
+import { useNodesPositionsContext } from "../../state";
+import { useStoreState } from "../store/hooks";
 import { useAddSelectedElements } from "../store/reducer";
 import { getNodesInside } from "../utils/graph";
 
 export const BoxSelection = memo(function BoxSelection({
   selectionKeyPressed,
 }) {
-  const selectionActive = useStoreState((state) => state.selectionActive);
-  const elementsSelectable = useStoreState((state) => state.elementsSelectable);
-  const setUserSelection = useStoreActions(
-    (actions) => actions.setUserSelection
-  );
-  const updateUserSelection = useStoreActions(
-    (actions) => actions.updateUserSelection
-  );
-  const unsetUserSelection = useStoreActions(
-    (actions) => actions.unsetUserSelection
-  );
-  const unsetNodesSelection = useStoreActions(
-    (actions) => actions.unsetNodesSelection
-  );
-  const userSelectionRect = useStoreState((state) => state.userSelectionRect);
   const transform = useStoreState((state) => state.transform);
-  const appState = useAppStateContext();
+
+  const [selectionRect, setSelectionRect] = useState(null);
+
+  const appState = useNodesPositionsContext();
   const addSelectedElements = useAddSelectedElements();
 
-  const renderUserSelectionPane = selectionActive || selectionKeyPressed;
-  if (!elementsSelectable || !renderUserSelectionPane) {
+  if (!(selectionRect != null || selectionKeyPressed)) {
     return null;
   }
   const onMouseDown = (event) => {
@@ -40,10 +27,17 @@ export const BoxSelection = memo(function BoxSelection({
     if (!mousePos) {
       return;
     }
-    setUserSelection(mousePos);
+    setSelectionRect({
+      width: 0,
+      height: 0,
+      startX: mousePos.x,
+      startY: mousePos.y,
+      x: mousePos.x,
+      y: mousePos.y,
+    });
   };
   const onMouseMove = (event) => {
-    if (!selectionKeyPressed || !selectionActive) {
+    if (!selectionKeyPressed || selectionRect == null) {
       return;
     }
     const mousePos = getMousePosition(event);
@@ -51,48 +45,43 @@ export const BoxSelection = memo(function BoxSelection({
       return;
     }
 
-    const startX = userSelectionRect.startX ?? 0;
-    const startY = userSelectionRect.startY ?? 0;
-    const nextUserSelectRect = {
-      ...userSelectionRect,
-      x: mousePos.x < startX ? mousePos.x : userSelectionRect.x,
-      y: mousePos.y < startY ? mousePos.y : userSelectionRect.y,
+    const startX = selectionRect.startX ?? 0;
+    const startY = selectionRect.startY ?? 0;
+    const nextSelectionRect = {
+      ...selectionRect,
+      x: mousePos.x < startX ? mousePos.x : selectionRect.x,
+      y: mousePos.y < startY ? mousePos.y : selectionRect.y,
       width: Math.abs(mousePos.x - startX),
       height: Math.abs(mousePos.y - startY),
     };
     const selectedNodes = getNodesInside(
       appState,
-      nextUserSelectRect,
+      nextSelectionRect,
       transform,
       false,
       true
     );
     addSelectedElements(selectedNodes);
-    updateUserSelection(nextUserSelectRect);
+    setSelectionRect(nextSelectionRect);
   };
-  const onMouseUp = () => {
-    unsetUserSelection();
-  };
-  const onMouseLeave = () => {
-    unsetUserSelection();
-    unsetNodesSelection();
+  const cancelSelection = () => {
+    setSelectionRect(null);
   };
   return (
     <FillParent
       css={{ zIndex: "$uiAboveNodes" }}
       onMouseDown={onMouseDown}
       onMouseMove={onMouseMove}
-      onMouseUp={onMouseUp}
-      onMouseLeave={onMouseLeave}
+      onMouseUp={cancelSelection}
+      onMouseLeave={cancelSelection}
     >
-      <SelectionRect />
+      <SelectionRect rect={selectionRect} />
     </FillParent>
   );
 });
 
-const SelectionRect = () => {
-  const userSelectionRect = useStoreState((state) => state.userSelectionRect);
-  if (!userSelectionRect.draw) {
+const SelectionRect = ({ rect }) => {
+  if (rect == null) {
     return null;
   }
   return (
@@ -103,9 +92,9 @@ const SelectionRect = () => {
         left: 0,
         background: "rgba(0, 89, 220, 0.08)",
         border: "1px dotted rgba(0, 89, 220, 0.8)",
-        width: userSelectionRect.width,
-        height: userSelectionRect.height,
-        transform: `translate(${userSelectionRect.x}px, ${userSelectionRect.y}px)`,
+        width: rect.width,
+        height: rect.height,
+        transform: `translate(${rect.x}px, ${rect.y}px)`,
       }}
     />
   );

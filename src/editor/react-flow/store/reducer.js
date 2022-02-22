@@ -142,22 +142,6 @@ export default function reactFlowReducer(state = initialState, action) {
     case constants.UPDATE_NODE_POS_DIFF: {
       throw new Error("migrate to context");
     }
-    case constants.SET_USER_SELECTION: {
-      const mousePos = action.payload;
-      return {
-        ...state,
-        selectionActive: true,
-        userSelectionRect: {
-          width: 0,
-          height: 0,
-          startX: mousePos.x,
-          startY: mousePos.y,
-          x: mousePos.x,
-          y: mousePos.y,
-          draw: true,
-        },
-      };
-    }
     // case constants.UPDATE_USER_SELECTION: {
 
     // const mousePos = action.payload;
@@ -181,29 +165,6 @@ export default function reactFlowReducer(state = initialState, action) {
     // const nextSelectedElements = [...selectedNodes, ...selectedEdges];
 
     // }
-    case constants.UNSET_USER_SELECTION: {
-      // const selectedNodes = state.selectedElements?.filter(
-      //   (node) => isNode(node) && node.__rf
-      // );
-      const stateUpdate = {
-        ...state,
-        selectionActive: false,
-        userSelectionRect: {
-          ...state.userSelectionRect,
-          draw: false,
-        },
-        nodesSelectionActive: false,
-      };
-      // if ((selectedNodes ?? []).length < 2) {
-      //   // stateUpdate.selectedElements = null;
-      // stateUpdate.nodesSelectionActive = false;
-      // } else {
-      //   const selectedNodesBbox = getRectOfNodes(selectedNodes);
-      //   stateUpdate.selectedNodesBbox = selectedNodesBbox;
-      //   stateUpdate.nodesSelectionActive = true;
-      // }
-      return stateUpdate;
-    }
     // case constants.SET_SELECTED_ELEMENTS: {
     //   const elements = action.payload;
     //   const selectedElementsArr = Array.isArray(elements)
@@ -275,12 +236,10 @@ export default function reactFlowReducer(state = initialState, action) {
       };
     }
     // case constants.RESET_SELECTED_ELEMENTS:
-    case constants.UPDATE_USER_SELECTION:
     case constants.SET_ON_CONNECT:
     case constants.SET_ON_CONNECT_START:
     case constants.SET_ON_CONNECT_STOP:
     case constants.SET_ON_CONNECT_END:
-    case constants.UNSET_NODES_SELECTION:
     case constants.UPDATE_TRANSFORM:
     case constants.UPDATE_SIZE:
     case constants.SET_CONNECTION_POSITION:

@@ -51,6 +51,9 @@ export function produceAndRecord(value, updater) {
     beforeValue,
     updater
   );
+  if (forwardSet.length === 0) {
+    return value;
+  }
   const [forward, reverse] = [
     forwardSet.filter(({ path }) => path[0] !== "history"),
     reverseSet.filter(({ path }) => path[0] !== "history"),
