@@ -55,7 +55,7 @@ export default function NodeUI({
               isConnectable={
                 parentEdges[1] == null && connectingHandleID !== "1"
               }
-              style={{ top: "calc(100% - 8px)" }}
+              style={{ top: "calc(100% - 7px)" }}
               position="left"
               type="target"
             />

@@ -120,25 +120,46 @@ function NodesPane({ children, nodeTypes, onKeyDown, onDoubleClick }) {
             });
           }}
           {...PAN_SETTINGS.MAC}
-          onEdgeUpdate={(edge, { source, target }) => {
+          onEdgeUpdate={(edge, { source, target, targetHandle }) => {
             setAppState((appState) => {
-              Edges.remove(appState, edge);
-              Edges.addChild(
-                appState,
-                Node.fake(source),
-                Node.fake(target),
-                Edge.childHandleIndex(edge)
-              );
+              History.startRecording(appState);
+              if (
+                target === Edge.childID(edge) &&
+                Edge.childHandleIndex(edge) != null
+              ) {
+                Edges.detachedParents(appState, Node.fake(target)).forEach(
+                  (edge) => {
+                    Edges.remove(appState, edge);
+                    Edges.addChild(
+                      appState,
+                      Node.fake(Edge.parentID(edge)),
+                      Node.fake(Edge.childID(edge)),
+                      Edge.childHandleIndex(edge) === "0" ? "1" : "0"
+                    );
+                  }
+                );
+              } else {
+                Edges.remove(appState, edge);
+                Edges.addChild(
+                  appState,
+                  Node.fake(source),
+                  Node.fake(target),
+                  targetHandle
+                );
+              }
+              History.endRecording(appState);
             });
           }}
           onConnect={({ source, target, targetHandle }) => {
             setAppState((appState) => {
+              History.startRecording(appState);
               Edges.addChild(
                 appState,
                 Node.fake(source),
                 Node.fake(target),
                 targetHandle
               );
+              History.endRecording(appState);
             });
           }}
           // onElementsRemove={onElementsRemove}

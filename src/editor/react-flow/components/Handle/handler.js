@@ -190,6 +190,9 @@ function checkElementBelowIsValid(
           source: nodeId,
           sourceHandle: handleId,
           target: nodeBelowID,
+          targetHandle: nodeBelow.querySelector(`[data-handleid="0"]`)
+            ? "0"
+            : null,
         };
     result.connection = connection;
     result.isValid = isValidConnection(connection);
