@@ -119,7 +119,11 @@ function getBezierPath({
     leftAndRight.includes(sourcePosition) &&
     leftAndRight.includes(targetPosition)
   ) {
-    return `M${sourceX},${sourceY} C${cX},${sourceY} ${cX},${targetY} ${targetX},${targetY}`;
+    const verticalDistance = Math.min(100, Math.abs(targetY - sourceY));
+    const offset = Math.max(0, sourceX - targetX + verticalDistance);
+    const sourceControlX = Math.max(cX, sourceX + offset + 0);
+    const targetControlX = Math.min(cX, targetX - offset - 0);
+    return `M${sourceX},${sourceY} C${sourceControlX},${sourceY} ${targetControlX},${targetY} ${targetX},${targetY}`;
   } else if (leftAndRight.includes(targetPosition)) {
     return `M${sourceX},${sourceY} Q${sourceX},${targetY} ${targetX},${targetY}`;
   } else if (leftAndRight.includes(sourcePosition)) {

@@ -37,6 +37,14 @@ export function parents(graph, node) {
   );
 }
 
+export function parentsOrdered(graph, node) {
+  let ordered = [];
+  parents(graph, node).forEach((edge) => {
+    ordered[Edge.childHandleIndex(edge)] = edge;
+  });
+  return ordered;
+}
+
 export function parentNode(graph, edge) {
   return Nodes.nodeWithID(graph, Edge.parentID(edge));
 }

@@ -18,6 +18,7 @@ export default function NodeUI({
   const node = useNodeUIProps();
   const appState = useAppGraphContext();
   const parentCount = Edges.parents(appState, node).length;
+  const parentEdges = Edges.parentsOrdered(appState, node);
   return (
     <>
       <NodeWrapper
@@ -41,14 +42,14 @@ export default function NodeUI({
           <>
             <Handle
               id="0"
-              isConnectable={parentCount < 1}
+              isConnectable={parentEdges[0] == null}
               style={{ top: "8px" }}
               position="left"
               type="target"
             />
             <Handle
               id="1"
-              isConnectable={parentCount < 2}
+              isConnectable={parentEdges[1] == null}
               style={{ top: "calc(100% - 8px)" }}
               position="left"
               type="target"
