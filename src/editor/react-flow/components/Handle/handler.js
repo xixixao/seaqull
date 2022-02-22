@@ -186,9 +186,11 @@ function checkElementBelowIsValid(
       ? {
           source: nodeBelowID,
           target: nodeId,
+          targetHandle: handleId,
         }
       : {
           source: nodeId,
+          sourceHandle: handleId,
           target: nodeBelowID,
         };
     result.connection = connection;

@@ -18,7 +18,7 @@ import React, {
 import { DraggableCore } from "react-draggable";
 import * as Layout from "../../../Layout";
 import { useSetAppStateContext } from "../../../state";
-import { useStore, useStoreActions } from "../../store/hooks";
+import { useStore, useStoreActions, useStoreState } from "../../store/hooks";
 import {
   useAddSelectedElements,
   useUpdateNodeDimensions,
@@ -68,6 +68,10 @@ export default function wrapNode(NodeComponent) {
     const setAppState = useSetAppStateContext();
     const updateNodeDimensions = useUpdateNodeDimensions();
     const addSelectedElements = useAddSelectedElements();
+    const connectionNodeId = useStoreState((state) => state.connectionNodeId);
+    const connectionHandleId = useStoreState(
+      (state) => state.connectionHandleId
+    );
     const store = useStore();
     const nodeElement = useRef(null);
     const node = useMemo(
@@ -373,6 +377,8 @@ export default function wrapNode(NodeComponent) {
       edited,
       dragHandle,
       nodeElement,
+      connectingHandleID:
+        connectionNodeId === id ? connectionHandleId ?? "0" : null,
     };
     return (
       <DraggableCore

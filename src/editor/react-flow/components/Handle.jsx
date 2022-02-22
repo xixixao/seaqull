@@ -1,10 +1,10 @@
-import React, { memo, useContext, useCallback, forwardRef } from "react";
+import React, { memo, useCallback, forwardRef } from "react";
 import cc from "classcat";
 import { useStoreActions, useStoreState } from "../store/hooks";
-import NodeIdContext from "../contexts/NodeIdContext";
 import { Position } from "../types";
 import { onMouseDown } from "./Handle/handler";
 import { styled } from "editor/style";
+import { useNode } from "./Nodes/wrapNode";
 const alwaysValid = () => true;
 
 export const Handle = memo(
@@ -22,7 +22,7 @@ export const Handle = memo(
     },
     ref
   ) {
-    const nodeId = useContext(NodeIdContext);
+    const { id: nodeId } = useNode();
     const setPosition = useStoreActions(
       (actions) => actions.setConnectionPosition
     );
@@ -111,8 +111,8 @@ export const Handle = memo(
 const HandleCore = styled("div", {
   pointerEvents: "none",
   position: "absolute",
-  width: "1px",
-  height: "1px",
+  width: "10px",
+  height: "10px",
 
   variants: {
     position: {
@@ -132,7 +132,7 @@ const HandleCore = styled("div", {
       left: {
         top: "50%",
         left: "0px",
-        transform: "translate(0, -50%)",
+        transform: "translate(-10px, -50%)",
       },
 
       right: {
@@ -145,21 +145,10 @@ const HandleCore = styled("div", {
       true: {
         pointerEvents: "all",
         cursor: "crosshair",
-        width: "10px",
-        height: "10px",
         background: "$slate9",
         border: "1px solid $slate9",
         borderRadius: "100%",
       },
     },
   },
-  compoundVariants: [
-    {
-      position: "left",
-      isConnectable: true,
-      css: {
-        transform: "translate(-10px, -50%)",
-      },
-    },
-  ],
 });

@@ -303,6 +303,8 @@ export const getEdgePositions = (
   };
 };
 
+// We hack around handle size differences by ignoring them and hardcoding
+// left-to-right edges in this logic
 function getHandlePosition(position, pos, handle = null) {
   const x = (handle?.x || 0) + pos.x;
   const y = (handle?.y || 0) + pos.y;
@@ -326,7 +328,7 @@ function getHandlePosition(position, pos, handle = null) {
       };
     case Position.Left:
       return {
-        x,
+        x: x + width,
         y: y + height / 2,
       };
     default:

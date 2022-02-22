@@ -21,8 +21,11 @@ export function ConnectionLine({
     sourceNode,
     connectionHandleType
   );
+  // We hack around handle size differences by ignoring them and hardcoding
+  // left-to-right edges in this logic
+  const isFromSource = connectionHandleType === "source";
   const sourceHandleX = sourceHandle
-    ? sourceHandle.x + sourceHandle.width / 2
+    ? sourceHandle.x + (isFromSource ? 0 : sourceHandle.width)
     : sourceNode.width / 2;
   const sourceHandleY = sourceHandle
     ? sourceHandle.y + sourceHandle.height / 2

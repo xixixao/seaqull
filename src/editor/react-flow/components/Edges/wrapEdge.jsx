@@ -3,7 +3,6 @@ import cc from "classcat";
 import { useStoreActions, useStoreState } from "../../store/hooks";
 import { onMouseDown } from "../Handle/handler";
 import { EdgeAnchor } from "./EdgeAnchor";
-import { useSetAppStateContext } from "editor/state";
 
 export default function wrapEdge(EdgeComponent) {
   const EdgeWrapper = ({

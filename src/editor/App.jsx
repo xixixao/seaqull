@@ -131,8 +131,17 @@ function NodesPane({ children, nodeTypes, onKeyDown, onDoubleClick }) {
               );
             });
           }}
+          onConnect={({ source, target, targetHandle }) => {
+            setAppState((appState) => {
+              Edges.addChild(
+                appState,
+                Node.fake(source),
+                Node.fake(target),
+                targetHandle
+              );
+            });
+          }}
           // onElementsRemove={onElementsRemove}
-          // onConnect={onConnect}
           // onLoad={onLoad}
         >
           {/* <MiniMap
