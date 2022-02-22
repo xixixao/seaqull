@@ -64,7 +64,7 @@ export function onMouseDown(
       x: event.clientX - containerBounds.left,
       y: event.clientY - containerBounds.top,
     });
-    const { connection, elementBelow, isValid, isHoveringHandle } =
+    const { connection, elementBelow, isValid, isHovering } =
       checkElementBelowIsValid(
         event,
         connectionMode,
@@ -74,7 +74,7 @@ export function onMouseDown(
         isValidConnection,
         doc
       );
-    if (!isHoveringHandle) {
+    if (!isHovering) {
       return resetRecentHandle(recentHoveredHandle);
     }
     const isOwnHandle = connection.source === connection.target;
@@ -147,7 +147,7 @@ function checkElementBelowIsValid(
       sourceHandle: null,
       targetHandle: null,
     },
-    isHoveringHandle: false,
+    isHovering: false,
   };
   // if (elementBelow && (elementBelowIsTarget || elementBelowIsSource)) {
   //   result.isHoveringHandle = true;
@@ -194,6 +194,8 @@ function checkElementBelowIsValid(
         };
     result.connection = connection;
     result.isValid = isValidConnection(connection);
+    result.elementBelow = nodeBelow;
+    result.isHovering = true;
   }
   return result;
 }

@@ -150,6 +150,9 @@ const NodeWrapper = styled("div", {
   // background: props.isSelected ? "#e7f2fd" : "white",
   // boxSizing: "border-box",
   padding: "2px 8px",
+  ".react-flow__handle-connecting &": {
+    borderBottomColor: "$amber9",
+  },
   variants: {
     isSelected: {
       true: {
