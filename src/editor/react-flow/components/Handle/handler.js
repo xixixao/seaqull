@@ -73,9 +73,7 @@ export function onMouseDown(
         isValidConnection,
         doc
       );
-    if (!isHovering) {
-      return resetRecentHandle(recentHoveredHandle);
-    }
+    resetRecentHandle(recentHoveredHandle);
     const isOwnHandle = connection.source === connection.target;
     if (!isOwnHandle && elementBelow) {
       recentHoveredHandle = elementBelow;
