@@ -27,8 +27,8 @@ import {
   useState,
 } from "react";
 import { useAppRedo, useAppUndo } from "./historyHooks";
-import { useZoomPanHelper } from "./react-flow";
 import { useNode } from "./react-flow/components/Nodes/wrapNode";
+import useZoomPanHelper from "./react-flow/hooks/useZoomPanHelper";
 import {
   useSetAppStateContext,
   useSetAppStateWithoutRecordingContext,

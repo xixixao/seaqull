@@ -1,11 +1,11 @@
 import React, { memo, useMemo } from "react";
-import { useAppStateContext } from "../../../state";
-import { useStoreState } from "../../store/hooks";
-import { useUpdateNodeDimensions } from "../../store/reducer";
-import { getNodesInside } from "../../utils/graph";
+import { useAppStateContext } from "../../state";
+import { useStoreState } from "../store/hooks";
+import { useUpdateNodeDimensions } from "../store/reducer";
+import { getNodesInside } from "../utils/graph";
 import * as Nodes from "graph/Nodes";
 
-const NodeRenderer = (props) => {
+export const NodeRenderer = memo(function (props) {
   const transform = useStoreState((state) => state.transform);
   const nodesDraggable = useStoreState((state) => state.nodesDraggable);
   const nodesConnectable = useStoreState((state) => state.nodesConnectable);
@@ -107,6 +107,4 @@ const NodeRenderer = (props) => {
       })}
     </div>
   );
-};
-NodeRenderer.displayName = "NodeRenderer";
-export default memo(NodeRenderer);
+});

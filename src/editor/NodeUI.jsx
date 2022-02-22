@@ -1,12 +1,12 @@
 import { PlusIcon } from "@modulz/radix-icons";
 import * as Nodes from "graph/Nodes";
 import * as Edges from "graph/Edges";
-import { Handle } from "./react-flow";
 import { useNodeUIProps } from "./react-flow/components/Nodes/wrapNode";
 import { useAppGraphContext } from "./state";
 import { styled } from "./style";
 import FloatOnHover from "./ui/FloatOnHover";
 import { IconButton } from "./ui/IconButton";
+import { Handle } from "./react-flow/components/Handle";
 
 export default function NodeUI({
   hasProblem,

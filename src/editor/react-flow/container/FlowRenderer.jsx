@@ -1,11 +1,11 @@
-import React, { useCallback, memo } from "react";
-import { useStoreActions, useStoreState } from "../../store/hooks";
-import useGlobalKeyHandler from "../../hooks/useGlobalKeyHandler";
-import useKeyPress from "../../hooks/useKeyPress";
-import ZoomPane from "../ZoomPane";
-import { BoxSelection } from "../../components/BoxSelection";
-import { useResetSelectedElements } from "../../store/reducer";
-const FlowRenderer = ({
+import React, { memo, useCallback } from "react";
+import { BoxSelection } from "../components/BoxSelection";
+import useGlobalKeyHandler from "../hooks/useGlobalKeyHandler";
+import useKeyPress from "../hooks/useKeyPress";
+import { useResetSelectedElements } from "../store/reducer";
+import { ZoomPane } from "./ZoomPane";
+
+export const FlowRenderer = memo(function ({
   children,
   onPaneClick,
   onPaneDoubleClick,
@@ -35,7 +35,7 @@ const FlowRenderer = ({
   onSelectionDrag,
   onSelectionDragStop,
   onSelectionContextMenu,
-}) => {
+}) {
   const resetSelectedElements = useResetSelectedElements();
   const selectionKeyPressed = useKeyPress(selectionKeyCode);
   useGlobalKeyHandler({
@@ -93,6 +93,4 @@ const FlowRenderer = ({
       />
     </ZoomPane>
   );
-};
-FlowRenderer.displayName = "FlowRenderer";
-export default memo(FlowRenderer);
+});

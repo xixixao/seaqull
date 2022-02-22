@@ -1,22 +1,13 @@
 import React, { useEffect, useRef } from "react";
 import { zoom, zoomIdentity } from "d3-zoom";
 import { select, pointer } from "d3-selection";
-import { clamp } from "../../utils";
-import useKeyPress from "../../hooks/useKeyPress";
-import useResizeHandler from "../../hooks/useResizeHandler";
-import { useStoreState, useStoreActions, useStore } from "../../store/hooks";
-import { PanOnScrollMode } from "../../types";
-const viewChanged = (prevTransform, eventTransform) =>
-  prevTransform.x !== eventTransform.x ||
-  prevTransform.y !== eventTransform.y ||
-  prevTransform.zoom !== eventTransform.k;
-const eventToFlowTransform = (eventTransform) => ({
-  x: eventTransform.x,
-  y: eventTransform.y,
-  zoom: eventTransform.k,
-});
-const hasNoWheelClass = (event) => event.target.closest(".nowheel");
-const ZoomPane = ({
+import { clamp } from "../utils";
+import useKeyPress from "../hooks/useKeyPress";
+import useResizeHandler from "../hooks/useResizeHandler";
+import { useStoreState, useStoreActions, useStore } from "../store/hooks";
+import { PanOnScrollMode } from "../types";
+
+export function ZoomPane({
   onMove,
   onMoveStart,
   onMoveEnd,
@@ -35,7 +26,7 @@ const ZoomPane = ({
   zoomActivationKeyCode,
   preventScrolling = true,
   children,
-}) => {
+}) {
   const zoomPane = useRef(null);
   const prevTransform = useRef({ x: 0, y: 0, zoom: 0 });
   const store = useStore();
@@ -269,5 +260,15 @@ const ZoomPane = ({
       {children}
     </div>
   );
-};
-export default ZoomPane;
+}
+
+const viewChanged = (prevTransform, eventTransform) =>
+  prevTransform.x !== eventTransform.x ||
+  prevTransform.y !== eventTransform.y ||
+  prevTransform.zoom !== eventTransform.k;
+const eventToFlowTransform = (eventTransform) => ({
+  x: eventTransform.x,
+  y: eventTransform.y,
+  zoom: eventTransform.k,
+});
+const hasNoWheelClass = (event) => event.target.closest(".nowheel");

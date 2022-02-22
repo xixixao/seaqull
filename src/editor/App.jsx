@@ -1,6 +1,5 @@
 import * as History from "editor/History";
 import * as Layout from "editor/Layout";
-import ReactFlow, { Background, ReactFlowProvider } from "editor/react-flow";
 import { useStore } from "editor/react-flow/store/hooks";
 import {
   AppStateContextProvider,
@@ -28,6 +27,9 @@ import { buildKeyMap } from "./keybindings";
 import { LayoutRequestContext } from "./layoutRequest";
 import { positionToRendererPosition } from "./react-flow/utils/graph";
 import { BezierEdge } from "./react-flow/components/Edges/BezierEdge";
+import { ReactFlowProvider } from "./react-flow/additional-components/ReactFlowProvider";
+import { ReactFlow } from "./react-flow/container/ReactFlow";
+import Background from "./react-flow/additional-components/Background";
 
 function App({
   initialState,

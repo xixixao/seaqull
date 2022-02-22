@@ -1,15 +1,16 @@
 import React, { useEffect, useRef, memo } from "react";
-import { useStoreActions, useStore } from "../../store/hooks";
-import FlowRenderer from "../FlowRenderer";
-import NodeRenderer from "../NodeRenderer";
-import { EdgeRenderer } from "../EdgeRenderer";
+import { useStoreActions, useStore } from "../store/hooks";
+import { FlowRenderer } from "./FlowRenderer";
+import { NodeRenderer } from "./NodeRenderer";
+import { EdgeRenderer } from "./EdgeRenderer";
 import {
   onLoadProject,
   onLoadGetElements,
   onLoadToObject,
-} from "../../utils/graph";
-import useZoomPanHelper from "../../hooks/useZoomPanHelper";
-const GraphView = ({
+} from "../utils/graph";
+import useZoomPanHelper from "../hooks/useZoomPanHelper";
+
+export const GraphView = memo(function ({
   nodeTypes,
   edgeTypes,
   onMove,
@@ -72,7 +73,7 @@ const GraphView = ({
   onEdgeMouseMove,
   onEdgeMouseLeave,
   edgeUpdaterRadius,
-}) => {
+}) {
   const isInitialized = useRef(false);
   const setOnConnect = useStoreActions((actions) => actions.setOnConnect);
   const setOnConnectStart = useStoreActions(
@@ -256,6 +257,4 @@ const GraphView = ({
       />
     </FlowRenderer>
   );
-};
-GraphView.displayName = "GraphView";
-export default memo(GraphView);
+});
