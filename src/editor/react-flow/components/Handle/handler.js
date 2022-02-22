@@ -1,12 +1,11 @@
 import { getHostForElement } from "../../utils";
-import { ConnectionMode } from "../../types";
 
 export function hasTargetHandle(node, event) {
   const doc = getHostForElement(event.target);
   const nodeElement = doc.querySelector(
     `.react-flow__node[data-id="${node.id}"]`
   );
-  return nodeElement?.querySelector(".react-flow__handle.target") != null;
+  return nodeElement?.querySelector(`[data-handletype="target"]`) != null;
 }
 
 // Handles mouse down on Handles and EdgeAnchors

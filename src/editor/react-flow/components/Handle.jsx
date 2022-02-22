@@ -90,6 +90,7 @@ export const Handle = memo(
         data-handleid={handleId}
         data-nodeid={nodeId}
         data-handlepos={position}
+        data-handletype={type}
         isConnectable={isConnectable}
         className={
           // TODO: Dont use classes for targeting handles, use data
