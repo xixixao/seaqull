@@ -1,7 +1,5 @@
-import { hasTargetHandle } from "editor/react-flow/components/Handle/handler";
 import * as Arrays from "js/Arrays";
 import * as Sets from "js/Sets";
-import { doNodesOverlap } from "../editor/react-flow/utils/graph";
 import * as Edge from "./Edge";
 import * as Edges from "./Edges";
 import * as Node from "./Node";
@@ -241,21 +239,6 @@ export function groupBy(nodes, groupper) {
     grouped.set(key, group);
   });
   return Array.from(grouped.values());
-}
-
-export function overlappingLeafs(graph, targetNode, event) {
-  if (!hasTargetHandle(targetNode, event)) {
-    return false;
-  }
-  const targetPosition = positionOf(graph, targetNode);
-  return tightLeafs(graph).filter((node) => {
-    const position = positionOf(graph, node);
-    return (
-      !Node.is(targetNode, node) &&
-      doNodesOverlap(position, targetPosition, 20) &&
-      !Edges.isAncestor(graph, targetNode, node)
-    );
-  });
 }
 
 export function tightLeafs(graph) {

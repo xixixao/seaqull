@@ -1,6 +1,6 @@
 import cc from "classcat";
-import wrapEdge from "editor/react-flow/components/Edges/wrapEdge";
-import wrapNode from "editor/react-flow/components/Nodes/wrapNode";
+import wrapEdge from "seaqull/react-flow/components/Edges/wrapEdge";
+import wrapNode from "seaqull/react-flow/components/Nodes/wrapNode";
 import * as Objects from "js/Objects";
 import React, { forwardRef, useMemo } from "react";
 import { ConnectionMode, PanOnScrollMode } from "../types";

@@ -23,8 +23,9 @@ import {
   useAddSelectedElements,
   useUpdateNodeDimensions,
 } from "../../store/reducer";
-import * as History from "editor/History";
+import * as History from "seaqull/History";
 import { hasTargetHandle } from "../Handle/handler";
+import { doNodesOverlap } from "../../utils/graph";
 
 export default function wrapNode(NodeComponent) {
   const MemoizedNodeComponent = memo(NodeComponent);
@@ -207,7 +208,7 @@ export default function wrapNode(NodeComponent) {
           });
           const validPotentialTightParent =
             firstDraggedNode != null
-              ? only(Nodes.overlappingLeafs(appState, firstDraggedNode, event))
+              ? only(overlappingLeafs(appState, firstDraggedNode, event))
               : null;
           appState.highlightedNodeIDs = Nodes.idSet(
             validPotentialTightParent != null ? [validPotentialTightParent] : []
@@ -269,7 +270,7 @@ export default function wrapNode(NodeComponent) {
             return;
           }
           const validPotentialTightParent = only(
-            Nodes.overlappingLeafs(appState, firstDraggedNode, event)
+            overlappingLeafs(appState, firstDraggedNode, event)
           );
           if (validPotentialTightParent == null) {
             return;
@@ -426,4 +427,19 @@ export function useNodeUIProps() {
 
 export function useNode() {
   return useContext(NodeContext);
+}
+
+function overlappingLeafs(graph, targetNode, event) {
+  if (!hasTargetHandle(targetNode, event)) {
+    return false;
+  }
+  const targetPosition = Nodes.positionOf(graph, targetNode);
+  return Nodes.tightLeafs(graph).filter((node) => {
+    const position = Nodes.positionOf(graph, node);
+    return (
+      !Node.is(targetNode, node) &&
+      doNodesOverlap(position, targetPosition, 20) &&
+      !Edges.isAncestor(graph, targetNode, node)
+    );
+  });
 }

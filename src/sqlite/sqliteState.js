@@ -1,7 +1,7 @@
 import {
   useAppGraphAndSelectionContext,
   useAppGraphContext,
-} from "editor/state";
+} from "seaqull/state";
 import { useContext, useMemo } from "react";
 import { createContextState } from "../react/contextState";
 import { NODE_CONFIGS } from "./sqliteNodes";

@@ -1,5 +1,5 @@
-import * as Layout from "editor/Layout";
-import * as History from "editor/History";
+import * as Layout from "seaqull/Layout";
+import * as History from "seaqull/History";
 import * as Edges from "graph/Edges";
 import * as Node from "graph/Node";
 import * as Nodes from "graph/Nodes";

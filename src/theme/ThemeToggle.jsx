@@ -1,8 +1,8 @@
 import { SunIcon } from "@modulz/radix-icons";
 import React, { useEffect } from "react";
-import { IconButton } from "../ui/IconButton";
-import { darkTheme } from "../style";
-import { Tooltip } from "../ui/Tooltip";
+import { IconButton } from "../seaqull/ui/IconButton";
+import { darkTheme } from "../seaqull/style";
+import { Tooltip } from "../seaqull/ui/Tooltip";
 import { useTheme } from "./useTheme";
 
 export function ThemeToggle(props) {

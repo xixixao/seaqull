@@ -5,7 +5,9 @@
     "paths": {
       "js/*": ["./src/js/*"],
       "graph/*": ["./src/graph/*"],
-      "editor/*": ["./src/editor/*"]
+      "seaqull/*": ["./src/seaqull/*"],
+      "theme/*": ["./src/theme/*"],
+      "ui/*": ["./src/ui/*"]
     },
     "noEmit": true
   }

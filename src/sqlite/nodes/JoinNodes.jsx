@@ -1,4 +1,4 @@
-import { useNode } from "editor/react-flow/components/Nodes/wrapNode";
+import { useNode } from "seaqull/react-flow/components/Nodes/wrapNode";
 import {
   joinColumnsSchema,
   SQLJoinNodeConfig,

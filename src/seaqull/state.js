@@ -9,7 +9,7 @@ import {
   produceAndRecord,
   produceWithoutRecording,
 } from "./History";
-import * as History from "editor/History";
+import * as History from "seaqull/History";
 
 export const {
   state: AppStateContext,

@@ -1,9 +1,9 @@
-import { keyframes, styled } from "editor/style";
-import { Box } from "editor/ui/Box";
-import { Button } from "editor/ui/Button";
-import { Column } from "editor/ui/Column";
-import { Row } from "editor/ui/Row";
-import VerticalSpace from "editor/ui/VerticalSpace";
+import { keyframes, styled } from "seaqull/style";
+import { Box } from "seaqull/ui/Box";
+import { Button } from "seaqull/ui/Button";
+import { Column } from "seaqull/ui/Column";
+import { Row } from "seaqull/ui/Row";
+import VerticalSpace from "seaqull/ui/VerticalSpace";
 import * as Node from "graph/Node";
 import * as Nodes from "graph/Nodes";
 import { only } from "js/Arrays";

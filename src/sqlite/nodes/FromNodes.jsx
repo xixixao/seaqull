@@ -1,6 +1,6 @@
-import { useNode } from "editor/react-flow/components/Nodes/wrapNode";
-import { useSetNodeState } from "editor/state";
-import { Button } from "editor/ui/Button";
+import { useNode } from "seaqull/react-flow/components/Nodes/wrapNode";
+import { useSetNodeState } from "seaqull/state";
+import { Button } from "seaqull/ui/Button";
 import {
   nodeName,
   setName,

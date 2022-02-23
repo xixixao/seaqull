@@ -10,7 +10,9 @@ export default defineConfig({
     alias: {
       js: path.resolve(__dirname, "./src/js"),
       graph: path.resolve(__dirname, "./src/graph"),
-      editor: path.resolve(__dirname, "./src/editor"),
+      seaqull: path.resolve(__dirname, "./src/seaqull"),
+      theme: path.resolve(__dirname, "./src/theme"),
+      ui: path.resolve(__dirname, "./src/ui"),
     },
   },
   plugins: [react(), reactSvgPlugin()],

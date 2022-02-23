@@ -1,6 +1,6 @@
-import Input from "editor/Input";
-import { useNode } from "editor/react-flow/components/Nodes/wrapNode";
-import { useSetNodeState } from "editor/state";
+import Input from "seaqull/Input";
+import { useNode } from "seaqull/react-flow/components/Nodes/wrapNode";
+import { useSetNodeState } from "seaqull/state";
 import * as Nodes from "graph/Nodes";
 import { only } from "js/Arrays";
 import React from "react";

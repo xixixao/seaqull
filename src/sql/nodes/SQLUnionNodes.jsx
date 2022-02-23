@@ -1,5 +1,5 @@
-import { useNode } from "editor/react-flow/components/Nodes/wrapNode";
-import { useAppGraphContext, useSetNodeState } from "editor/state";
+import { useNode } from "seaqull/react-flow/components/Nodes/wrapNode";
+import { useAppGraphContext, useSetNodeState } from "seaqull/state";
 import * as Nodes from "graph/Nodes";
 import * as Arrays from "js/Arrays";
 import {
@@ -7,7 +7,7 @@ import {
   getQuerySelectableOrNull,
   useNodeConfig,
 } from "../sqlNodes";
-import Input from "editor/Input";
+import Input from "seaqull/Input";
 import SQLNodeUI from "../ui/SQLNodeUI";
 
 function UnionNode() {

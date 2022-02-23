@@ -33,14 +33,7 @@ export function PaneControls({
     return null;
   }
   return (
-    <Column
-      css={{
-        position: "absolute",
-        zIndex: 5,
-        bottom: 10,
-        left: 10,
-      }}
-    >
+    <>
       <Tooltip content="Zoom in" side="right" align="center">
         <IconButton onClick={onZoomInHandler}>
           <ZoomInIcon />
@@ -56,6 +49,6 @@ export function PaneControls({
           <AllSidesIcon />
         </IconButton>
       </Tooltip>
-    </Column>
+    </>
   );
 }

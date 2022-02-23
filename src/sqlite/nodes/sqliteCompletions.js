@@ -3,7 +3,7 @@ import { only } from "js/Arrays";
 import * as Objects from "js/Objects";
 import { schemaCompletion, SQLite } from "@codemirror/lang-sql";
 import { LanguageSupport } from "@codemirror/language";
-import { useNode } from "editor/react-flow/components/Nodes/wrapNode";
+import { useNode } from "seaqull/react-flow/components/Nodes/wrapNode";
 import { useAppGraphWithEditorConfig } from "../sqliteState";
 import { getColumnNames } from "../../sql/sqlNodes";
 

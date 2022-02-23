@@ -1,5 +1,5 @@
 import * as Nodes from "graph/Nodes";
-import * as History from "editor/History";
+import * as History from "seaqull/History";
 import { useCallback } from "react";
 import { useSetAppStateWithoutRecordingContext } from "./state";
 

@@ -1,13 +1,3 @@
-import * as History from "editor/History";
-import * as Layout from "editor/Layout";
-import { useStore } from "editor/react-flow/store/hooks";
-import {
-  AppStateContextProvider,
-  useAppStateContext,
-  useSetAppStateContext,
-} from "editor/state";
-import { styled } from "editor/style";
-import { PaneControls } from "editor/ui/PaneControls";
 import * as Edge from "graph/Edge";
 import * as Edges from "graph/Edges";
 import * as Node from "graph/Node";
@@ -21,57 +11,56 @@ import React, {
   useRef,
   useState,
 } from "react";
+import * as History from "seaqull/History";
+import * as Layout from "seaqull/Layout";
+import { useStore } from "seaqull/react-flow/store/hooks";
+import {
+  AppStateContextProvider,
+  useAppStateContext,
+  useSetAppStateContext,
+} from "seaqull/state";
+import { PaneControls } from "seaqull/ui/PaneControls";
 import { useEventListener } from "../react/useEventListener";
 import { useAppRedo, useAppUndo } from "./historyHooks";
 import { buildKeyMap } from "./keybindings";
 import { LayoutRequestContext } from "./layoutRequest";
-import { positionToRendererPosition } from "./react-flow/utils/graph";
-import { BezierEdge } from "./react-flow/components/Edges/BezierEdge";
-import { ReactFlowProvider } from "./react-flow/additional-components/ReactFlowProvider";
-import { ReactFlow } from "./react-flow/container/ReactFlow";
 import Background from "./react-flow/additional-components/Background";
+import { ReactFlowProvider } from "./react-flow/additional-components/ReactFlowProvider";
+import { BezierEdge } from "./react-flow/components/Edges/BezierEdge";
+import { ReactFlow } from "./react-flow/container/ReactFlow";
+import {
+  mouseEventToRendererPosition,
+  positionToRendererPosition,
+} from "./react-flow/utils/graph";
 
-function App({
-  initialState,
-  topUI,
-  children,
-  nodeTypes,
-  onDoubleClick,
-  onKeyDown,
-}) {
+export function Seaqull({ initialState, children }) {
   return (
     <AppStateContextProvider initialState={initialState}>
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          height: "100%",
-        }}
-      >
-        <ReactFlowProvider>
-          <NodesPane
-            nodeTypes={nodeTypes}
-            onDoubleClick={onDoubleClick}
-            onKeyDown={onKeyDown}
-          >
-            {topUI}
-          </NodesPane>
-        </ReactFlowProvider>
-        <div
-          style={{
-            flexGrow: 1,
-            maxHeight: "50%",
-            position: "relative",
-          }}
-        >
-          {children}
-        </div>
-      </div>
+      {children}
     </AppStateContextProvider>
   );
 }
 
-const Div = styled("div");
+Seaqull.NodeEditor = function NodeEditor({
+  nodeTypes,
+  onDoubleClick,
+  onKeyDown,
+  children,
+}) {
+  return (
+    <ReactFlowProvider>
+      <NodesPane
+        nodeTypes={nodeTypes}
+        onDoubleClick={onDoubleClick}
+        onKeyDown={onKeyDown}
+      >
+        {children}
+      </NodesPane>
+    </ReactFlowProvider>
+  );
+};
+
+Seaqull.NodeEditor.PaneControls = PaneControls;
 
 const PAN_SETTINGS = {
   MAC: {
@@ -82,125 +71,62 @@ const PAN_SETTINGS = {
   WINDOWS: {},
 };
 
-function NodesPane({ children, nodeTypes, onKeyDown, onDoubleClick }) {
+function NodesPane({ nodeTypes, onKeyDown, onDoubleClick, children }) {
   const setAppState = useSetAppStateContext();
   const store = useStore();
   const onRequestLayout = useLayoutRequestEffect();
   useKeyListeners(onRequestLayout, onKeyDown);
   const [mousePosition, mouseHandlers] = useMousePosition();
   useClipboardListeners(mousePosition);
-
   return (
     <LayoutRequestContext.Provider value={onRequestLayout}>
-      <Div
-        css={{
-          height: "65%",
-          borderBottom: "1px solid $slate7",
-          // borderTop: "1px solid $slate7",
-          outline: "none",
-        }}
-        tabIndex="-1"
+      <ReactFlow
         {...mouseHandlers}
+        nodeTypes={nodeTypes}
+        edgeTypes={EDGE_COMPONENTS}
+        zoomOnDoubleClick={false}
+        onPaneDoubleClick={(event) => {
+          setAppState((appState) => {
+            const at = mouseEventToRendererPosition(store, event);
+            onRequestLayout(onDoubleClick(appState, at));
+          });
+        }}
+        {...PAN_SETTINGS.MAC}
+        onEdgeUpdate={(edge, connection) => {
+          setAppState((appState) => {
+            updateEdge(appState, edge, connection);
+          });
+        }}
+        onConnect={(connection) => {
+          setAppState((appState) => {
+            addEdge(appState, connection);
+          });
+        }}
       >
-        <ReactFlow
-          nodeTypes={nodeTypes}
-          edgeTypes={EDGE_COMPONENTS}
-          zoomOnDoubleClick={false}
-          onPaneDoubleClick={(event) => {
-            setAppState((appState) => {
-              onRequestLayout(
-                onDoubleClick(
-                  appState,
-                  positionToRendererPosition(store, {
-                    x: event.clientX,
-                    y: event.clientY,
-                  })
-                )
-              );
-            });
-          }}
-          {...PAN_SETTINGS.MAC}
-          onEdgeUpdate={(edge, { source, target, targetHandle }) => {
-            setAppState((appState) => {
-              History.startRecording(appState);
-              if (
-                source === Edge.parentID(edge) &&
-                target === Edge.childID(edge) &&
-                Edge.childHandleIndex(edge) != null
-              ) {
-                Edges.detachedParents(appState, Node.fake(target)).forEach(
-                  (edge) => {
-                    Edges.remove(appState, edge);
-                    Edges.addChild(
-                      appState,
-                      Node.fake(Edge.parentID(edge)),
-                      Node.fake(Edge.childID(edge)),
-                      Edge.childHandleIndex(edge) === "0" ? "1" : "0"
-                    );
-                  }
-                );
-              } else {
-                Edges.remove(appState, edge);
-                Edges.addChild(
-                  appState,
-                  Node.fake(source),
-                  Node.fake(target),
-                  targetHandle
-                );
-              }
-              History.endRecording(appState);
-            });
-          }}
-          onConnect={({ source, target, targetHandle }) => {
-            setAppState((appState) => {
-              History.startRecording(appState);
-              Edges.addChild(
-                appState,
-                Node.fake(source),
-                Node.fake(target),
-                targetHandle
-              );
-              History.endRecording(appState);
-            });
-          }}
-          // onElementsRemove={onElementsRemove}
-          // onLoad={onLoad}
-        >
-          {/* <MiniMap
-        nodeStrokeColor={(n) => {
-          if (n.style?.background) return n.style.background;
-          if (n.type === "input") return "#0041d0";
-          if (n.type === "output") return "#ff0072";
-          if (n.type === "default") return "#1a192b";
-
-          return "#eee";
-        }}
-        nodeColor={(n) => {
-          if (n.style?.background) return n.style.background;
-
-          return "#fff";
-        }}
-        nodeBorderRadius={2}
-      /> */}
-          <div
-            style={{
-              position: "absolute",
-              padding: 4,
-              zIndex: 5,
-              transform: "translate(-50%, 0)",
-              top: 0,
-              left: "50%",
-            }}
-          >
-            {children}
-          </div>
-          <PaneControls showInteractive={false} />
-          <Background color="#aaa" gap={16} />
-        </ReactFlow>
-      </Div>
+        {/* TODO: This needs to stretch to fill */}
+        <div style={{ zIndex: 5 }}>{children}</div>
+        <Background color="#aaa" gap={16} />
+      </ReactFlow>
     </LayoutRequestContext.Provider>
   );
 }
+
+// <MiniMap
+//   nodeStrokeColor={(n) => {
+//     if (n.style?.background) return n.style.background;
+//     if (n.type === "input") return "#0041d0";
+//     if (n.type === "output") return "#ff0072";
+//     if (n.type === "default") return "#1a192b";
+
+//     return "#eee";
+//   }}
+//   nodeColor={(n) => {
+//     if (n.style?.background) return n.style.background;
+
+//     return "#fff";
+//   }}
+//   nodeBorderRadius={2}
+// />
 
 const EDGE_COMPONENTS = {
   default: BezierEdge,
@@ -339,6 +265,44 @@ function useLayoutRequestEffect() {
   }, []);
 }
 
+function updateEdge(appState, edge, { source, target, targetHandle }) {
+  History.startRecording(appState);
+  if (
+    source === Edge.parentID(edge) &&
+    target === Edge.childID(edge) &&
+    Edge.childHandleIndex(edge) != null
+  ) {
+    swapParentEdges(appState, Node.fake(target));
+  } else {
+    Edges.remove(appState, edge);
+    Edges.addChild(
+      appState,
+      Node.fake(source),
+      Node.fake(target),
+      targetHandle
+    );
+  }
+  History.endRecording(appState);
+}
+
+function swapParentEdges(appState, child) {
+  Edges.detachedParents(appState, child).forEach((edge) => {
+    Edges.remove(appState, edge);
+    Edges.addChild(
+      appState,
+      Node.fake(Edge.parentID(edge)),
+      Node.fake(Edge.childID(edge)),
+      Edge.childHandleIndex(edge) === "0" ? "1" : "0"
+    );
+  });
+}
+
+function addEdge(appState, { source, target, targetHandle }) {
+  History.startRecording(appState);
+  Edges.addChild(appState, Node.fake(source), Node.fake(target), targetHandle);
+  History.endRecording(appState);
+}
+
 function deleteSelectedNodes({ setAppState }) {
   setAppState((appState) => {
     if (Nodes.countSelected(appState) === 0) {
@@ -467,5 +431,3 @@ function pasteSelectedNodes(event, appState, position) {
   Nodes.select(appState, Arrays.values(newNodes));
   History.endRecording(appState);
 }
-
-export default App;
