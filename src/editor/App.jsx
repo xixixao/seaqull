@@ -124,6 +124,7 @@ function NodesPane({ children, nodeTypes, onKeyDown, onDoubleClick }) {
             setAppState((appState) => {
               History.startRecording(appState);
               if (
+                source === Edge.parentID(edge) &&
                 target === Edge.childID(edge) &&
                 Edge.childHandleIndex(edge) != null
               ) {
