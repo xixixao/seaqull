@@ -1,7 +1,7 @@
 import * as Objects from "js/Objects";
 import { createContext, useContext, useMemo, useState } from "react";
 
-export function createContextState(defaults, history) {
+export function createContextState(defaults) {
   const stateContextMap = Objects.map(defaults, (value) =>
     createContext(value)
   );
