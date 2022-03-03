@@ -84,7 +84,6 @@ function NodesPane({ nodeTypes, onKeyDown, onDoubleClick, children }) {
         {...mouseHandlers}
         nodeTypes={nodeTypes}
         edgeTypes={EDGE_COMPONENTS}
-        zoomOnDoubleClick={false}
         onPaneDoubleClick={(event) => {
           setAppState((appState) => {
             const at = mouseEventToRendererPosition(store, event);

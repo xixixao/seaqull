@@ -62,7 +62,6 @@ export const ReactFlow = forwardRef(function ReactFlow(
     panOnScroll = false,
     panOnScrollSpeed = 0.5,
     panOnScrollMode = PanOnScrollMode.Free,
-    zoomOnDoubleClick = true,
     paneMoveable = true,
     onPaneClick,
     onPaneDoubleClick,
@@ -133,7 +132,6 @@ export const ReactFlow = forwardRef(function ReactFlow(
         markerEndId={markerEndId}
         zoomOnScroll={zoomOnScroll}
         zoomOnPinch={zoomOnPinch}
-        zoomOnDoubleClick={zoomOnDoubleClick}
         panOnScroll={panOnScroll}
         panOnScrollSpeed={panOnScrollSpeed}
         panOnScrollMode={panOnScrollMode}

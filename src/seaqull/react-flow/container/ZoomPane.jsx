@@ -17,7 +17,6 @@ export function ZoomPane({
   panOnScroll = false,
   panOnScrollSpeed = 0.5,
   panOnScrollMode = PanOnScrollMode.Free,
-  zoomOnDoubleClick = true,
   selectionKeyPressed,
   elementsSelectable,
   paneMoveable = true,
@@ -133,6 +132,7 @@ export function ZoomPane({
     zoomActivationKeyPressed,
     zoomOnPinch,
     preventScrolling,
+    panOnScrollSpeed,
   ]);
   useEffect(() => {
     if (d3Zoom) {
@@ -186,22 +186,12 @@ export function ZoomPane({
       d3Zoom.filter((event) => {
         const zoomScroll = zoomActivationKeyPressed || zoomOnScroll;
         const pinchZoom = zoomOnPinch && event.ctrlKey;
-        // if all interactions are disabled, we prevent all zoom events
-        if (
-          !paneMoveable &&
-          !zoomScroll &&
-          !panOnScroll &&
-          !zoomOnDoubleClick &&
-          !zoomOnPinch
-        ) {
-          return false;
-        }
         // during a selection we prevent all other interactions
         if (selectionKeyPressed) {
           return false;
         }
         // if zoom on double click is disabled, we prevent the double click event
-        if (!zoomOnDoubleClick && event.type === "dblclick") {
+        if (event.type === "dblclick") {
           return false;
         }
         if (hasNoWheelClass(event) && event.type === "wheel") {
@@ -250,7 +240,6 @@ export function ZoomPane({
     zoomOnScroll,
     zoomOnPinch,
     panOnScroll,
-    zoomOnDoubleClick,
     paneMoveable,
     selectionKeyPressed,
     elementsSelectable,

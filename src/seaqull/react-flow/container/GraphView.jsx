@@ -61,7 +61,6 @@ export const GraphView = memo(function ({
   panOnScroll,
   panOnScrollSpeed,
   panOnScrollMode,
-  zoomOnDoubleClick,
   paneMoveable,
   onPaneClick,
   onPaneDoubleClick,
@@ -211,7 +210,6 @@ export const GraphView = memo(function ({
       onMoveEnd={onMoveEnd}
       zoomOnScroll={zoomOnScroll}
       zoomOnPinch={zoomOnPinch}
-      zoomOnDoubleClick={zoomOnDoubleClick}
       panOnScroll={panOnScroll}
       panOnScrollSpeed={panOnScrollSpeed}
       panOnScrollMode={panOnScrollMode}

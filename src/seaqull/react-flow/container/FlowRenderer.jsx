@@ -26,7 +26,6 @@ export const FlowRenderer = memo(function ({
   panOnScroll,
   panOnScrollSpeed,
   panOnScrollMode,
-  zoomOnDoubleClick,
   paneMoveable,
   defaultPosition,
   defaultZoom,
@@ -75,7 +74,6 @@ export const FlowRenderer = memo(function ({
       panOnScroll={panOnScroll}
       panOnScrollSpeed={panOnScrollSpeed}
       panOnScrollMode={panOnScrollMode}
-      zoomOnDoubleClick={zoomOnDoubleClick}
       paneMoveable={paneMoveable}
       defaultPosition={defaultPosition}
       defaultZoom={defaultZoom}
