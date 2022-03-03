@@ -1,11 +1,13 @@
 import React, { memo } from "react";
 import cc from "classcat";
-import { useStoreState } from "../../store/hooks";
-import { getRectOfNodes, getBoundsofRects } from "../../utils/graph";
-import MiniMapNode from "./MiniMapNode";
+import { useStoreState } from "../store/hooks";
+import { getRectOfNodes, getBoundsofRects } from "../utils/graph";
+import { styled } from "seaqull/style";
+
 const defaultWidth = 200;
 const defaultHeight = 150;
-const MiniMap = ({
+
+export const MiniMap = memo(function ({
   style,
   className,
   nodeStrokeColor = "#555",
@@ -14,7 +16,7 @@ const MiniMap = ({
   nodeBorderRadius = 5,
   nodeStrokeWidth = 2,
   maskColor = "rgb(240, 242, 243, 0.7)",
-}) => {
+}) {
   const containerWidth = useStoreState((s) => s.width);
   const containerHeight = useStoreState((s) => s.height);
   const [tX, tY, tScale] = useStoreState((s) => s.transform);
@@ -92,6 +94,44 @@ const MiniMap = ({
       />
     </svg>
   );
-};
-MiniMap.displayName = "MiniMap";
-export default memo(MiniMap);
+});
+
+const MiniMapNode = memo(function MiniMapNode({
+  x,
+  y,
+  width,
+  height,
+  style,
+  color,
+  strokeColor,
+  strokeWidth,
+  className,
+  borderRadius,
+  shapeRendering,
+}) {
+  const { background, backgroundColor } = style || {};
+  const fill = color || background || backgroundColor;
+  return (
+    <Rect
+      css={{
+        position: "absolute",
+        zIndex: 5,
+        bottom: "10px",
+        right: "10px",
+        backgroundColor: "#fff",
+      }}
+      x={x}
+      y={y}
+      rx={borderRadius}
+      ry={borderRadius}
+      width={width}
+      height={height}
+      fill={fill}
+      stroke={strokeColor}
+      strokeWidth={strokeWidth}
+      shapeRendering={shapeRendering}
+    />
+  );
+});
+
+const Rect = styled("rect");
