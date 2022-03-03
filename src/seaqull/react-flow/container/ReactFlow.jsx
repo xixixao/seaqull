@@ -5,13 +5,14 @@ import * as Objects from "js/Objects";
 import React, { forwardRef, useMemo } from "react";
 import { ConnectionMode, PanOnScrollMode } from "../types";
 import { GraphView } from "./GraphView";
+import { Box } from "seaqull/ui/Box";
+import { FillParent } from "seaqull/ui/FillParent";
 
 const snapGridDefault = [15, 15];
 
 export const ReactFlow = forwardRef(function ReactFlow(
   {
     elements = [],
-    className,
     nodeTypes,
     edgeTypes,
     onElementClick,
@@ -87,9 +88,8 @@ export const ReactFlow = forwardRef(function ReactFlow(
     () => Objects.map(edgeTypes, wrapEdge),
     [edgeTypes]
   );
-  const reactFlowClasses = cc(["react-flow", className]);
   return (
-    <div {...rest} ref={ref} className={reactFlowClasses}>
+    <FillParent className="react-flow" {...rest} ref={ref}>
       <GraphView
         onLoad={onLoad}
         onMove={onMove}
@@ -155,6 +155,6 @@ export const ReactFlow = forwardRef(function ReactFlow(
         edgeUpdaterRadius={edgeUpdaterRadius}
       />
       {children}
-    </div>
+    </FillParent>
   );
 });

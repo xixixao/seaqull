@@ -2,7 +2,7 @@
  * The user selection rectangle gets displayed when a user drags the mouse while pressing shift
  */
 import { Box } from "seaqull/ui/Box";
-import { FillParent } from "seaqull/ui/FillParent";
+import { FillParentAbsolute } from "seaqull/ui/FillParentAbsolute";
 import React, { memo, useState } from "react";
 import { useNodesPositionsContext } from "../../state";
 import { useStoreState } from "../store/hooks";
@@ -68,7 +68,7 @@ export const BoxSelection = memo(function BoxSelection({
     setSelectionRect(null);
   };
   return (
-    <FillParent
+    <FillParentAbsolute
       css={{ zIndex: "$uiAboveNodes" }}
       onMouseDown={onMouseDown}
       onMouseMove={onMouseMove}
@@ -76,7 +76,7 @@ export const BoxSelection = memo(function BoxSelection({
       onMouseLeave={cancelSelection}
     >
       <SelectionRect rect={selectionRect} />
-    </FillParent>
+    </FillParentAbsolute>
   );
 });
 

@@ -6,6 +6,7 @@ import useKeyPress from "../hooks/useKeyPress";
 import useResizeHandler from "../hooks/useResizeHandler";
 import { useStoreState, useStoreActions, useStore } from "../store/hooks";
 import { PanOnScrollMode } from "../types";
+import { FillParent } from "seaqull/ui/FillParent";
 
 export function ZoomPane({
   onMove,
@@ -256,9 +257,15 @@ export function ZoomPane({
     zoomActivationKeyPressed,
   ]);
   return (
-    <div className="react-flow__renderer react-flow__zoompane" ref={zoomPane}>
+    <FillParent
+      css={{
+        // TODO: Not sure why 4 is here
+        zIndex: 4,
+      }}
+      ref={zoomPane}
+    >
       {children}
-    </div>
+    </FillParent>
   );
 }
 

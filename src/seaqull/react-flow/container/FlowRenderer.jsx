@@ -1,4 +1,5 @@
 import React, { memo, useCallback } from "react";
+import { FillParent } from "seaqull/ui/FillParent";
 import { BoxSelection } from "../components/BoxSelection";
 import useGlobalKeyHandler from "../hooks/useGlobalKeyHandler";
 import useKeyPress from "../hooks/useKeyPress";
@@ -84,8 +85,8 @@ export const FlowRenderer = memo(function ({
     >
       {children}
       <BoxSelection selectionKeyPressed={selectionKeyPressed} />
-      <div
-        className="react-flow__pane"
+      <FillParent
+        css={{ zIndex: "$background" }}
         onClick={onClick}
         onDoubleClick={onPaneDoubleClick}
         onContextMenu={onContextMenu}

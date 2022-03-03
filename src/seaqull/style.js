@@ -255,6 +255,7 @@ const { styled, css, createTheme, globalCss, keyframes } = createStitches({
       80: "80px",
     },
     zIndices: {
+      background: 1,
       nodeEditor: 3,
       uiAboveNodes: 5,
       selectedNodes: 10,
@@ -380,17 +381,6 @@ globalCss({
     font: "$body",
     background: "$panel !important",
   },
-
-  // TODO: Convert to proper components
-  ".react-flow": {
-    width: "100%",
-    height: "100%",
-    position: "relative",
-    overflow: "hidden",
-  },
-  // TODO: Not sure why 4 is here
-  ".react-flow__renderer": { ...absoluteFill, zIndex: 4 },
-  ".react-flow__pane": { ...absoluteFill, zIndex: 1 },
 
   ".react-flow__edge": {
     pointerEvents: "visibleStroke",
