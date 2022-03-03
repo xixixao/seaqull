@@ -24,7 +24,7 @@ import { useEventListener } from "../react/useEventListener";
 import { useAppRedo, useAppUndo } from "./historyHooks";
 import { buildKeyMap } from "./keybindings";
 import { LayoutRequestContext } from "./layoutRequest";
-import Background from "./react-flow/additional-components/Background";
+import { Background } from "./react-flow/additional-components/Background";
 import { ReactFlowProvider } from "./react-flow/additional-components/ReactFlowProvider";
 import { BezierEdge } from "./react-flow/components/Edges/BezierEdge";
 import { ReactFlow } from "./react-flow/container/ReactFlow";

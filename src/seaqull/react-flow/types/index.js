@@ -5,11 +5,6 @@ export var Position;
   Position["Right"] = "right";
   Position["Bottom"] = "bottom";
 })(Position || (Position = {}));
-export var BackgroundVariant;
-(function (BackgroundVariant) {
-  BackgroundVariant["Lines"] = "lines";
-  BackgroundVariant["Dots"] = "dots";
-})(BackgroundVariant || (BackgroundVariant = {}));
 export var ConnectionMode;
 (function (ConnectionMode) {
   ConnectionMode["Strict"] = "strict";

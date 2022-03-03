@@ -116,14 +116,6 @@ export const darkTheme = createTheme("dark-theme", {
   },
 });
 
-const absoluteFill = {
-  width: "100%",
-  height: "100%",
-  position: "absolute",
-  top: 0,
-  left: 0,
-};
-
 globalCss({
   // Reset CSS: https://www.joshwcomeau.com/css/custom-css-reset/
   "*, *::before, *::after": {
@@ -148,6 +140,4 @@ globalCss({
     font: "$body",
     background: "$panel !important",
   },
-
-  ".react-flow__background": absoluteFill,
 })();
