@@ -1,6 +1,6 @@
 import React from "react";
 import { Position } from "../../types";
-import { styled } from "seaqull/style";
+import { styled } from "ui/styled/style";
 
 export const EdgeAnchor = ({ position, centerX, centerY, radius = 10 }) => (
   <Circle

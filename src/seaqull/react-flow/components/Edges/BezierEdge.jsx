@@ -4,7 +4,7 @@ import { getCenter } from "./utils";
 import { Position } from "../../types";
 import { Group } from "../Group";
 import { Path } from "../Path";
-import { keyframes } from "seaqull/style";
+import { keyframes } from "ui/styled/style";
 
 export const BezierEdge = memo(function BezierEdge({
   sourceX,

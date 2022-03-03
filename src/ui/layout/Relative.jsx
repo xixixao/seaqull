@@ -1,4 +1,4 @@
-import { styled } from "seaqull/style";
+import { styled } from "ui/styled/style";
 
 export const Relative = styled("div", {
   position: "absolute",

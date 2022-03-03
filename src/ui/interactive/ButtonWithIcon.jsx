@@ -1,4 +1,4 @@
-import { Box } from "./Box";
+import { Box } from "../layout/Box";
 import { Button } from "./Button";
 
 export function ButtonWithIcon({ icon, children, ...props }) {

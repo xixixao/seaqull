@@ -33,8 +33,8 @@ import {
   useSetAppStateContext,
   useSetAppStateWithoutRecordingContext,
 } from "./state";
-import { Box } from "./ui/Box";
-import { codeMirrorStyles } from "./ui/codeMirrorStyles";
+import { Box } from "../ui/layout/Box";
+import { codeMirrorStyles } from "./codeMirrorStyles";
 
 export default function Input({
   extensions,

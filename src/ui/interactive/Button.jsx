@@ -1,4 +1,4 @@
-import { styled } from "../style";
+import { styled } from "../styled/style";
 
 export const Button = styled("button", {
   // Reset

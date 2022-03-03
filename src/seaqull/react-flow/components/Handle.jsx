@@ -3,7 +3,7 @@ import cc from "classcat";
 import { useStoreActions, useStoreState } from "../store/hooks";
 import { Position } from "../types";
 import { onMouseDown } from "./Handle/handler";
-import { styled } from "seaqull/style";
+import { styled } from "ui/styled/style";
 import { useNode } from "./Nodes/wrapNode";
 const alwaysValid = () => true;
 

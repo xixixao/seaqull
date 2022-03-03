@@ -1,5 +1,5 @@
 import { Children } from "react";
-import { Box } from "../seaqull/ui/Box";
+import { Box } from "./Box";
 
 export function SplitView({ children }) {
   const [first, second] = Children.toArray(children);

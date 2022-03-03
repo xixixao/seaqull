@@ -7,7 +7,7 @@ import { onlyWarns } from "js/Arrays";
 import { useContext } from "react";
 import { LayoutRequestContext } from "./layoutRequest";
 import { useSetAppStateContext } from "./state";
-import { ButtonWithIcon } from "./ui/ButtonWithIcon";
+import { ButtonWithIcon } from "../ui/interactive/ButtonWithIcon";
 
 export function AddNodeButton({ icon, children, onAdd }) {
   const setAppState = useSetAppStateContext();

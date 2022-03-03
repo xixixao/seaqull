@@ -1,6 +1,6 @@
 import { ExternalLinkIcon } from "@modulz/radix-icons";
 import React from "react";
-import { styled } from "../style";
+import { styled } from "../styled/style";
 
 export const Link = styled(
   (props) => {

@@ -6,7 +6,7 @@ import useKeyPress from "../hooks/useKeyPress";
 import useResizeHandler from "../hooks/useResizeHandler";
 import { useStoreState, useStoreActions, useStore } from "../store/hooks";
 import { PanOnScrollMode } from "../types";
-import { FillParent } from "seaqull/ui/FillParent";
+import { FillParent } from "ui/layout/FillParent";
 
 export function ZoomPane({
   onMove,

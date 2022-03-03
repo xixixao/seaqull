@@ -26,7 +26,7 @@ import {
 import * as History from "seaqull/History";
 import { hasTargetHandle } from "../Handle/handler";
 import { doNodesOverlap } from "../../utils/graph";
-import { Box } from "seaqull/ui/Box";
+import { Box } from "ui/layout/Box";
 
 export default function wrapNode(NodeComponent) {
   const MemoizedNodeComponent = memo(NodeComponent);

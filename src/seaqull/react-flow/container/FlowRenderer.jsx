@@ -1,5 +1,5 @@
 import React, { memo, useCallback } from "react";
-import { FillParent } from "seaqull/ui/FillParent";
+import { FillParent } from "ui/layout/FillParent";
 import { BoxSelection } from "../components/BoxSelection";
 import useGlobalKeyHandler from "../hooks/useGlobalKeyHandler";
 import useKeyPress from "../hooks/useKeyPress";

@@ -1,3 +1,3 @@
-import { styled } from "seaqull/style";
+import { styled } from "ui/styled/style";
 
 export const SVG = styled("svg");

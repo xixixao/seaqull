@@ -4,7 +4,7 @@ import { useStoreState } from "../store/hooks";
 import { useUpdateNodeDimensions } from "../store/reducer";
 import { getNodesInside } from "../utils/graph";
 import * as Nodes from "graph/Nodes";
-import { Box } from "seaqull/ui/Box";
+import { Box } from "ui/layout/Box";
 
 export const NodeRenderer = memo(function (props) {
   const transform = useStoreState((state) => state.transform);

@@ -1,9 +1,9 @@
 import { CheckIcon } from "@modulz/radix-icons";
 // import DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
 import { forwardRef } from "react";
-import { css, styled } from "../style";
-import { Box } from "./Box";
-import { Column } from "./Column";
+import { css, styled } from "../styled/style";
+import { Box } from "../layout/Box";
+import { Column } from "../layout/Column";
 
 var DropdownMenuPrimitive;
 

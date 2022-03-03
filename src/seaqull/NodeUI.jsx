@@ -3,9 +3,9 @@ import * as Nodes from "graph/Nodes";
 import * as Edges from "graph/Edges";
 import { useNodeUIProps } from "./react-flow/components/Nodes/wrapNode";
 import { useAppGraphContext } from "./state";
-import { styled } from "./style";
-import FloatOnHover from "./ui/FloatOnHover";
-import { IconButton } from "./ui/IconButton";
+import { styled } from "../ui/styled/style";
+import FloatOnHover from "../ui/interactions/FloatOnHover";
+import { IconButton } from "../ui/interactive/IconButton";
 import { Handle } from "./react-flow/components/Handle";
 
 export default function NodeUI({

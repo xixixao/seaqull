@@ -13,10 +13,10 @@ import {
   useAppGraphAndSelectionContext,
   useAppModesContext,
 } from "seaqull/state";
-import { Column } from "seaqull/ui/Column";
-import HorizontalSpace from "seaqull/ui/HorizontalSpace";
-import { Row } from "seaqull/ui/Row";
-import VerticalSpace from "seaqull/ui/VerticalSpace";
+import { Column } from "ui/layout/Column";
+import HorizontalSpace from "ui/layout/HorizontalSpace";
+import { Row } from "ui/layout/Row";
+import VerticalSpace from "ui/layout/VerticalSpace";
 import * as Nodes from "graph/Nodes";
 import * as Arrays from "js/Arrays";
 import { Fragment } from "react";

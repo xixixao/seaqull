@@ -1,5 +1,5 @@
 import * as DialogPrimitive from "@radix-ui/react-dialog";
-import { styled } from "seaqull/style";
+import { styled } from "ui/styled/style";
 import React, { forwardRef } from "react";
 
 export function Dialog({ children, ...props }) {

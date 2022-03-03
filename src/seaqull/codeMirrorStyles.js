@@ -1,5 +1,3 @@
-import { HighlightStyle, tags as t } from "@codemirror/highlight";
-
 export const codeMirrorStyles = {
   // Main theme
   // "&": {

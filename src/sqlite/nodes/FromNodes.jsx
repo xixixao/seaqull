@@ -1,6 +1,6 @@
 import { useNode } from "seaqull/react-flow/components/Nodes/wrapNode";
 import { useSetNodeState } from "seaqull/state";
-import { Button } from "seaqull/ui/Button";
+import { Button } from "ui/interactive/Button";
 import {
   nodeName,
   setName,

@@ -5,8 +5,8 @@ import * as Objects from "js/Objects";
 import React, { forwardRef, useMemo } from "react";
 import { ConnectionMode, PanOnScrollMode } from "../types";
 import { GraphView } from "./GraphView";
-import { Box } from "seaqull/ui/Box";
-import { FillParent } from "seaqull/ui/FillParent";
+import { Box } from "ui/layout/Box";
+import { FillParent } from "ui/layout/FillParent";
 
 const snapGridDefault = [15, 15];
 

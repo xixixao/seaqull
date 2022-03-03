@@ -1,9 +1,9 @@
 import { QuestionMarkIcon } from "@modulz/radix-icons";
 import { addNodeAtPosition } from "seaqull/AddNodeButton";
-import { Button } from "seaqull/ui/Button";
-import { Box } from "seaqull/ui/Box";
-import { IconButton } from "seaqull/ui/IconButton";
-import { Row } from "seaqull/ui/Row";
+import { Button } from "ui/interactive/Button";
+import { Box } from "ui/layout/Box";
+import { IconButton } from "ui/interactive/IconButton";
+import { Row } from "ui/layout/Row";
 import * as Objects from "js/Objects";
 import React, { useContext } from "react";
 import { SQLNodeConfigsProvider } from "../sql/SQLNodeConfigsProvider";
@@ -16,11 +16,11 @@ import { DialogTrigger } from "./ui/Dialog";
 import { SQLiteLocalStorage } from "./ui/SQLiteLocalStorage";
 import { SQLiteResults } from "./ui/SQLiteResults";
 import { WelcomeDialog } from "./ui/SQLiteWelcomeDialog";
-import { Relative } from "ui/Relative";
+import { Relative } from "ui/layout/Relative";
 import { Seaqull } from "seaqull/Seaqull";
 import { ThemeToggle } from "theme/ThemeToggle";
-import { SplitView } from "../ui/SplitView";
-import { Column } from "../seaqull/ui/Column";
+import { SplitView } from "../ui/layout/SplitView";
+import { Column } from "../ui/layout/Column";
 
 const NODE_TYPES = Objects.map(NODE_CONFIGS, (type) => type.Component);
 

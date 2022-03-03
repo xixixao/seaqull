@@ -1,7 +1,7 @@
-import { Button } from "seaqull/ui/Button";
-import HorizontalSpace from "seaqull/ui/HorizontalSpace";
-import { Link } from "seaqull/ui/Link";
-import { Row } from "seaqull/ui/Row";
+import { Button } from "ui/interactive/Button";
+import HorizontalSpace from "ui/layout/HorizontalSpace";
+import { Link } from "ui/interactive/Link";
+import { Row } from "ui/layout/Row";
 import React, { useState } from "react";
 import dvdRentalURL from "../../sqlite_examples/dvd_rental.db?url";
 import { database } from "../database";

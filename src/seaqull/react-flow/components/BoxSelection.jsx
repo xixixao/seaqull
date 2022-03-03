@@ -1,8 +1,8 @@
 /**
  * The user selection rectangle gets displayed when a user drags the mouse while pressing shift
  */
-import { Box } from "seaqull/ui/Box";
-import { FillParentAbsolute } from "seaqull/ui/FillParentAbsolute";
+import { Box } from "ui/layout/Box";
+import { FillParentAbsolute } from "ui/layout/FillParentAbsolute";
 import React, { memo, useState } from "react";
 import { useNodesPositionsContext } from "../../state";
 import { useStoreState } from "../store/hooks";

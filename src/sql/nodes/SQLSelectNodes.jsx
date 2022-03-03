@@ -1,8 +1,8 @@
 import Input from "seaqull/Input";
 import { useNode } from "seaqull/react-flow/components/Nodes/wrapNode";
 import { useAppGraphContext, useSetNodeState } from "seaqull/state";
-import HorizontalSpace from "seaqull/ui/HorizontalSpace";
-import { Row } from "seaqull/ui/Row";
+import HorizontalSpace from "ui/layout/HorizontalSpace";
+import { Row } from "ui/layout/Row";
 import * as Nodes from "graph/Nodes";
 import * as Arrays from "js/Arrays";
 import { only } from "js/Arrays";

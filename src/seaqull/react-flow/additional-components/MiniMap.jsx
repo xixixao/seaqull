@@ -2,7 +2,7 @@ import React, { memo } from "react";
 import cc from "classcat";
 import { useStoreState } from "../store/hooks";
 import { getRectOfNodes, getBoundsofRects } from "../utils/graph";
-import { styled } from "seaqull/style";
+import { styled } from "ui/styled/style";
 
 const defaultWidth = 200;
 const defaultHeight = 150;

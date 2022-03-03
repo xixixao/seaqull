@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { Box } from "./Box";
+import { Box } from "../layout/Box";
 
+// TODO: This was a quick hack and it needs to be implemented properly
 export default function ShowOnClick({ css, trigger, children }) {
   const [isShowing, setIsShowing] = useState(false);
   return (

@@ -1,4 +1,4 @@
-import { styled } from "seaqull/style";
+import { styled } from "ui/styled/style";
 import * as Edges from "graph/Edges";
 import * as Node from "graph/Node";
 import * as Nodes from "graph/Nodes";
