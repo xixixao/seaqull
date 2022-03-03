@@ -4,6 +4,7 @@ import { useStoreState } from "../store/hooks";
 import { useUpdateNodeDimensions } from "../store/reducer";
 import { getNodesInside } from "../utils/graph";
 import * as Nodes from "graph/Nodes";
+import { Box } from "seaqull/ui/Box";
 
 export const NodeRenderer = memo(function (props) {
   const transform = useStoreState((state) => state.transform);
@@ -37,7 +38,17 @@ export const NodeRenderer = memo(function (props) {
     });
   }, [updateNodeDimensions]);
   return (
-    <div className="react-flow__nodes" style={transformStyle}>
+    <Box
+      css={{
+        position: "absolute",
+        width: "100%",
+        height: "100%",
+        pointerEvents: "none",
+        transformOrigin: "0 0",
+        zIndex: "$nodeEditor",
+      }}
+      style={transformStyle}
+    >
       {visibleNodes.map((node) => {
         const position = Nodes.positionOf(appState, node);
         const nodeType = node.type || "default";
@@ -105,6 +116,6 @@ export const NodeRenderer = memo(function (props) {
           />
         );
       })}
-    </div>
+    </Box>
   );
 });

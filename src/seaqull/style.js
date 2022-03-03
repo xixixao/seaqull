@@ -149,15 +149,6 @@ globalCss({
     background: "$panel !important",
   },
 
-  ".react-flow__nodes": {
-    position: "absolute",
-    width: "100%",
-    height: "100%",
-    pointerEvents: "none",
-    transformOrigin: "0 0",
-    zIndex: 3,
-  },
-
   ".react-flow__node": {
     position: "absolute",
     userSelect: "none",
