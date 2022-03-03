@@ -1,6 +1,7 @@
 import React, { memo } from "react";
-import cc from "classcat";
-const MiniMapNode = ({
+import { styled } from "seaqull/style";
+
+export const MiniMapNode = memo(function MiniMapNode({
   x,
   y,
   width,
@@ -12,12 +13,18 @@ const MiniMapNode = ({
   className,
   borderRadius,
   shapeRendering,
-}) => {
+}) {
   const { background, backgroundColor } = style || {};
   const fill = color || background || backgroundColor;
   return (
-    <rect
-      className={cc(["react-flow__minimap-node", className])}
+    <Rect
+      css={{
+        position: "absolute",
+        zIndex: 5,
+        bottom: "10px",
+        right: "10px",
+        backgroundColor: "#fff",
+      }}
       x={x}
       y={y}
       rx={borderRadius}
@@ -30,6 +37,6 @@ const MiniMapNode = ({
       shapeRendering={shapeRendering}
     />
   );
-};
-MiniMapNode.displayName = "MiniMapNode";
-export default memo(MiniMapNode);
+});
+
+const Rect = styled("rect");

@@ -150,47 +150,4 @@ globalCss({
   },
 
   ".react-flow__background": absoluteFill,
-
-  // '.react-flow__minimap': {
-  //   position: 'absolute',
-  //   zIndex: 5,
-  //   bottom: '10px',
-  //   right: '10px',
-  // },
-
-  //   '&.connectable': {
-  //     cursor: 'crosshair',
-  //   },
-  // },
-
-  // '.react-flow__minimap': {
-  //   backgroundColor: '#fff',
-  // },
-
-  ".react-flow__controls": {
-    boxShadow: "0 0 2px 1px rgba(0, 0, 0, 0.08)",
-  },
-
-  ".react-flow__controls-button": {
-    background: "#fefefe",
-    borderBottom: "1px solid #eee",
-    boxSizing: "content-box",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    width: "16px",
-    height: "16px",
-    cursor: "pointer",
-    userSelect: "none",
-    padding: "5px",
-  },
-
-  ".react-flow__controls-button svg": {
-    maxWidth: "12px",
-    maxHeight: "12px",
-  },
-
-  ".react-flow__controls-button:hover": {
-    background: "#f4f4f4",
-  },
 })();
