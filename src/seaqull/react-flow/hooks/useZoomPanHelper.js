@@ -6,13 +6,15 @@ import {
   pointToRendererPoint,
   getTransformForBounds,
 } from "../utils/graph";
+import * as Arrays from "js/Arrays";
+
 const DEFAULT_PADDING = 0.1;
 const initialZoomPanHelper = {
   zoomIn: () => {},
   zoomOut: () => {},
   zoomTo: (_) => {},
   transform: (_) => {},
-  fitView: (_ = { padding: DEFAULT_PADDING, includeHiddenNodes: false }) => {},
+  fitView: (_) => {},
   setCenter: (_, __) => {},
   fitBounds: (_) => {},
   project: (position) => position,
@@ -28,31 +30,26 @@ const useZoomPanHelper = () => {
         zoomIn: () => d3Zoom.scaleBy(d3Selection, 1.2),
         zoomOut: () => d3Zoom.scaleBy(d3Selection, 1 / 1.2),
         zoomTo: (zoomLevel) => d3Zoom.scaleTo(d3Selection, zoomLevel),
+        resetZoom: () => d3Zoom.scaleTo(d3Selection, 1),
         transform: (transform) => {
           const nextTransform = zoomIdentity
             .translate(transform.x, transform.y)
             .scale(transform.zoom);
           d3Zoom.transform(d3Selection, nextTransform);
         },
-        fitView: (
-          options = { padding: DEFAULT_PADDING, includeHiddenNodes: false }
-        ) => {
-          const { nodes, width, height, minZoom, maxZoom } = store.getState();
-          if (!nodes.length) {
+        fitView: (positions) => {
+          const { width, height, minZoom, maxZoom } = store.getState();
+          if (positions.size === 0) {
             return;
           }
-          const bounds = getRectOfNodes(
-            options.includeHiddenNodes
-              ? nodes
-              : nodes.filter((node) => !node.isHidden)
-          );
+          const bounds = getRectOfNodes(Arrays.values(positions));
           const [x, y, zoom] = getTransformForBounds(
             bounds,
             width,
             height,
-            options.minZoom ?? minZoom,
-            options.maxZoom ?? maxZoom,
-            options.padding ?? DEFAULT_PADDING
+            minZoom,
+            maxZoom,
+            DEFAULT_PADDING
           );
           const transform = zoomIdentity.translate(x, y).scale(zoom);
           d3Zoom.transform(d3Selection, transform);

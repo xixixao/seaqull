@@ -66,12 +66,22 @@ function Editor({
             <Relative top right>
               <Row css={{ padding: "$12" }}>
                 {topRightUI}
-                <ThemeToggle />
+                <ThemeToggle
+                  tooltipProps={{
+                    side: "bottom",
+                    align: "end",
+                  }}
+                />
               </Row>
             </Relative>
             <Relative bottom left>
               <Column css={{ padding: "$12" }}>
-                <Seaqull.NodeEditor.PaneControls />
+                <Seaqull.NodeEditor.PaneControls
+                  tooltipProps={{
+                    side: "right",
+                    align: "center",
+                  }}
+                />
               </Column>
             </Relative>
           </Seaqull.NodeEditor>

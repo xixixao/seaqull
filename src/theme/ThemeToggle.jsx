@@ -5,7 +5,7 @@ import { darkTheme } from "../ui/styled/style";
 import { Tooltip } from "../ui/interactive/Tooltip";
 import { useTheme } from "./useTheme";
 
-export function ThemeToggle(props) {
+export function ThemeToggle({ tooltipProps }) {
   const [theme, setTheme] = useTheme();
 
   useEffect(() => {
@@ -17,12 +17,11 @@ export function ThemeToggle(props) {
   }, [theme]);
 
   return (
-    <Tooltip content="Toggle theme" side="bottom" align="end">
+    <Tooltip content="Toggle theme" {...tooltipProps}>
       <IconButton
         onClick={() => {
           setTheme(theme === "dark" ? "light" : "dark");
         }}
-        {...props}
         aria-label="toggle a light and dark color scheme"
       >
         <SunIcon />

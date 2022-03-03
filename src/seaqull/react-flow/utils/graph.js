@@ -171,14 +171,15 @@ export const boxToRect = ({ x, y, x2, y2 }) => ({
 });
 export const getBoundsofRects = (rect1, rect2) =>
   boxToRect(getBoundsOfBoxes(rectToBox(rect1), rectToBox(rect2)));
+
 export const getRectOfNodes = (nodes) => {
   const box = nodes.reduce(
-    (currBox, { __rf: { position, width, height } = {} }) =>
-      getBoundsOfBoxes(currBox, rectToBox({ ...position, width, height })),
+    (currBox, position) => getBoundsOfBoxes(currBox, rectToBox(position)),
     { x: Infinity, y: Infinity, x2: -Infinity, y2: -Infinity }
   );
   return boxToRect(box);
 };
+
 export const graphPosToZoomedPos = ({ x, y }, [tx, ty, tScale]) => ({
   x: x * tScale + tx,
   y: y * tScale + ty,
