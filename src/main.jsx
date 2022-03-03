@@ -1,4 +1,4 @@
-import render from "./seaqull/renderEditor";
-import SQLiteLanguage from "./sqlite/SQLiteLanguage";
+import { render } from "./sqlite/renderEditor";
+import { SQLiteEditor } from "./sqlite/SQLiteEditor";
 
-render(<SQLiteLanguage />);
+render(<SQLiteEditor />);

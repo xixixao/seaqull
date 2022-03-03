@@ -24,7 +24,7 @@ import { Column } from "../seaqull/ui/Column";
 
 const NODE_TYPES = Objects.map(NODE_CONFIGS, (type) => type.Component);
 
-export default function SQLiteLanguage() {
+export function SQLiteEditor() {
   return (
     <SQLNodeConfigsProvider value={NODE_CONFIGS}>
       <SQLiteStateProvider>
