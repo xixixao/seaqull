@@ -271,7 +271,34 @@ function TableBody({ css, values }) {
 }
 
 const TBody = styled("tbody");
-const Table = styled("table");
+const Table = styled("table", {
+  borderCollapse: "collapse",
+  height: "fit-content",
+  th: {
+    // borderWidth: "1px",
+    // borderStyle: "solid",
+    // borderColor: "inherit",
+    // borderBottom: "1px solid $slate7",
+    position: "sticky",
+    top: "0",
+    background: "$panel",
+    whiteSpace: "nowrap",
+    textAlign: "start",
+    padding: "$8 $4 0 $4",
+    boxShadow: "inset 0 -1px 0 $colors$slate7",
+  },
+  td: {
+    // borderWidth: "1px",
+    // borderStyle: "solid",
+    // borderColor: "inherit",
+    // border: "1px solid $slate7",
+    padding: "0 4px",
+    whiteSpace: "nowrap",
+  },
+  "tbody tr": {
+    borderBottom: "1px solid $slate3",
+  },
+});
 
 export class ResultError {
   constructor(sql, error) {
