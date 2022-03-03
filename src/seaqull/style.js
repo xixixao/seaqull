@@ -149,23 +149,6 @@ globalCss({
     background: "$panel !important",
   },
 
-  ".react-flow__edge": {
-    pointerEvents: "visibleStroke",
-
-    "&.inactive": {
-      pointerEvents: "none",
-    },
-  },
-
-  // ".react-flow__edge-textwrapper": {
-  //   pointerEvents: "all",
-  // },
-
-  // ".react-flow__edge-text": {
-  //   pointerEvents: "none",
-  //   userSelect: "none",
-  // },
-
   ".react-flow__nodes": {
     position: "absolute",
     width: "100%",

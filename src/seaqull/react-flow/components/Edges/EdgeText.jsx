@@ -20,6 +20,10 @@ const EdgeText = ({
     width: 0,
     height: 0,
   });
+
+  // ".react-flow__edge-textwrapper": {
+  //   pointerEvents: "all",
+  // },
   const edgeTextClasses = cc(["react-flow__edge-textwrapper", className]);
   useEffect(() => {
     if (edgeRef.current) {
@@ -56,6 +60,10 @@ const EdgeText = ({
         />
       )}
       <text
+        // ".react-flow__edge-text": {
+        //   pointerEvents: "none",
+        //   userSelect: "none",
+        // },
         className="react-flow__edge-text"
         y={edgeTextBbox.height / 2}
         dy="0.3em"

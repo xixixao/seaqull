@@ -3,11 +3,11 @@ import cc from "classcat";
 import { useStoreActions, useStoreState } from "../../store/hooks";
 import { onMouseDown } from "../Handle/handler";
 import { EdgeAnchor } from "./EdgeAnchor";
+import { Group } from "../Group";
 
 export default function wrapEdge(EdgeComponent) {
   const EdgeWrapper = ({
     id,
-    className,
     type,
     data,
     onClick,
@@ -55,9 +55,7 @@ export default function wrapEdge(EdgeComponent) {
     const [updating, setUpdating] = useState(false);
     const inactive = !elementsSelectable && !onClick;
     const edgeClasses = cc([
-      "react-flow__edge",
-      `react-flow__edge-${type}`,
-      className,
+      // TODO: Dont use classes, use React props instead
       { selected, animated, inactive, updating },
     ]);
     const edgeElement = useMemo(() => {
@@ -180,7 +178,13 @@ export default function wrapEdge(EdgeComponent) {
       return null;
     }
     return (
-      <g
+      <Group
+        css={{
+          pointerEvents: "visibleStroke",
+          "&.inactive": {
+            pointerEvents: "none",
+          },
+        }}
         className={edgeClasses}
         onClick={onEdgeClick}
         onDoubleClick={onEdgeDoubleClickHandler}
@@ -243,7 +247,7 @@ export default function wrapEdge(EdgeComponent) {
             />
           </g>
         )}
-      </g>
+      </Group>
     );
   };
   EdgeWrapper.displayName = "EdgeWrapper";
