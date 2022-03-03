@@ -9,24 +9,24 @@ import { Tooltip } from "../../../ui/interactive/Tooltip";
 import useZoomPanHelper from "../hooks/useZoomPanHelper";
 import { useStoreState } from "../store/hooks";
 
-export function PaneControls({ tooltipProps }) {
+export function PaneControls() {
   const { zoomIn, zoomOut, resetZoom } = useZoomPanHelper();
   return (
     <>
-      <Tooltip content="Zoom in" {...tooltipProps}>
+      <Tooltip content="Zoom in">
         <IconButton onClick={zoomIn}>
           <ZoomInIcon />
         </IconButton>
       </Tooltip>
-      <Tooltip content="Zoom out" {...tooltipProps}>
+      <Tooltip content="Zoom out">
         <IconButton onClick={zoomOut}>
           <ZoomOutIcon />
         </IconButton>
       </Tooltip>
-      <FitViewButton tooltipProps={tooltipProps} />
+      <FitViewButton />
       <VerticalSpace />
       <VerticalSpace />
-      <Tooltip content="Reset zoom" {...tooltipProps}>
+      <Tooltip content="Reset zoom">
         <Button ghost={true} onClick={resetZoom}>
           <ZoomIndicator />
         </Button>
@@ -39,7 +39,7 @@ function FitViewButton({ tooltipProps }) {
   const { fitView } = useZoomPanHelper();
   const positions = useContext(AppStateContext.positions);
   return (
-    <Tooltip content="Fit view" {...tooltipProps}>
+    <Tooltip content="Fit view">
       <IconButton onClick={() => fitView(positions)}>
         <AllSidesIcon />
       </IconButton>

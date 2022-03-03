@@ -5,7 +5,7 @@ import { darkTheme } from "../ui/styled/style";
 import { Tooltip } from "../ui/interactive/Tooltip";
 import { useTheme } from "./useTheme";
 
-export function ThemeToggle({ tooltipProps }) {
+export function ThemeToggle() {
   const [theme, setTheme] = useTheme();
 
   useEffect(() => {
@@ -17,7 +17,7 @@ export function ThemeToggle({ tooltipProps }) {
   }, [theme]);
 
   return (
-    <Tooltip content="Toggle theme" {...tooltipProps}>
+    <Tooltip content="Toggle theme">
       <IconButton
         onClick={() => {
           setTheme(theme === "dark" ? "light" : "dark");

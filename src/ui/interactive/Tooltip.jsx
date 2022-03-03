@@ -1,12 +1,17 @@
 import React from "react";
 import { styled } from "../styled/style";
 import * as TooltipPrimitive from "@radix-ui/react-tooltip";
+import { createContext } from "react";
+import { useContext } from "react";
+
+const TooltipsPositionContext = createContext();
 
 export function Tooltip({ children, content, ...props }) {
+  const contextProps = useContext(TooltipsPositionContext) ?? {};
   return (
     <TooltipPrimitive.Root>
       <TooltipPrimitive.Trigger asChild>{children}</TooltipPrimitive.Trigger>
-      <Content sideOffset={3} {...props}>
+      <Content sideOffset={3} {...contextProps} {...props}>
         {content}
         <Box css={{ color: "$transparentPanel" }}>
           <TooltipPrimitive.Arrow
@@ -18,6 +23,14 @@ export function Tooltip({ children, content, ...props }) {
         </Box>
       </Content>
     </TooltipPrimitive.Root>
+  );
+}
+
+export function TooltipsPosition({ children, ...props }) {
+  return (
+    <TooltipsPositionContext.Provider value={props}>
+      {children}
+    </TooltipsPositionContext.Provider>
   );
 }
 

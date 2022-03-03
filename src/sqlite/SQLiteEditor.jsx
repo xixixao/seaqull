@@ -21,6 +21,7 @@ import { Seaqull } from "seaqull/Seaqull";
 import { ThemeToggle } from "theme/ThemeToggle";
 import { SplitView } from "../ui/layout/SplitView";
 import { Column } from "../ui/layout/Column";
+import { TooltipsPosition } from "ui/interactive/Tooltip";
 
 const NODE_TYPES = Objects.map(NODE_CONFIGS, (type) => type.Component);
 
@@ -66,22 +67,16 @@ function Editor({
             <Relative top right>
               <Row css={{ padding: "$12" }}>
                 {topRightUI}
-                <ThemeToggle
-                  tooltipProps={{
-                    side: "bottom",
-                    align: "end",
-                  }}
-                />
+                <TooltipsPosition side="bottom" align="end">
+                  <ThemeToggle />
+                </TooltipsPosition>
               </Row>
             </Relative>
             <Relative bottom left>
               <Column css={{ padding: "$12" }}>
-                <Seaqull.NodeEditor.PaneControls
-                  tooltipProps={{
-                    side: "right",
-                    align: "center",
-                  }}
-                />
+                <TooltipsPosition side="right" align="center">
+                  <Seaqull.NodeEditor.PaneControls />
+                </TooltipsPosition>
               </Column>
             </Relative>
           </Seaqull.NodeEditor>
