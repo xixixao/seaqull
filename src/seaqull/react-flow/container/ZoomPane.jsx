@@ -198,20 +198,6 @@ export function ZoomPane({
           return false;
         }
         // when the target element is a node, we still allow zooming
-        if (
-          (event.target.closest(".react-flow__node") ||
-            event.target.closest(".react-flow__edge")) &&
-          event.type !== "wheel"
-        ) {
-          return false;
-        }
-        // when the target element is a node selection, we still allow zooming
-        if (
-          event.target.closest(".react-flow__nodesselection") &&
-          event.type !== "wheel"
-        ) {
-          return false;
-        }
         if (!zoomOnPinch && event.ctrlKey && event.type === "wheel") {
           return false;
         }
