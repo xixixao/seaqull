@@ -149,15 +149,6 @@ globalCss({
     background: "$panel !important",
   },
 
-  ".react-flow__node": {
-    position: "absolute",
-    userSelect: "none",
-    pointerEvents: "all",
-    transformOrigin: "0 0",
-    outline: "none",
-    cursor: "grab",
-  },
-
   ".react-flow__background": absoluteFill,
 
   // '.react-flow__minimap': {
@@ -166,18 +157,6 @@ globalCss({
   //   bottom: '10px',
   //   right: '10px',
   // },
-
-  // TODO: Convert to proper components
-  // ".react-flow__selection": {
-  //   background: "rgba(0, 89, 220, 0.08)",
-  //   border: "1px dotted rgba(0, 89, 220, 0.8)",
-  // },
-
-  // '.react-flow__node-input.selectable',
-  // '.react-flow__node-output.selectable'
-  ".react-flow__node.selectable:not(.selected):hover > div": {
-    boxShadow: "0 1px 4px 1px $colors$subtleShadow",
-  },
 
   //   '&.connectable': {
   //     cursor: 'crosshair',

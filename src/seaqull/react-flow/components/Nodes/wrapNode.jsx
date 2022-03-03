@@ -26,6 +26,7 @@ import {
 import * as History from "seaqull/History";
 import { hasTargetHandle } from "../Handle/handler";
 import { doNodesOverlap } from "../../utils/graph";
+import { Box } from "seaqull/ui/Box";
 
 export default function wrapNode(NodeComponent) {
   const MemoizedNodeComponent = memo(NodeComponent);
@@ -354,8 +355,7 @@ export default function wrapNode(NodeComponent) {
     }
     const nodeClasses = cc([
       "react-flow__node",
-      `react-flow__node-${type}`,
-      className,
+      // TODO: Dont use classes, use React props instead
       {
         selected,
         selectable: isSelectable,
@@ -393,7 +393,15 @@ export default function wrapNode(NodeComponent) {
         enableUserSelectHack={false}
         handle={dragHandle}
       >
-        <div
+        <Box
+          css={{
+            position: "absolute",
+            userSelect: "none",
+            pointerEvents: "all",
+            transformOrigin: "0 0",
+            outline: "none",
+            cursor: "grab",
+          }}
           className={nodeClasses}
           ref={setNodeRef}
           style={nodeStyle}
@@ -410,7 +418,7 @@ export default function wrapNode(NodeComponent) {
               <MemoizedNodeComponent />
             </NodeContext.Provider>
           </NodeUIContext.Provider>
-        </div>
+        </Box>
       </DraggableCore>
     );
   };
