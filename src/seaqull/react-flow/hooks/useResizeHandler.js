@@ -1,7 +1,8 @@
 import { useEffect } from "react";
 import { useStoreActions } from "../store/hooks";
 import { getDimensions } from "../utils";
-export default (rendererNode) => {
+
+export default function useResizeHandler(rendererNode) {
   const updateSize = useStoreActions((actions) => actions.updateSize);
   useEffect(() => {
     let resizeObserver;
@@ -30,4 +31,4 @@ export default (rendererNode) => {
       }
     };
   }, []);
-};
+}

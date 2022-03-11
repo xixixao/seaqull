@@ -25,7 +25,7 @@ export const Button = styled("button", {
 
   "&:disabled": {
     backgroundColor: "$slate2",
-    boxShadow: "inset 0 0 0 1px $colors$slate7",
+    // boxShadow: "inset 0 0 0 1px $colors$slate7",
     color: "$slate8",
     pointerEvents: "none",
   },

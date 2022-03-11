@@ -1,15 +1,16 @@
-import { keyframes, styled } from "ui/styled/style";
-import { Box } from "ui/layout/Box";
-import { Button } from "ui/interactive/Button";
-import { Column } from "ui/layout/Column";
-import { Row } from "ui/layout/Row";
-import VerticalSpace from "ui/layout/VerticalSpace";
 import * as Node from "graph/Node";
 import * as Nodes from "graph/Nodes";
 import { only } from "js/Arrays";
 import * as Promises from "js/Promises";
 import React, { memo, useEffect, useState } from "react";
 import { format as formatSQL } from "sql-formatter";
+import { Button } from "ui/interactive/Button";
+import { Box } from "ui/layout/Box";
+import { Column } from "ui/layout/Column";
+import HorizontalSpace from "ui/layout/HorizontalSpace";
+import { Row } from "ui/layout/Row";
+import VerticalSpace from "ui/layout/VerticalSpace";
+import { keyframes, styled } from "ui/styled/style";
 import {
   getColumnControl,
   getQuery,
@@ -18,33 +19,26 @@ import {
   getQuerySelectable,
   getResults,
 } from "../sqlNodes";
+import { SQLResultsChart } from "./SQLResultsChart";
 
 export function SQLResults({ executedSql, execQuery, useAppContext }) {
   const appState = useAppContext();
   const selected = Nodes.selected(appState);
   const singleSelectedNode = only(selected);
   return (
-    <Row
-      css={{
-        overflow: "scroll",
-        padding: "0 $8",
-        maxHeight: "100%",
-      }}
-    >
-      {(singleSelectedNode != null
-        ? getResults(appState, singleSelectedNode)
-        : null) ?? (
-        <ResultsTable
-          executedSql={executedSql}
-          execQuery={execQuery}
-          useAppContext={useAppContext}
-        />
-      )}
-    </Row>
+    (singleSelectedNode != null
+      ? getResults(appState, singleSelectedNode)
+      : null) ?? (
+      <ResultsView
+        executedSql={executedSql}
+        execQuery={execQuery}
+        useAppContext={useAppContext}
+      />
+    )
   );
 }
 
-function ResultsTable({ executedSql, execQuery, useAppContext }) {
+function ResultsView({ executedSql, execQuery, useAppContext }) {
   const appState = useAppContext();
   const [resultsState, setResultsState] = useState(null);
   const [updated, setUpdated] = useState();
@@ -121,42 +115,62 @@ function ResultsTable({ executedSql, execQuery, useAppContext }) {
 
 function ResultsDisplay({ updated, state, executedSql }) {
   const [view, setView] = useState("table");
-  const controls = (
-    <Row justify="end">
-      <Button
-        onClick={() => {
-          setView(view === "table" ? "sql" : "table");
-        }}
-      >
-        {view === "table" ? "SQL" : "Results"}
-      </Button>
-    </Row>
-  );
-  return (
-    <>
-      <Box
-        css={{
-          display: "inline-flex",
-          // border: "1px solid transparent",
-          table: {
-            animation: updated ? `${borderBlink} 1s ease-out` : null,
-          },
-        }}
-      >
-        {view === "table" ? (
-          <ResultsTableLoaded state={state} />
+  const validationError = validateResults(state.tables);
+  const controls = <ResultsViewControls view={view} setView={setView} />;
+  return validationError == null && (view === "table" || view === "chart") ? (
+    view === "table" ? (
+      <ResultsLayoutTables
+        controls={controls}
+        tables={<ResultsTableLoaded state={state} />}
+        updated={updated}
+      />
+    ) : (
+      <ResultsLayoutChart
+        controls={controls}
+        chart={<SQLResultsChart state={state} />}
+        updated={updated}
+      />
+    )
+  ) : (
+    <ResultsLayoutSQL
+      controls={controls}
+      sql={
+        view !== "sql" ? (
+          validationError
         ) : (
           <SQLDisplay background="$slate2">
             {executedSql(state.queries[0])}
           </SQLDisplay>
-        )}
-      </Box>
+        )
+      }
+      updated={updated}
+    />
+  );
+}
 
+function ResultsLayoutTables({ tables, controls, updated }) {
+  return (
+    <Row
+      css={{
+        overflow: "scroll",
+        padding: "0 $8",
+        maxHeight: "100%",
+      }}
+    >
+      <Box
+        // border: "1px solid transparent",
+        css={{
+          display: "inline-flex",
+          table: {
+            animation: updateAnimation(updated),
+          },
+        }}
+      >
+        {tables}
+      </Box>
       <Box css={{ paddingLeft: "$8", flexGrow: 1 }}>
-        {
-          // Rendered twice, to create correct scroll buffer space
-          controls
-        }
+        {/* Rendered twice, to create correct scroll buffer space */}
+        <Row justify="end">{controls}</Row>
       </Box>
       <Box
         css={{
@@ -168,10 +182,87 @@ function ResultsDisplay({ updated, state, executedSql }) {
           borderBottomLeftRadius: "$4",
         }}
       >
-        {controls}
+        <Row justify="end">{controls}</Row>
       </Box>
+    </Row>
+  );
+}
+
+function ResultsLayoutChart({ controls, chart }) {
+  return (
+    <Row
+      css={{ height: "100%", overflow: "hidden", padding: "$8" }}
+      justify="end"
+    >
+      {chart}
+      {controls}
+    </Row>
+  );
+}
+
+function ResultsLayoutSQL({ sql, controls, updated }) {
+  return (
+    <Row css={{ overflow: "scroll", maxHeight: "100%" }}>
+      <Box
+        css={{ display: "inline-flex", animation: updateAnimation(updated) }}
+      >
+        {sql}
+      </Box>
+      <Box css={{ paddingLeft: "$8", flexGrow: 1 }}>
+        {/* Rendered twice, to create correct scroll buffer space */}
+        <Row justify="end">{controls}</Row>
+      </Box>
+      <Box
+        css={{
+          padding: "$8",
+          top: 0,
+          right: 0,
+          position: "absolute",
+          background: "$panel",
+          borderBottomLeftRadius: "$4",
+        }}
+      >
+        <Row justify="end">{controls}</Row>
+      </Box>
+    </Row>
+  );
+}
+
+function ResultsViewControls({ view, setView }) {
+  return (
+    <>
+      <Button
+        disabled={view === "table"}
+        onClick={() => {
+          setView("table");
+        }}
+      >
+        Table
+      </Button>
+      <HorizontalSpace />
+      <Button
+        disabled={view === "chart"}
+        onClick={() => {
+          setView("chart");
+        }}
+      >
+        Chart
+      </Button>
+      <HorizontalSpace />
+      <Button
+        disabled={view === "sql"}
+        onClick={() => {
+          setView("sql");
+        }}
+      >
+        SQL
+      </Button>
     </>
   );
+}
+
+function updateAnimation(updated) {
+  return updated ? `${borderBlink} 1s ease-out` : null;
 }
 
 const borderBlink = keyframes({
@@ -179,10 +270,7 @@ const borderBlink = keyframes({
   to: {},
 });
 
-const ResultsTableLoaded = memo(function ResultsTableLoaded({
-  state: { appState, tables, additionalValues },
-}) {
-  const selectedNode = only(Nodes.selected(appState));
+function validateResults(tables) {
   if (tables[0] instanceof NoResultsError) {
     return (
       <SQLDisplay background="$yellow3" label="No results from:">
@@ -201,6 +289,14 @@ const ResultsTableLoaded = memo(function ResultsTableLoaded({
       </SQLDisplay>
     );
   }
+  return null;
+}
+
+const ResultsTableLoaded = memo(function ResultsTableLoaded({
+  state: { appState, tables, additionalValues },
+}) {
+  console.log("rendering", tables);
+  const selectedNode = only(Nodes.selected(appState));
   return tables.map(({ columns, values }, tableIndex) => {
     const isPrimary = tableIndex === 0;
     const moreValues = additionalValues[tableIndex];
@@ -315,13 +411,13 @@ export class NoResultsError {
 
 function SQLDisplay({ background, label, children }) {
   return (
-    <Box css={{ paddingTop: "$8" }}>
+    <Row css={{ padding: "$8" }}>
       <Column css={{ background, padding: "$12", borderRadius: "$4" }}>
         {label}
         {label != null ? <VerticalSpace /> : null}
         <SQL>{children}</SQL>
       </Column>
-    </Box>
+    </Row>
   );
 }
 
