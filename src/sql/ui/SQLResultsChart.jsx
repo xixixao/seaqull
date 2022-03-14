@@ -1,55 +1,48 @@
-import { useState } from "react";
-import { useCallback } from "react";
-import { useEffect } from "react";
-import { useRef } from "react";
-import { memo } from "react";
+import Highcharts from "highcharts";
+import HighchartsReact from "highcharts-react-official";
+import { memo, useEffect, useRef, useState } from "react";
 import { getDimensions } from "seaqull/react-flow/utils";
-import {
-  VictoryLine,
-  VictoryChart,
-  VictoryAxis,
-  VictoryTooltip,
-  VictoryVoronoiContainer,
-} from "victory";
-import { VictoryTheme } from "../../chart/VictoryTheme";
 
 export const SQLResultsChart = memo(function SQLResultsChart({
   state: { appState, tables },
 }) {
   const ref = useRef();
-  const size = useResizeHandler(ref);
+  // const size = useResizeHandler(ref);
   // const results = tables[0];
+  const xs = ["2012", "2013", "2014", "2015", "2016"];
+  // .map(
+  // (year) => new Date(Date.UTC(year))
+  // );
   const results = {
-    values: [
-      ["2012", 2],
-      ["2013", 1],
-      ["2014", 5],
-      ["2015", 4],
-      ["2016", 3],
-    ],
+    name: "Foo",
+    data: [[2], [1], [5], [4], [3]],
   };
   return (
     <div ref={ref} style={{ width: "100%", height: "100%" }}>
-      <VictoryChart
-        containerComponent={
-          <VictoryVoronoiContainer
-            labels={({ datum }) => datum[0] + "\n" + datum[1]}
-          />
-        }
-        domainPadding={20}
-        theme={VictoryTheme}
-        scale={{ x: "time" }}
-        width={size.width}
-        height={size.height}
-      >
-        <VictoryAxis />
-        <VictoryAxis dependentAxis />
-        <VictoryLine
-          data={results.values}
-          x={([date]) => new Date(date)}
-          y={1}
-        />
-      </VictoryChart>
+      <HighchartsReact
+        highcharts={Highcharts}
+        options={{
+          chart: {
+            style: { fontFamily: "inherit" },
+          },
+          title: { text: "" },
+          xAxis: { type: "datetime", categories: xs },
+          yAxis: {
+            title: {
+              text: "",
+            },
+          },
+          series: [results],
+          plotOptions: {
+            series: {
+              marker: {
+                enabled: false,
+              },
+            },
+          },
+          credits: { enabled: false },
+        }}
+      />
     </div>
   );
 });

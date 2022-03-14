@@ -29,6 +29,8 @@
     "classcat": "^5.0.3",
     "d3-selection": "^3.0.0",
     "d3-zoom": "^3.0.0",
+    "highcharts": "^10.0.0",
+    "highcharts-react-official": "^3.1.0",
     "immer": "^9.0.7",
     "react": "^17.0.2",
     "react-dom": "^17.0.0",
@@ -37,8 +39,7 @@
     "redux": "^4.1.2",
     "sql-formatter": "^4.0.2",
     "sql.js": "^1.6.2",
-    "use-immer": "^0.6.0",
-    "victory": "^36.3.0"
+    "use-immer": "^0.6.0"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^1.0.0",
