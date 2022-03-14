@@ -2,6 +2,8 @@ import Highcharts from "highcharts";
 import HighchartsReact from "highcharts-react-official";
 import { memo, useEffect, useRef, useState } from "react";
 import { getDimensions } from "seaqull/react-flow/utils";
+import { Box } from "ui/layout/Box";
+import { HighchartsTheme } from "../../chart/HighchartsTheme";
 
 export const SQLResultsChart = memo(function SQLResultsChart({
   state: { appState, tables },
@@ -15,18 +17,36 @@ export const SQLResultsChart = memo(function SQLResultsChart({
   // );
   const results = {
     name: "Foo",
-    data: [[2], [1], [5], [4], [3]],
+    data: [
+      [2012, 2],
+      [2013, 1],
+      [2014, 5],
+      [2015, 4],
+      [2016, 3],
+    ].map(([year, y]) => [+new Date(Date.UTC(year)), y]),
   };
   return (
-    <div ref={ref} style={{ width: "100%", height: "100%" }}>
+    <Box
+      ref={ref}
+      css={{
+        width: "100%",
+        height: "100%",
+        ...HighchartsTheme,
+      }}
+    >
       <HighchartsReact
         highcharts={Highcharts}
         options={{
           chart: {
-            style: { fontFamily: "inherit" },
+            // backgroundColor: null,
+            styledMode: true,
           },
           title: { text: "" },
-          xAxis: { type: "datetime", categories: xs },
+          xAxis: {
+            type: "datetime",
+            // categories: xs,
+            crosshair: true,
+          },
           yAxis: {
             title: {
               text: "",
@@ -35,6 +55,7 @@ export const SQLResultsChart = memo(function SQLResultsChart({
           series: [results],
           plotOptions: {
             series: {
+              stickyTracking: false,
               marker: {
                 enabled: false,
               },
@@ -43,7 +64,7 @@ export const SQLResultsChart = memo(function SQLResultsChart({
           credits: { enabled: false },
         }}
       />
-    </div>
+    </Box>
   );
 });
 
