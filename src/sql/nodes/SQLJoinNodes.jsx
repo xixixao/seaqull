@@ -15,11 +15,14 @@ import * as Objects from "js/Objects";
 import * as Sets from "js/Sets";
 import {
   getColumnNames,
-  getQuerySelectableOrNull,
+  getQuery,
+  getQueryOrNull,
+  isSelectingThisNode,
   useNodeConfig,
 } from "../sqlNodes";
-import ColumnCheckbox from "../ui/ColumnCheckbox";
-import SQLNodeUI from "../ui/SQLNodeUI";
+import ColumnCheckbox from "../results/ColumnCheckbox";
+import SQLNodeUI, { useStandardControls } from "../ui/SQLNodeUI";
+import { SQLResultsTable } from "../results/SQLResultsTable";
 
 function JoinNode() {
   const node = useNode();
@@ -57,10 +60,32 @@ function JoinNode() {
 export const SQLJoinNodeConfig = {
   Component: JoinNode,
   emptyNodeData: empty,
+  useControls: useStandardControls,
   hasProblem(appState, node) {
     return Nodes.parents(appState, node).length !== 2;
   },
   query(appState, node) {
+    const parents = Nodes.parentsOrdered(appState, node);
+    const [a, b] = parents;
+    const parentsColumnNames = parents.map((parent) =>
+      getColumnNames(appState, parent)
+    );
+    return sql(
+      appState,
+      node,
+      a,
+      b,
+      selectedColumnExpressionsAliased(node, parentsColumnNames).join(",")
+    );
+  },
+  columnNames(appState, node) {
+    const parents = Nodes.parentsOrdered(appState, node);
+    const parentsColumnNames = parents.map((parent) =>
+      getColumnNames(appState, parent)
+    );
+    return selectedColumnNames(node, parentsColumnNames);
+  },
+  queryBothSides(appState, node) {
     const parents = Nodes.parentsOrdered(appState, node);
     const [a, b] = parents;
     const joined = joinedColumns(node);
@@ -94,84 +119,75 @@ export const SQLJoinNodeConfig = {
     // validParents(appState, node)
     // return (name ?? "").length > 0 ? `SELECT * from ${name}` : null;
   },
-  queryAdditionalTables(appState, node) {
-    return null;
-  },
-  querySelectable(appState, node) {
-    const parents = Nodes.parentsOrdered(appState, node);
-    const [a, b] = parents;
-    const parentsColumnNames = parents.map((parent) =>
-      getColumnNames(appState, parent)
-    );
-    return sql(
-      appState,
-      node,
-      a,
-      b,
-      selectedColumnExpressionsAliased(node, parentsColumnNames).join(",")
-    );
-  },
-  columnNames(appState, node) {
-    const parents = Nodes.parentsOrdered(appState, node);
-    const parentsColumnNames = parents.map((parent) =>
-      getColumnNames(appState, parent)
-    );
-    return selectedColumnNames(node, parentsColumnNames);
-  },
-  // TODO: Obviously refactor this
-  ColumnControl({ appState, node, columnName, isPrimary, columnIndex }) {
-    const setNodeState = useSetNodeState(node);
-    if (Nodes.isDeleted(appState, node)) {
-      return null;
-    }
-    const joined = joinedColumns(node);
-    const parents = Nodes.parentsOrdered(appState, node);
-    const aOtherColumns = Arrays.subtractSets(
-      getColumnNames(appState, first(parents)),
-      // TODO: Fix this logic
-      new Set(joined.map(first))
-    );
-    const isJoined = columnIndex < joined.length;
-    const isA = columnIndex < joined.length + aOtherColumns.length;
-    const prefixedColumnName =
-      (isJoined ? "" : (isA ? "a" : "b") + ".") + columnName;
+  Results({ appState, node }) {
     return (
-      <Row align="center">
-        {isJoined ? (
-          <>
-            <ColumnCheckbox
-              checked={true}
-              onChange={() => {
-                setNodeState((node) => {
-                  removeFilter(node, columnName);
-                });
-              }}
-            />
-            <HorizontalSpace />
-            <HorizontalSpace />
-          </>
-        ) : null}
-        {prefixedColumnName}
-        {!isJoined ? (
-          <JoinOnSelector
-            columns={Arrays.map(
-              getColumnNames(
-                appState,
-                (isA ? second : first)(Nodes.parents(appState, node))
-              ),
-              (column) => (!isA ? "a" : "b") + "." + column
-            )}
-            onChange={(otherColumn) => {
-              setNodeState((node) => {
-                addFilter(node, `${prefixedColumnName} = ${otherColumn}`);
-              });
-            }}
-          />
-        ) : null}
-      </Row>
+      <SQLResultsTable
+        appState={appState}
+        node={node}
+        getQuery={
+          isSelectingThisNode(appState)
+            ? SQLJoinNodeConfig.queryBothSides
+            : getQuery
+        }
+        columnHeader={ColumnHeader}
+      />
     );
   },
 };
+
+// TODO: Obviously refactor this
+function ColumnHeader({ appState, node, columnName, columnIndex }) {
+  const setNodeState = useSetNodeState(node);
+  if (Nodes.isDeleted(appState, node)) {
+    return null;
+  }
+  const joined = joinedColumns(node);
+  const parents = Nodes.parentsOrdered(appState, node);
+  const aOtherColumns = Arrays.subtractSets(
+    getColumnNames(appState, first(parents)),
+    // TODO: Fix this logic
+    new Set(joined.map(first))
+  );
+  const isJoined = columnIndex < joined.length;
+  const isA = columnIndex < joined.length + aOtherColumns.length;
+  const prefixedColumnName =
+    (isJoined ? "" : (isA ? "a" : "b") + ".") + columnName;
+  return (
+    <Row align="center">
+      {isJoined ? (
+        <>
+          <ColumnCheckbox
+            checked={true}
+            onChange={() => {
+              setNodeState((node) => {
+                removeFilter(node, columnName);
+              });
+            }}
+          />
+          <HorizontalSpace />
+          <HorizontalSpace />
+        </>
+      ) : null}
+      {prefixedColumnName}
+      {!isJoined ? (
+        <JoinOnSelector
+          columns={Arrays.map(
+            getColumnNames(
+              appState,
+              (isA ? second : first)(Nodes.parents(appState, node))
+            ),
+            (column) => (!isA ? "a" : "b") + "." + column
+          )}
+          onChange={(otherColumn) => {
+            setNodeState((node) => {
+              addFilter(node, `${prefixedColumnName} = ${otherColumn}`);
+            });
+          }}
+        />
+      ) : null}
+    </Row>
+  );
+}
 
 function JoinOnSelector({ columns, onChange }) {
   return (
@@ -350,8 +366,8 @@ function getSimpleJoin(filter) {
 function sql(appState, node, a, b, selected) {
   return `SELECT ${selected} FROM ${supportRightJoin(
     node,
-    `(${getQuerySelectableOrNull(appState, a)}) AS a`,
-    `(${getQuerySelectableOrNull(appState, b)}) AS b`
+    `(${getQueryOrNull(appState, a)}) AS a`,
+    `(${getQueryOrNull(appState, b)}) AS b`
   )} ${hasFilter(node) ? `ON ${nodeFilters(node)}` : ""}`;
 }
 

@@ -30,7 +30,9 @@ import {
 
 export default function SQLNodeUI({ hideControls, parentLimit, children }) {
   const node = useNode();
-  const hasProblem = useNodeConfig(node).useHasProblem?.(node);
+  const config = useNodeConfig(node);
+  const hasProblem = config.useHasProblem?.(node);
+  const useControls = config.useControls ?? useNoControls;
   return (
     <NodeUI
       hasProblem={hasProblem}
@@ -43,7 +45,11 @@ export default function SQLNodeUI({ hideControls, parentLimit, children }) {
   );
 }
 
-function useControls(node) {
+function useNoControls() {
+  return null;
+}
+
+export function useStandardControls(node) {
   const appState = useAppGraphAndSelectionContext();
   const modes = useAppModesContext();
   if (Nodes.countSelected(appState) > 2) {
@@ -68,6 +74,9 @@ function useControls(node) {
     <Column>
       {!shouldReplace || isTightChild ? (
         <>
+          {/* TODO: Many places in the app should use grid instead of flex,
+          to simplify spacing between items, gap could be used for flex
+          now too but its fairly new in Chrome */}
           <Row>
             <TightChildStepButtons
               icon={shouldReplace ? <UpdateIcon /> : <PlusIcon />}
@@ -75,6 +84,11 @@ function useControls(node) {
             />
           </Row>
           <VerticalSpace />
+          {shouldReplace ? null : (
+            <Row>
+              <AddChart />
+            </Row>
+          )}
         </>
       ) : null}
       {
@@ -108,6 +122,18 @@ function TightChildStepButtons({ action, icon }) {
         </Fragment>
       ))}
     </>
+  );
+}
+
+function AddChart() {
+  const nodeConfigs = useNodeConfigs();
+  return (
+    <AddNodeButton
+      icon={<PlusIcon />}
+      onAdd={addTightNode(getEmptyNode({ nodeConfigs }, "chart"))}
+    >
+      Chart
+    </AddNodeButton>
   );
 }
 

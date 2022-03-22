@@ -30,7 +30,6 @@ export const ReactFlow = forwardRef(function ReactFlow(
     onNodeMouseLeave,
     onNodeContextMenu,
     onNodeDoubleClick,
-    onNodeDragStart,
     onNodeDrag,
     onNodeDragStop,
     onSelectionDragStart,
@@ -100,7 +99,6 @@ export const ReactFlow = forwardRef(function ReactFlow(
         onNodeMouseLeave={onNodeMouseLeave}
         onNodeContextMenu={onNodeContextMenu}
         onNodeDoubleClick={onNodeDoubleClick}
-        onNodeDragStart={onNodeDragStart}
         onNodeDrag={onNodeDrag}
         onNodeDragStop={onNodeDragStop}
         nodeTypes={nodeTypesParsed}

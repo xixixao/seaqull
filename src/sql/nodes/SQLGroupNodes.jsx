@@ -13,8 +13,13 @@ import * as Nodes from "graph/Nodes";
 import * as Arrays from "js/Arrays";
 import { only } from "js/Arrays";
 import React from "react";
-import { getColumnNames, getQuerySelectable, useNodeConfig } from "../sqlNodes";
-import SQLNodeUI from "../ui/SQLNodeUI";
+import {
+  getColumnNames,
+  getQuery,
+  isSelectingThisNode,
+  useNodeConfig,
+} from "../sqlNodes";
+import SQLNodeUI, { useStandardControls } from "../ui/SQLNodeUI";
 import {
   aliasedExpressionList,
   aliasedToExpression,
@@ -24,6 +29,7 @@ import {
   joinList,
   stripTrailingComma,
 } from "./sqlExpressions";
+import { SQLResultsTable } from "../results/SQLResultsTable";
 
 function GroupNode() {
   const node = useNode();
@@ -63,27 +69,52 @@ function GroupNode() {
 export const SQLGroupNodeConfig = {
   Component: GroupNode,
   emptyNodeData: empty,
+  useControls: useStandardControls,
   // hasProblem(appState, node) {
   //   return false; // TODO
   // },
+  columnNames(appState, node) {
+    const sourceNode = only(Nodes.parents(appState, node));
+    if (sourceNode == null) {
+      return new Set();
+    }
+    return hasGrouped(node)
+      ? new Set(aggregationList(node).map(aliasedToName))
+      : getColumnNames(appState, sourceNode);
+  },
   query(appState, node) {
+    if (!hasGrouped(node)) {
+      return SQLGroupNodeConfig.query(appState, node);
+    }
     const sourceNode = only(Nodes.parents(appState, node));
     if (sourceNode == null) {
       return null;
     }
-    const fromQuery = getQuerySelectable(appState, sourceNode);
+    const fromQuery = getQuery(appState, sourceNode);
+    return sql(
+      node,
+      aggregationList(node).map(aliasedToSelectable).join(","),
+      fromQuery
+    );
+  },
+  queryGrouped(appState, node) {
+    const sourceNode = only(Nodes.parents(appState, node));
+    if (sourceNode == null) {
+      return null;
+    }
+    const fromQuery = getQuery(appState, sourceNode);
     if (!hasGrouped(node)) {
       return `SELECT * from (${fromQuery})`;
     }
 
     return sql(node, aggregations(node), fromQuery);
   },
-  queryAdditionalTables(appState, node) {
+  queryUngrouped(appState, node) {
     const sourceNode = only(Nodes.parents(appState, node));
     if (sourceNode == null) {
       return null;
     }
-    const fromQuery = getQuerySelectable(appState, sourceNode);
+    const fromQuery = getQuery(appState, sourceNode);
     if (!hasGrouped(node)) {
       return null;
     }
@@ -94,33 +125,40 @@ export const SQLGroupNodeConfig = {
     if (otherColumns.length === 0) {
       return null;
     }
-    return [`SELECT ${otherColumns.join(",")} FROM (${fromQuery})`];
+    return `SELECT ${otherColumns.join(",")} FROM (${fromQuery})`;
   },
-  querySelectable(appState, node) {
-    if (!hasGrouped(node)) {
-      return SQLGroupNodeConfig.query(appState, node);
+  Results({ appState, node }) {
+    const config = useNodeConfig(node);
+    if (!isSelectingThisNode(appState)) {
+      return (
+        <SQLResultsTable appState={appState} node={node} getQuery={getQuery} />
+      );
     }
-    const sourceNode = only(Nodes.parents(appState, node));
-    if (sourceNode == null) {
-      return null;
-    }
-    const fromQuery = getQuerySelectable(appState, sourceNode);
-    return sql(
-      node,
-      aggregationList(node).map(aliasedToSelectable).join(","),
-      fromQuery
+    return (
+      <>
+        <SQLResultsTable
+          appState={appState}
+          node={node}
+          columnHeader={GroupedColumnHeader}
+          getQuery={config.queryGrouped}
+        />
+        <SQLResultsTable
+          appState={appState}
+          node={node}
+          getQuery={config.queryUngrouped}
+          columnHeader={ChooseColumnHeader}
+          color="$$secondary"
+        />
+      </>
     );
   },
-  columnNames(appState, node) {
-    const sourceNode = only(Nodes.parents(appState, node));
-    if (sourceNode == null) {
-      return new Set();
-    }
-    return hasGrouped(node)
-      ? new Set(aggregationList(node).map(aliasedToName))
-      : getColumnNames(appState, sourceNode);
-  },
-  ColumnControl({ node, columnName, isPrimary }) {
+};
+
+const GroupedColumnHeader = columnHeader(true);
+const ChooseColumnHeader = columnHeader(false);
+
+function columnHeader(isPrimary) {
+  return ({ node, columnName }) => {
     const setNodeState = useSetNodeState(node);
     const isSelectTable = isPrimary && hasGrouped(node);
     const isToggleable =
@@ -160,8 +198,8 @@ export const SQLGroupNodeConfig = {
         ) : null}
       </Row>
     );
-  },
-};
+  };
+}
 
 function AggregationSelector({ onChange }) {
   return (

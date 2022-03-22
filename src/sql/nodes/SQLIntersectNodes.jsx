@@ -1,7 +1,8 @@
 import * as Nodes from "graph/Nodes";
 import * as Arrays from "js/Arrays";
-import { getColumnNames, getQuerySelectableOrNull } from "../sqlNodes";
-import SQLNodeUI from "../ui/SQLNodeUI";
+import { getColumnNames, getQuery, getQueryOrNull } from "../sqlNodes";
+import SQLNodeUI, { useStandardControls } from "../ui/SQLNodeUI";
+import { SQLResultsTableWithRemainingRows } from "../results/SQLResultsTable";
 
 function IntersectNode() {
   return <SQLNodeUI parentLimit={2}>INTERSECT</SQLNodeUI>;
@@ -10,6 +11,7 @@ function IntersectNode() {
 export const SQLIntersectNodeConfig = {
   Component: IntersectNode,
   emptyNodeData: empty,
+  useControls: useStandardControls,
   hasProblem(appState, node) {
     return Nodes.parents(appState, node).length !== 2;
   },
@@ -18,16 +20,6 @@ export const SQLIntersectNodeConfig = {
     const [a, b] = parents;
     return sql(appState, "INTERSECT", a, b);
   },
-  queryAdditionalValues(appState, node) {
-    const parents = Nodes.parents(appState, node);
-    const [a, b] = parents;
-    return `SELECT * FROM (${sql(appState, "EXCEPT", a, b)})
-      UNION
-      SELECT * FROM (${sql(appState, "EXCEPT", b, a)})`;
-  },
-  querySelectable(appState, node) {
-    return SQLIntersectNodeConfig.query(appState, node);
-  },
   columnNames(appState, node) {
     const parent = Arrays.first(Nodes.parents(appState, node));
     if (parent == null) {
@@ -35,8 +27,22 @@ export const SQLIntersectNodeConfig = {
     }
     return getColumnNames(appState, parent);
   },
-  ColumnControl({ columnName }) {
-    return columnName;
+  queryOuterRows(appState, node) {
+    const parents = Nodes.parents(appState, node);
+    const [a, b] = parents;
+    return `SELECT * FROM (${sql(appState, "EXCEPT", a, b)})
+      UNION
+      SELECT * FROM (${sql(appState, "EXCEPT", b, a)})`;
+  },
+  Results({ appState, node }) {
+    return (
+      <SQLResultsTableWithRemainingRows
+        appState={appState}
+        node={node}
+        getQuery={getQuery}
+        getQueryForRemainingRows={SQLIntersectNodeConfig.queryOuterRows}
+      />
+    );
   },
 };
 
@@ -46,7 +52,7 @@ function empty() {
 
 function sql(appState, operator, a, b) {
   return `
-  ${getQuerySelectableOrNull(appState, a)}
+  ${getQueryOrNull(appState, a)}
   ${operator}
-  ${getQuerySelectableOrNull(appState, b)}`;
+  ${getQueryOrNull(appState, b)}`;
 }

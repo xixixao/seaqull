@@ -7,13 +7,14 @@ import { Row } from "ui/layout/Row";
 import * as Nodes from "graph/Nodes";
 import { only } from "js/Arrays";
 import React from "react";
-import { getColumnNames, getQuerySelectable, useNodeConfig } from "../sqlNodes";
-import SQLNodeUI from "../ui/SQLNodeUI";
+import { getColumnNames, getQuery, useNodeConfig } from "../sqlNodes";
+import SQLNodeUI, { useStandardControls } from "../ui/SQLNodeUI";
 import {
   aliasedExpressionList,
   joinList,
   suffixedExpressionList,
 } from "./sqlExpressions";
+import { SQLResultsTable } from "../results/SQLResultsTable";
 
 function OrderNode() {
   const node = useNode();
@@ -43,23 +44,18 @@ export const SQLOrderNodeConfig = {
   //   return false; // TODO
   // },
   emptyNodeData: empty,
+  useControls: useStandardControls,
   query(appState, node) {
     const sourceNode = only(Nodes.parents(appState, node));
     if (sourceNode == null) {
       return null;
     }
-    const fromQuery = getQuerySelectable(appState, sourceNode);
+    const fromQuery = getQuery(appState, sourceNode);
     if (!hasOrdered(node)) {
       return fromQuery;
     }
     return `SELECT * FROM  (${fromQuery})
     ORDER BY ${orderClause(node)}`;
-  },
-  queryAdditionalTables() {
-    return null;
-  },
-  querySelectable(appState, node) {
-    return SQLOrderNodeConfig.query(appState, node);
   },
   columnNames(appState, node) {
     const sourceNode = only(Nodes.parents(appState, node));
@@ -68,34 +64,45 @@ export const SQLOrderNodeConfig = {
     }
     return getColumnNames(appState, sourceNode);
   },
-  ColumnControl({ node, columnName }) {
-    const setNodeState = useSetNodeState(node);
+  Results({ appState, node }) {
     return (
-      <Row>
-        <Button
-          onClick={() => {
-            setNodeState((node) => {
-              updateColumnOrder(node, columnName);
-            });
-          }}
-        >
-          {(() => {
-            switch (columnState(node, columnName)) {
-              case "ASC":
-                return "▲";
-              case "DESC":
-                return "▼";
-              default:
-                return "-";
-            }
-          })()}
-        </Button>
-        <HorizontalSpace />
-        {columnName}
-      </Row>
+      <SQLResultsTable
+        appState={appState}
+        node={node}
+        getQuery={getQuery}
+        columnHeader={ColumnHeader}
+      />
     );
   },
 };
+
+function ColumnHeader({ node, columnName }) {
+  const setNodeState = useSetNodeState(node);
+  return (
+    <Row>
+      <Button
+        onClick={() => {
+          setNodeState((node) => {
+            updateColumnOrder(node, columnName);
+          });
+        }}
+      >
+        {(() => {
+          switch (columnState(node, columnName)) {
+            case "ASC":
+              return "▲";
+            case "DESC":
+              return "▼";
+            default:
+              return "-";
+          }
+        })()}
+      </Button>
+      <HorizontalSpace />
+      {columnName}
+    </Row>
+  );
+}
 
 function empty() {
   return { by: "" };

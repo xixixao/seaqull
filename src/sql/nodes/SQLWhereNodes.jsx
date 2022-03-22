@@ -4,8 +4,19 @@ import { useSetNodeState } from "seaqull/state";
 import * as Nodes from "graph/Nodes";
 import { only } from "js/Arrays";
 import React from "react";
-import { getColumnNames, getQuerySelectable, useNodeConfig } from "../sqlNodes";
-import SQLNodeUI from "../ui/SQLNodeUI";
+import {
+  getColumnNames,
+  getQuery,
+  isSelectingThisNode,
+  useNodeConfig,
+} from "../sqlNodes";
+import SQLNodeUI, { useStandardControls } from "../ui/SQLNodeUI";
+import {
+  SQLResultsTable,
+  SQLResultsTableWithRemainingRows,
+  SQLTableBody,
+} from "../results/SQLResultsTable";
+import { Column } from "ui/layout/Column";
 
 function WhereNode() {
   const node = useNode();
@@ -32,6 +43,7 @@ function WhereNode() {
 export const SQLWhereNodeConfig = {
   Component: WhereNode,
   emptyNodeData: empty,
+  useControls: useStandardControls,
   // hasProblem(appState, node) {
   //   return false; // TODO
   // },
@@ -40,28 +52,22 @@ export const SQLWhereNodeConfig = {
     if (sourceNode == null) {
       return null;
     }
-    const fromQuery = getQuerySelectable(appState, sourceNode);
+    const fromQuery = getQuery(appState, sourceNode);
     if (!hasFilter(node)) {
       return `SELECT * FROM (${fromQuery})`;
     }
     return `SELECT * FROM (${fromQuery}) WHERE ${nodeFilters(node)}`;
   },
-  queryAdditionalValues(appState, node) {
+  queryOtherRows(appState, node) {
     const sourceNode = only(Nodes.parents(appState, node));
     if (sourceNode == null) {
       return null;
     }
-    const fromQuery = getQuerySelectable(appState, sourceNode);
+    const fromQuery = getQuery(appState, sourceNode);
     if (!hasFilter(node)) {
       return null;
     }
     return `SELECT * FROM (${fromQuery}) WHERE NOT (${nodeFilters(node)})`;
-  },
-  queryAdditionalTables(appState, node) {
-    return null;
-  },
-  querySelectable(appState, node) {
-    return SQLWhereNodeConfig.query(appState, node);
   },
   columnNames(appState, node) {
     const sourceNode = only(Nodes.parents(appState, node));
@@ -70,8 +76,15 @@ export const SQLWhereNodeConfig = {
     }
     return getColumnNames(appState, sourceNode);
   },
-  ColumnControl({ columnName }) {
-    return columnName;
+  Results({ appState, node }) {
+    return (
+      <SQLResultsTableWithRemainingRows
+        appState={appState}
+        node={node}
+        getQuery={getQuery}
+        getQueryForRemainingRows={SQLWhereNodeConfig.queryOtherRows}
+      />
+    );
   },
 };
 

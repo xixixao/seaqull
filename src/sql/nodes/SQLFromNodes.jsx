@@ -2,7 +2,7 @@ import Input from "seaqull/Input";
 import { useNode } from "seaqull/react-flow/components/Nodes/wrapNode";
 import { useSetNodeState } from "seaqull/state";
 import { useNodeConfig } from "../sqlNodes";
-import SQLNodeUI from "../ui/SQLNodeUI";
+import SQLNodeUI, { useStandardControls } from "../ui/SQLNodeUI";
 
 function SQLFromNode() {
   const node = useNode();
@@ -28,19 +28,11 @@ function SQLFromNode() {
 
 export const SQLFromNodeConfig = {
   Component: SQLFromNode,
+  useControls: useStandardControls,
   emptyNodeData: empty,
   query(appState, node) {
     const name = nodeName(node);
     return name.length > 0 ? `SELECT * from ${name}` : null;
-  },
-  queryAdditionalTables(appState, node) {
-    return null;
-  },
-  querySelectable(appState, node) {
-    return SQLFromNodeConfig.query(appState, node);
-  },
-  ColumnControl({ columnName }) {
-    return columnName;
   },
 };
 

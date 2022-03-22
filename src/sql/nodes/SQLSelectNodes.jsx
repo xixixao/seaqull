@@ -7,9 +7,9 @@ import * as Nodes from "graph/Nodes";
 import * as Arrays from "js/Arrays";
 import { only } from "js/Arrays";
 import React from "react";
-import { getColumnNames, getQuerySelectable, useNodeConfig } from "../sqlNodes";
-import ColumnCheckbox from "../ui/ColumnCheckbox";
-import SQLNodeUI from "../ui/SQLNodeUI";
+import { getColumnNames, getQuery, useNodeConfig } from "../sqlNodes";
+import ColumnCheckbox from "../results/ColumnCheckbox";
+import SQLNodeUI, { useStandardControls } from "../ui/SQLNodeUI";
 import {
   aliasedExpressionList,
   aliasedToExpression,
@@ -19,6 +19,7 @@ import {
   joinList,
   stripTrailingComma,
 } from "./sqlExpressions";
+import { SQLResultsTable } from "../results/SQLResultsTable";
 
 function SelectNode() {
   const node = useNode();
@@ -44,6 +45,7 @@ function SelectNode() {
 export const SQLSelectNodeConfig = {
   Component: SelectNode,
   emptyNodeData: empty,
+  useControls: useStandardControls,
   useHasProblem() {
     const appState = useAppGraphContext();
     const node = useNode();
@@ -52,31 +54,7 @@ export const SQLSelectNodeConfig = {
   query(appState, node) {
     const sourceNode = only(Nodes.parents(appState, node));
     const fromQuery =
-      sourceNode == null ? null : getQuerySelectable(appState, sourceNode);
-    return sql(selected(node), fromQuery);
-  },
-  queryAdditionalTables(appState, node) {
-    const sourceNode = only(Nodes.parents(appState, node));
-    if (sourceNode == null) {
-      return null;
-    }
-    const fromQuery = getQuerySelectable(appState, sourceNode);
-    if (!hasSelected(node)) {
-      return null;
-    }
-    const otherColumns = Arrays.subtractSets(
-      getColumnNames(appState, sourceNode),
-      new Set(selectedExpressions(node).map(aliasedToName))
-    );
-    if (otherColumns.length === 0) {
-      return null;
-    }
-    return [sql(otherColumns.join(","), fromQuery)];
-  },
-  querySelectable(appState, node) {
-    const sourceNode = only(Nodes.parents(appState, node));
-    const fromQuery =
-      sourceNode == null ? null : getQuerySelectable(appState, sourceNode);
+      sourceNode == null ? null : getQuery(appState, sourceNode);
     return sql(
       selectedExpressions(node).map(aliasedToSelectable).join(","),
       fromQuery
@@ -91,27 +69,71 @@ export const SQLSelectNodeConfig = {
       ? new Set(selectedExpressions(node).map(aliasedToName))
       : getColumnNames(appState, sourceNode);
   },
-  ColumnControl({ node, columnName }) {
-    const setNodeState = useSetNodeState(node);
+  querySelected(appState, node) {
+    const sourceNode = only(Nodes.parents(appState, node));
+    const fromQuery =
+      sourceNode == null ? null : getQuery(appState, sourceNode);
+    return sql(selected(node), fromQuery);
+  },
+  queryUnselected(appState, node) {
+    const sourceNode = only(Nodes.parents(appState, node));
+    if (sourceNode == null) {
+      return null;
+    }
+    const fromQuery = getQuery(appState, sourceNode);
+    if (!hasSelected(node)) {
+      return null;
+    }
+    const otherColumns = Arrays.subtractSets(
+      getColumnNames(appState, sourceNode),
+      new Set(selectedExpressions(node).map(aliasedToName))
+    );
+    if (otherColumns.length === 0) {
+      return null;
+    }
+    return [sql(otherColumns.join(","), fromQuery)];
+  },
+  Results({ appState, node }) {
     return (
-      <Row align="center">
-        <ColumnCheckbox
-          checked={hasSelectedColumn(node, columnName)}
-          onChange={() => {
-            setNodeState((node) => {
-              toggleSelectedColumn(node, columnName);
-            });
-          }}
+      <>
+        <SQLResultsTable
+          appState={appState}
+          node={node}
+          getQuery={SQLSelectNodeConfig.querySelected}
+          columnHeader={ColumnHeader}
         />
-
-        <HorizontalSpace />
-        <HorizontalSpace />
-        {columnName}
-        <HorizontalSpace />
-      </Row>
+        <SQLResultsTable
+          appState={appState}
+          node={node}
+          getQuery={SQLSelectNodeConfig.queryUnselected}
+          columnHeader={ColumnHeader}
+          color={hasSelected(node) ? "$$secondary" : null}
+        />
+      </>
     );
   },
 };
+
+function ColumnHeader({ node, columnName }) {
+  const setNodeState = useSetNodeState(node);
+  return (
+    <Row align="center">
+      <ColumnCheckbox
+        checked={hasSelectedColumn(node, columnName)}
+        onChange={() => {
+          setNodeState((node) => {
+            toggleSelectedColumn(node, columnName);
+          });
+        }}
+      />
+
+      <HorizontalSpace />
+      <HorizontalSpace />
+      {columnName}
+      <HorizontalSpace />
+    </Row>
+  );
+}
 
 function empty() {
   return { selected: "" };

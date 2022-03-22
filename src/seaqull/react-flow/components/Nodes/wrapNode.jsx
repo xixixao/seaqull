@@ -18,7 +18,7 @@ import React, {
 import { DraggableCore } from "react-draggable";
 import * as Layout from "../../../Layout";
 import { useSetAppStateContext } from "../../../state";
-import { useStore, useStoreActions, useStoreState } from "../../store/hooks";
+import { useStore, useStoreState } from "../../store/hooks";
 import {
   useAddSelectedElements,
   useUpdateNodeDimensions,
@@ -48,7 +48,6 @@ export default function wrapNode(NodeComponent) {
     onMouseLeave,
     onContextMenu,
     onNodeDoubleClick,
-    onNodeDragStart,
     onNodeDrag,
     onNodeDragStop,
     style,
@@ -133,27 +132,20 @@ export default function wrapNode(NodeComponent) {
       }
       return (event) => onContextMenu(event, node);
     }, [onContextMenu, node]);
+
     const onDragStart = useCallback(
       (event) => {
-        onNodeDragStart?.(event, node);
         if (selectNodesOnDrag && isSelectable) {
           if (!selected) {
             // TODO: Remove multiSelectionActive from state and use event
             // props directly
-            addSelectedElements([node], event.metaKey);
+            addSelectedElements([Node.fake(id)], event.metaKey);
           }
         } else if (!selectNodesOnDrag && !selected && isSelectable) {
           addSelectedElements([]);
         }
       },
-      [
-        onNodeDragStart,
-        node,
-        selectNodesOnDrag,
-        isSelectable,
-        selected,
-        addSelectedElements,
-      ]
+      [selectNodesOnDrag, isSelectable, selected, addSelectedElements, id]
     );
     const onDrag = useCallback(
       (event, draggableData) => {
@@ -241,14 +233,10 @@ export default function wrapNode(NodeComponent) {
         // onDragStop also gets called when user just clicks on a node.
         // Because of that we set dragging to true inside the onDrag handler and handle the click here
 
-        // TODO: Dead code because we have "select on drag" and no onClick
-        // if (!isDragging) {
-        //   if (isSelectable && !selectNodesOnDrag && !selected) {
-        //     addSelectedElements([node]);
-        //   }
-        //   onClick?.(event, node);
-        //   return;
-        // }
+        if (!isDragging) {
+          addSelectedElements([Node.fake(id)], event.metaKey);
+          return;
+        }
         setAppState((appState) => {
           Nodes.selected(appState).forEach((node) => {
             Nodes.positionOf(appState, node).isDragging = false;
@@ -291,16 +279,7 @@ export default function wrapNode(NodeComponent) {
 
         // onNodeDragStop?.(event, node);
       },
-      [
-        setAppState,
-        //   node,
-        //   isSelectable,
-        //   selectNodesOnDrag,
-        //   onClick,
-        //   onNodeDragStop,
-        //   isDragging,
-        //   selected,
-      ]
+      [isDragging, setAppState, addSelectedElements, id]
     );
     const onNodeDoubleClickHandler = useCallback(
       (event) => {

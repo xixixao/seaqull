@@ -1,7 +1,8 @@
 import * as Nodes from "graph/Nodes";
 import * as Arrays from "js/Arrays";
-import { getColumnNames, getQuerySelectableOrNull } from "../sqlNodes";
-import SQLNodeUI from "../ui/SQLNodeUI";
+import { getColumnNames, getQuery, getQueryOrNull } from "../sqlNodes";
+import SQLNodeUI, { useStandardControls } from "../ui/SQLNodeUI";
+import { SQLResultsTableWithRemainingRows } from "../results/SQLResultsTable";
 
 function ExceptNode() {
   return <SQLNodeUI parentLimit={2}>EXCEPT</SQLNodeUI>;
@@ -10,6 +11,7 @@ function ExceptNode() {
 export const SQLExceptNodeConfig = {
   Component: ExceptNode,
   emptyNodeData: empty,
+  useControls: useStandardControls,
   hasProblem(appState, node) {
     return Nodes.parents(appState, node).length !== 2;
   },
@@ -18,14 +20,6 @@ export const SQLExceptNodeConfig = {
     const [a, b] = parents;
     return sql(appState, "EXCEPT", a, b);
   },
-  queryAdditionalValues(appState, node) {
-    const parents = Nodes.parents(appState, node);
-    const [a, b] = parents;
-    return sql(appState, "INTERSECT", a, b);
-  },
-  querySelectable(appState, node) {
-    return SQLExceptNodeConfig.query(appState, node);
-  },
   columnNames(appState, node) {
     const parent = Arrays.first(Nodes.parents(appState, node));
     if (parent == null) {
@@ -33,8 +27,20 @@ export const SQLExceptNodeConfig = {
     }
     return getColumnNames(appState, parent);
   },
-  ColumnControl({ columnName }) {
-    return columnName;
+  queryAdditionalValues(appState, node) {
+    const parents = Nodes.parents(appState, node);
+    const [a, b] = parents;
+    return sql(appState, "INTERSECT", a, b);
+  },
+  Results({ appState, node }) {
+    return (
+      <SQLResultsTableWithRemainingRows
+        appState={appState}
+        node={node}
+        getQuery={getQuery}
+        getQueryForRemainingRows={SQLExceptNodeConfig.queryAdditionalValues}
+      />
+    );
   },
 };
 
@@ -44,7 +50,7 @@ function empty() {
 
 function sql(appState, operator, a, b) {
   return `
-  ${getQuerySelectableOrNull(appState, a)}
+  ${getQueryOrNull(appState, a)}
   ${operator}
-  ${getQuerySelectableOrNull(appState, b)}`;
+  ${getQueryOrNull(appState, b)}`;
 }

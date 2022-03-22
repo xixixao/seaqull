@@ -4,11 +4,13 @@ import * as Nodes from "graph/Nodes";
 import * as Arrays from "js/Arrays";
 import {
   getColumnNames,
-  getQuerySelectableOrNull,
+  getQuery,
+  getQueryOrNull,
   useNodeConfig,
 } from "../sqlNodes";
 import Input from "seaqull/Input";
-import SQLNodeUI from "../ui/SQLNodeUI";
+import SQLNodeUI, { useStandardControls } from "../ui/SQLNodeUI";
+import { SQLResultsTable } from "../results/SQLResultsTable";
 
 function UnionNode() {
   const node = useNode();
@@ -35,6 +37,7 @@ function UnionNode() {
 export const SQLUnionNodeConfig = {
   Component: UnionNode,
   emptyNodeData: empty,
+  useControls: useStandardControls,
   useHasProblem() {
     const appState = useAppGraphContext();
     const node = useNode();
@@ -45,9 +48,6 @@ export const SQLUnionNodeConfig = {
     const [a, b] = parents;
     return sql(appState, nodeUnionType(node), a, b);
   },
-  querySelectable(appState, node) {
-    return SQLUnionNodeConfig.query(appState, node);
-  },
   columnNames(appState, node) {
     const parent = Arrays.first(Nodes.parents(appState, node));
     if (parent == null) {
@@ -55,8 +55,10 @@ export const SQLUnionNodeConfig = {
     }
     return getColumnNames(appState, parent);
   },
-  ColumnControl({ columnName }) {
-    return columnName;
+  Results({ appState, node }) {
+    return (
+      <SQLResultsTable appState={appState} node={node} getQuery={getQuery} />
+    );
   },
 };
 
@@ -74,7 +76,7 @@ function setUnionType(node, unionType) {
 
 function sql(appState, unionType, a, b) {
   return `
-  ${getQuerySelectableOrNull(appState, a)}
+  ${getQueryOrNull(appState, a)}
   UNION ${unionType}
-  ${getQuerySelectableOrNull(appState, b)}`;
+  ${getQueryOrNull(appState, b)}`;
 }

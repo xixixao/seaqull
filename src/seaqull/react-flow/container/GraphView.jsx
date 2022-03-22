@@ -24,7 +24,6 @@ export const GraphView = memo(function ({
   onNodeMouseMove,
   onNodeMouseLeave,
   onNodeContextMenu,
-  onNodeDragStart,
   onNodeDrag,
   onNodeDragStop,
   onSelectionDragStart,
@@ -233,7 +232,6 @@ export const GraphView = memo(function ({
         onNodeContextMenu={onNodeContextMenu}
         onNodeDragStop={onNodeDragStop}
         onNodeDrag={onNodeDrag}
-        onNodeDragStart={onNodeDragStart}
         selectNodesOnDrag={selectNodesOnDrag}
         snapToGrid={snapToGrid}
         snapGrid={snapGrid}

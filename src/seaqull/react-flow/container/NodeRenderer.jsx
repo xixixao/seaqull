@@ -96,7 +96,6 @@ export const NodeRenderer = memo(function (props) {
             onMouseLeave={props.onNodeMouseLeave}
             onContextMenu={props.onNodeContextMenu}
             onNodeDoubleClick={props.onNodeDoubleClick}
-            onNodeDragStart={props.onNodeDragStart}
             onNodeDrag={props.onNodeDrag}
             onNodeDragStop={props.onNodeDragStop}
             scale={transform[2]}

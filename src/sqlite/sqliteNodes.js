@@ -1,5 +1,6 @@
 import { SQLExceptNodeConfig } from "../sql/nodes/SQLExceptNodes";
 import { SQLIntersectNodeConfig } from "../sql/nodes/SQLIntersectNodes";
+import { SQLChartNodeConfig } from "../sql/nodes/SQLChartNodes";
 import { FromNodeConfig } from "./nodes/FromNodes";
 import { GroupNodeConfig } from "./nodes/GroupNodes";
 import { JoinNodeConfig } from "./nodes/JoinNodes";
@@ -18,4 +19,5 @@ export const NODE_CONFIGS = {
   union: UnionNodeConfig,
   except: SQLExceptNodeConfig,
   intersect: SQLIntersectNodeConfig,
+  chart: SQLChartNodeConfig,
 };

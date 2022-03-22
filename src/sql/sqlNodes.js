@@ -1,5 +1,6 @@
 import { invariant } from "js/invariant";
 import * as Maps from "js/Maps";
+import * as Nodes from "graph/Nodes";
 import { useNodeConfigs } from "./SQLNodeConfigsProvider";
 
 export const TIGHT_CHILD_NODES = Maps.from({
@@ -53,8 +54,12 @@ function getNodeConfig(context, node) {
 }
 
 export function useNodeConfig(node) {
+  return useGetNodeConfig()(node);
+}
+
+export function useGetNodeConfig() {
   const nodeConfigs = useNodeConfigs();
-  return getNodeConfig({ nodeConfigs }, node);
+  return (node) => getNodeConfig({ nodeConfigs }, node);
 }
 
 export function getResults(context, node) {
@@ -65,23 +70,11 @@ export function getQuery(context, node) {
   return getNodeConfig(context, node).query(context, node);
 }
 
-export function getQueryAdditionalTables(context, node) {
-  return getNodeConfig(context, node).queryAdditionalTables?.(context, node);
-}
-
-export function getQueryAdditionalValues(context, node) {
-  return getNodeConfig(context, node).queryAdditionalValues?.(context, node);
-}
-
-export function getQuerySelectable(context, node) {
-  return getNodeConfig(context, node).querySelectable(context, node);
-}
-
-export function getQuerySelectableOrNull(context, node) {
+export function getQueryOrNull(context, node) {
   if (node == null) {
     return null;
   }
-  return getNodeConfig(context, node).querySelectable(context, node);
+  return getQuery(context, node);
 }
 
 export function getColumnNames(context, node) {
@@ -90,4 +83,9 @@ export function getColumnNames(context, node) {
 
 export function getColumnControl(context, node) {
   return getNodeConfig(context, node).ColumnControl;
+}
+
+export function isSelectingThisNode(appState) {
+  const selected = Nodes.selected(appState);
+  return selected.length === 1;
 }
