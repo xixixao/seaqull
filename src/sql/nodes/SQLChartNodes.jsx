@@ -6,10 +6,6 @@ import SQLNodeUI from "../ui/SQLNodeUI";
 import { SQLResultsChart } from "../results/SQLResultsChart";
 
 function ChartNode() {
-  // const node = useNode();
-  // const filters = nodeFilters(node);
-  // const setNodeState = useSetNodeState(node);
-  // const orderExtensions = useNodeConfig(node).useWhereInputExtensions();
   return <SQLNodeUI parentLimit={1}>Chart</SQLNodeUI>;
 }
 
@@ -30,17 +26,5 @@ export const SQLChartNodeConfig = {
 };
 
 export function empty() {
-  return { filters: "" };
-}
-
-export function hasFilter(node) {
-  return nodeFilters(node).length > 0;
-}
-
-export function nodeFilters(node) {
-  return node.data.filters;
-}
-
-export function setFilters(node, filters) {
-  node.data.filters = filters;
+  return {};
 }

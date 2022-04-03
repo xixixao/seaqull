@@ -34,11 +34,9 @@ export const SQLIntersectNodeConfig = {
       UNION
       SELECT * FROM (${sql(appState, "EXCEPT", b, a)})`;
   },
-  Results({ appState, node }) {
+  Results() {
     return (
       <SQLResultsTableWithRemainingRows
-        appState={appState}
-        node={node}
         getQuery={getQuery}
         getQueryForRemainingRows={SQLIntersectNodeConfig.queryOuterRows}
       />

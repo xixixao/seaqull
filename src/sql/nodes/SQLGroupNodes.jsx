@@ -1,24 +1,20 @@
 import { DropdownMenuIcon } from "@modulz/radix-icons";
-import Input from "seaqull/Input";
-import { useNode } from "seaqull/react-flow/components/Nodes/wrapNode";
-import { useSetNodeState } from "seaqull/state";
-import { Box } from "ui/layout/Box";
-import { Button } from "ui/interactive/Button";
-import { Column } from "ui/layout/Column";
-import HorizontalSpace from "ui/layout/HorizontalSpace";
-import { IconButton } from "ui/interactive/IconButton";
-import { Row } from "ui/layout/Row";
-import ShowOnClick from "ui/interactions/ShowOnClick";
 import * as Nodes from "graph/Nodes";
 import * as Arrays from "js/Arrays";
 import { only } from "js/Arrays";
 import React from "react";
-import {
-  getColumnNames,
-  getQuery,
-  isSelectingThisNode,
-  useNodeConfig,
-} from "../sqlNodes";
+import Input from "seaqull/Input";
+import { useNode } from "seaqull/react-flow/components/Nodes/wrapNode";
+import { useSetNodeState } from "seaqull/state";
+import ShowOnClick from "ui/interactions/ShowOnClick";
+import { Button } from "ui/interactive/Button";
+import { IconButton } from "ui/interactive/IconButton";
+import { Box } from "ui/layout/Box";
+import { Column } from "ui/layout/Column";
+import HorizontalSpace from "ui/layout/HorizontalSpace";
+import { Row } from "ui/layout/Row";
+import { SQLResultsTables } from "../results/SQLResultsTable";
+import { getColumnNames, getQuery, useNodeConfig } from "../sqlNodes";
 import SQLNodeUI, { useStandardControls } from "../ui/SQLNodeUI";
 import {
   aliasedExpressionList,
@@ -29,7 +25,6 @@ import {
   joinList,
   stripTrailingComma,
 } from "./sqlExpressions";
-import { SQLResultsTable } from "../results/SQLResultsTable";
 
 function GroupNode() {
   const node = useNode();
@@ -84,7 +79,7 @@ export const SQLGroupNodeConfig = {
   },
   query(appState, node) {
     if (!hasGrouped(node)) {
-      return SQLGroupNodeConfig.query(appState, node);
+      return SQLGroupNodeConfig.queryGrouped(appState, node);
     }
     const sourceNode = only(Nodes.parents(appState, node));
     if (sourceNode == null) {
@@ -127,29 +122,19 @@ export const SQLGroupNodeConfig = {
     }
     return `SELECT ${otherColumns.join(",")} FROM (${fromQuery})`;
   },
-  Results({ appState, node }) {
-    const config = useNodeConfig(node);
-    if (!isSelectingThisNode(appState)) {
-      return (
-        <SQLResultsTable appState={appState} node={node} getQuery={getQuery} />
-      );
-    }
+  Results() {
     return (
-      <>
-        <SQLResultsTable
-          appState={appState}
-          node={node}
+      <SQLResultsTables getQuery={getQuery}>
+        <SQLResultsTables.Table
+          getQuery={SQLGroupNodeConfig.queryGrouped}
           columnHeader={GroupedColumnHeader}
-          getQuery={config.queryGrouped}
         />
-        <SQLResultsTable
-          appState={appState}
-          node={node}
-          getQuery={config.queryUngrouped}
+        <SQLResultsTables.Table
+          getQuery={SQLGroupNodeConfig.queryUngrouped}
           columnHeader={ChooseColumnHeader}
           color="$$secondary"
         />
-      </>
+      </SQLResultsTables>
     );
   },
 };

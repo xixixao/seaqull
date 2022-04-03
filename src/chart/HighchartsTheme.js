@@ -100,7 +100,7 @@ export const HighchartsTheme = {
   ".highcharts-tooltip-box": {
     strokeWidth: "$tooltip-border",
     fill: "$loContrast",
-    fillOpacity: 0.85,
+    // fillOpacity: 0.85,
   },
   ".highcharts-tooltip-box .highcharts-label-box": {
     fill: "$loContrast",

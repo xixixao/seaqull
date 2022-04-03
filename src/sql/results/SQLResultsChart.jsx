@@ -6,8 +6,8 @@ import { HighchartsTheme } from "../../chart/HighchartsTheme";
 import { getQuery } from "../sqlNodes";
 import { useExecuteSQLQuery } from "./useExecuteSQLQuery";
 
-export function SQLResultsChart({ appState, node }) {
-  const state = useExecuteSQLQuery(appState, node, getQuery);
+export function SQLResultsChart() {
+  const state = useExecuteSQLQuery(getQuery);
   const ref = useRef();
   if (state == null) {
     return null;
@@ -15,22 +15,35 @@ export function SQLResultsChart({ appState, node }) {
   if (state.error) {
     return state.error;
   }
+  const { columns, values } = state.table;
+
   // const size = useResizeHandler(ref);
   // const results = tables[0];
-  const xs = ["2012", "2013", "2014", "2015", "2016"];
+  // const xs = ["2012", "2013", "2014", "2015", "2016"];
   // .map(
   // (year) => new Date(Date.UTC(year))
   // );
-  const results = {
-    name: "Foo",
-    data: [
-      [2012, 2],
-      [2013, 1],
-      [2014, 5],
-      [2015, 4],
-      [2016, 3],
-    ].map(([year, y]) => [+new Date(Date.UTC(year)), y]),
-  };
+  // const results = {
+  //   name: "Foo",
+  //   data: [
+  //     [2012, 2],
+  //     [2013, 1],
+  //     [2014, 5],
+  //     [2015, 4],
+  //     [2016, 3],
+  //   ].map(([year, y]) => [+new Date(Date.UTC(year)), y]),
+  // };
+
+  // For now we're gonna assume that first column contains x values
+  // and second column contains y values
+  const series = [
+    {
+      name: columns[1],
+      data: values,
+    },
+  ];
+  const xAxisName = columns[0];
+  const categories = null; // values.map((row) => row[0]);
   return (
     <Box
       ref={ref}
@@ -52,8 +65,8 @@ export function SQLResultsChart({ appState, node }) {
           },
           title: { text: "" },
           xAxis: {
-            type: "datetime",
-            // categories: xs,
+            // type: "datetime",
+            categories,
             crosshair: true,
           },
           yAxis: {
@@ -61,7 +74,10 @@ export function SQLResultsChart({ appState, node }) {
               text: "",
             },
           },
-          series: [results],
+          tooltip: {
+            headerFormat: xAxisName + ": <b>{point.key}</b><br/>",
+          },
+          series,
           plotOptions: {
             series: {
               stickyTracking: false,

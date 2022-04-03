@@ -1,168 +1,86 @@
-import React, { memo, useState } from "react";
-import { Button } from "ui/interactive/Button";
-import { Box } from "ui/layout/Box";
-import HorizontalSpace from "ui/layout/HorizontalSpace";
-import { Row } from "ui/layout/Row";
+import React, { memo } from "react";
 import { styled } from "ui/styled/style";
-import { isSelectingThisNode } from "../sqlNodes";
-import { SQLDisplay } from "./SQLDisplay";
+import {
+  useIsThisOnlySelectedNode,
+  useSQLResultsNodeContext,
+} from "./SQLResults";
+import { SQLResultsTableOrQuery } from "./SQLResultsTableOrQuery";
 import { useExecuteSQLQuery } from "./useExecuteSQLQuery";
 
-export function SQLResultsTable({
-  appState,
-  node,
-  getQuery,
-  children,
-  columnHeader,
-  color,
-}) {
-  const state = useExecuteSQLQuery(appState, node, getQuery);
-  const [view, setView] = useState("table");
-  if (state == null) {
-    return null;
-  }
-  const controls = isSelectingThisNode(appState) ? (
-    <ResultsViewControls view={view} setView={setView} />
-  ) : null;
-  if (state.error != null) {
-    return <ResultsLayoutSQL controls={null} sql={state.error} />;
-  }
-  return view === "table" ? (
-    <ResultsLayoutTables
-      controls={controls}
-      table={
-        <ResultsTableLoaded
-          node={node}
-          state={state}
-          columnHeader={columnHeader}
-          color={color}
-        >
-          {children}
-        </ResultsTableLoaded>
-      }
-    />
-  ) : (
-    <ResultsLayoutSQL
-      controls={controls}
-      sql={
-        <SQLDisplay background="$slate2">
-          {
-            state.query
-            /* executedSql(state.query) */
-          }
-        </SQLDisplay>
-      }
-    />
+export function SQLResultsTable({ getQuery, columnHeader, color }) {
+  return (
+    <SQLResultsTableOrQuery getQuery={getQuery}>
+      <ResultsTable
+        getQuery={getQuery}
+        columnHeader={columnHeader}
+        color={color}
+      />
+    </SQLResultsTableOrQuery>
   );
 }
 
+export function SQLResultsTables({ getQuery, children }) {
+  const isThisOnlySelectedNode = useIsThisOnlySelectedNode();
+  return (
+    <SQLResultsTableOrQuery getQuery={getQuery}>
+      {isThisOnlySelectedNode ? children : <ResultsTable getQuery={getQuery} />}
+    </SQLResultsTableOrQuery>
+  );
+}
+SQLResultsTables.Table = ResultsTable;
+
 export function SQLResultsTableWithRemainingRows({
-  appState,
-  node,
   getQuery,
   getQueryForRemainingRows,
 }) {
-  if (!isSelectingThisNode(appState)) {
-    return (
-      <SQLResultsTable appState={appState} node={node} getQuery={getQuery} />
-    );
-  }
+  const isThisOnlySelectedNode = useIsThisOnlySelectedNode();
   return (
-    <SQLResultsTable appState={appState} node={node} getQuery={getQuery}>
-      <SQLTableBody
-        css={{ color: "$slate11" }}
-        appState={appState}
-        node={node}
-        getQuery={getQueryForRemainingRows}
-      />
-    </SQLResultsTable>
+    <SQLResultsTableOrQuery getQuery={getQuery}>
+      {isThisOnlySelectedNode ? (
+        <ResultsTable getQuery={getQuery}>
+          <RemainingRows
+            getQuery={getQueryForRemainingRows}
+            css={{ color: "$slate11" }}
+          />
+        </ResultsTable>
+      ) : (
+        <ResultsTable getQuery={getQuery} />
+      )}
+    </SQLResultsTableOrQuery>
   );
 }
 
-function ResultsLayoutTables({ table, controls, updated }) {
-  if (controls == null) {
-    return table;
-  }
-  return (
-    <>
-      {table}
-      <ButtonBarWrapper>{controls}</ButtonBarWrapper>
-    </>
-  );
-}
-
-function ResultsLayoutSQL({ sql, controls }) {
-  return (
-    <>
-      {sql}
-      <ButtonBarWrapper>{controls}</ButtonBarWrapper>
-    </>
-  );
-}
-
-function ButtonBarWrapper({ children }) {
-  return (
-    <>
-      <Box css={{ paddingLeft: "$8", flexGrow: 1 }}>
-        {/* // Rendered twice, to create correct scroll buffer space */}
-        <Row justify="end">{children}</Row>
-      </Box>
-      <Box
-        css={{
-          padding: "$8",
-          top: 0,
-          right: 0,
-          position: "absolute",
-          background: "$panel",
-          borderBottomLeftRadius: "$4",
-        }}
-      >
-        <Row justify="end">{children}</Row>
-      </Box>
-    </>
-  );
-}
-
-function ResultsViewControls({ view, setView }) {
-  return (
-    <>
-      <Button
-        disabled={view === "table"}
-        onClick={() => {
-          setView("table");
-        }}
-      >
-        Table
-      </Button>
-      <HorizontalSpace />
-      <Button
-        disabled={view === "chart"}
-        onClick={() => {
-          setView("chart");
-        }}
-      >
-        Chart
-      </Button>
-      <HorizontalSpace />
-      <Button
-        disabled={view === "sql"}
-        onClick={() => {
-          setView("sql");
-        }}
-      >
-        SQL
-      </Button>
-    </>
-  );
-}
-
-export function SQLTableBody({ appState, node, getQuery, css }) {
-  const state = useExecuteSQLQuery(appState, node, getQuery);
-  if (state == null || state.error != null) {
+function RemainingRows({ getQuery, css }) {
+  const state = useExecuteSQLQuery(getQuery);
+  if (state == null) {
     return null;
   }
-  const { values } = state.table;
-  return <TableBody css={css} values={values} />;
+  if (state.error != null) {
+    return null;
+  }
+  return <TableBodyRows css={css} values={state.table.values} />;
+}
+
+function ResultsTable({ columnHeader, color, getQuery, results, children }) {
+  const { node } = useSQLResultsNodeContext();
+  const state = useExecuteSQLQuery(getQuery);
+  if (state == null) {
+    return null;
+  }
+  if (state.error != null) {
+    return state.error;
+  }
+
+  return (
+    <ResultsTableLoaded
+      node={node}
+      state={state}
+      columnHeader={columnHeader}
+      color={color}
+    >
+      {children}
+    </ResultsTableLoaded>
+  );
 }
 
 const ResultsTableLoaded = memo(function ResultsTableLoaded({
@@ -205,7 +123,7 @@ const ResultsTableLoaded = memo(function ResultsTableLoaded({
           ))}
         </tr>
       </thead>
-      <TableBody values={values} />
+      <TableBodyRows values={values} />
       {children}
     </Table>
   );
@@ -215,7 +133,7 @@ function DefaultColumnHeader({ columnName }) {
   return columnName;
 }
 
-function TableBody({ css, values }) {
+function TableBodyRows({ css, values }) {
   return (
     <TBody css={css}>
       {values.map((row, j) => (

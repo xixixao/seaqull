@@ -1,14 +1,15 @@
+import * as Nodes from "graph/Nodes";
+import * as Arrays from "js/Arrays";
+import { only } from "js/Arrays";
+import React from "react";
 import Input from "seaqull/Input";
 import { useNode } from "seaqull/react-flow/components/Nodes/wrapNode";
 import { useAppGraphContext, useSetNodeState } from "seaqull/state";
 import HorizontalSpace from "ui/layout/HorizontalSpace";
 import { Row } from "ui/layout/Row";
-import * as Nodes from "graph/Nodes";
-import * as Arrays from "js/Arrays";
-import { only } from "js/Arrays";
-import React from "react";
-import { getColumnNames, getQuery, useNodeConfig } from "../sqlNodes";
 import ColumnCheckbox from "../results/ColumnCheckbox";
+import { SQLResultsTables } from "../results/SQLResultsTable";
+import { getColumnNames, getQuery, useNodeConfig } from "../sqlNodes";
 import SQLNodeUI, { useStandardControls } from "../ui/SQLNodeUI";
 import {
   aliasedExpressionList,
@@ -19,7 +20,6 @@ import {
   joinList,
   stripTrailingComma,
 } from "./sqlExpressions";
-import { SQLResultsTable } from "../results/SQLResultsTable";
 
 function SelectNode() {
   const node = useNode();
@@ -93,23 +93,19 @@ export const SQLSelectNodeConfig = {
     }
     return [sql(otherColumns.join(","), fromQuery)];
   },
-  Results({ appState, node }) {
+  Results() {
     return (
-      <>
-        <SQLResultsTable
-          appState={appState}
-          node={node}
+      <SQLResultsTables getQuery={getQuery}>
+        <SQLResultsTables.Table
           getQuery={SQLSelectNodeConfig.querySelected}
           columnHeader={ColumnHeader}
         />
-        <SQLResultsTable
-          appState={appState}
-          node={node}
+        <SQLResultsTables.Table
           getQuery={SQLSelectNodeConfig.queryUnselected}
           columnHeader={ColumnHeader}
-          color={hasSelected(node) ? "$$secondary" : null}
+          color="$$secondary"
         />
-      </>
+      </SQLResultsTables>
     );
   },
 };

@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { SQLDisplay } from "./SQLDisplay";
+import { useSQLResultsNodeContext } from "./SQLResults";
 import { useSQLResultsContext } from "./SQLResultsContext";
 
-export function useExecuteSQLQuery(appState, node, getQuery) {
+export function useExecuteSQLQuery(getQuery) {
+  const { appState, node } = useSQLResultsNodeContext();
   const { executeSQLQuery } = useSQLResultsContext();
   const [resultsState, setResultsState] = useState(null);
   // const [updated, setUpdated] = useState();
@@ -47,6 +49,13 @@ export function useExecuteSQLQuery(appState, node, getQuery) {
   return resultsState;
 }
 
+export function ignoreNoResults(results) {
+  if (results.table instanceof NoResultsError) {
+    return null;
+  }
+  return results;
+}
+
 export class ResultError {
   constructor(sql, error) {
     this.sql = sql;
@@ -57,6 +66,12 @@ export class ResultError {
 export class NoResultsError {
   constructor(sql) {
     this.sql = sql;
+  }
+}
+
+class ThrownDisplay {
+  constructor(element) {
+    this.element = element;
   }
 }
 
@@ -77,4 +92,23 @@ function errorDisplay(table) {
     );
   }
   return null;
+}
+
+export class ResultErrorDisplayBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { thrown: null };
+  }
+
+  static getDerivedStateFromError(thrown) {
+    return thrown instanceof ThrownDisplay ? { thrown } : {};
+  }
+
+  render() {
+    const { thrown } = this.state;
+    if (thrown != null) {
+      return thrown;
+    }
+    return this.props.children;
+  }
 }

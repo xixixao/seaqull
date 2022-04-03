@@ -1,22 +1,12 @@
-import Input from "seaqull/Input";
-import { useNode } from "seaqull/react-flow/components/Nodes/wrapNode";
-import { useSetNodeState } from "seaqull/state";
 import * as Nodes from "graph/Nodes";
 import { only } from "js/Arrays";
 import React from "react";
-import {
-  getColumnNames,
-  getQuery,
-  isSelectingThisNode,
-  useNodeConfig,
-} from "../sqlNodes";
+import Input from "seaqull/Input";
+import { useNode } from "seaqull/react-flow/components/Nodes/wrapNode";
+import { useSetNodeState } from "seaqull/state";
+import { SQLResultsTableWithRemainingRows } from "../results/SQLResultsTable";
+import { getColumnNames, getQuery, useNodeConfig } from "../sqlNodes";
 import SQLNodeUI, { useStandardControls } from "../ui/SQLNodeUI";
-import {
-  SQLResultsTable,
-  SQLResultsTableWithRemainingRows,
-  SQLTableBody,
-} from "../results/SQLResultsTable";
-import { Column } from "ui/layout/Column";
 
 function WhereNode() {
   const node = useNode();
@@ -76,11 +66,9 @@ export const SQLWhereNodeConfig = {
     }
     return getColumnNames(appState, sourceNode);
   },
-  Results({ appState, node }) {
+  Results() {
     return (
       <SQLResultsTableWithRemainingRows
-        appState={appState}
-        node={node}
         getQuery={getQuery}
         getQueryForRemainingRows={SQLWhereNodeConfig.queryOtherRows}
       />

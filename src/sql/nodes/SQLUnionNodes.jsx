@@ -55,10 +55,8 @@ export const SQLUnionNodeConfig = {
     }
     return getColumnNames(appState, parent);
   },
-  Results({ appState, node }) {
-    return (
-      <SQLResultsTable appState={appState} node={node} getQuery={getQuery} />
-    );
+  Results() {
+    return <SQLResultsTable getQuery={getQuery} />;
   },
 };
 

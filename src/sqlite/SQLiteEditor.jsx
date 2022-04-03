@@ -62,7 +62,7 @@ function Editor({
             <RelativeRow top center css={{ padding: "$12" }}>
               {topUI}
             </RelativeRow>
-            <RelativeRow top right css={{ padding: "$12" }}>
+            <RelativeRow align="center" top right css={{ padding: "$12" }}>
               {topRightUI}
               <ThemeToggle />
             </RelativeRow>
@@ -82,13 +82,15 @@ function DatabaseFileAndHelpButtons() {
   const source = useContext(SQLiteStateContext.source);
   return (
     <WelcomeDialog>
+      {source != null ? (
+        <DialogTrigger asChild>
+          <Button>{source.name}</Button>
+        </DialogTrigger>
+      ) : null}
       <DialogTrigger asChild>
-        <Row align="center">
-          {source != null ? <Button>{source.name}</Button> : null}
-          <IconButton>
-            <QuestionMarkIcon />
-          </IconButton>
-        </Row>
+        <IconButton>
+          <QuestionMarkIcon />
+        </IconButton>
       </DialogTrigger>
     </WelcomeDialog>
   );

@@ -1,6 +1,6 @@
-import { only } from "js/Arrays";
-import * as Nodes from "graph/Nodes";
 import * as Node from "graph/Node";
+import * as Nodes from "graph/Nodes";
+import { only } from "js/Arrays";
 import { useNode } from "seaqull/react-flow/components/Nodes/wrapNode";
 import { useSetNodeState } from "seaqull/state";
 import { Button } from "ui/interactive/Button";
@@ -9,10 +9,11 @@ import {
   setName,
   SQLFromNodeConfig,
 } from "../../sql/nodes/SQLFromNodes";
+import { useSQLResultsNodeContext } from "../../sql/results/SQLResults";
 import { SQLResultsTable } from "../../sql/results/SQLResultsTable";
+import { getQuery } from "../../sql/sqlNodes";
 import { useEditorConfig } from "../sqliteState";
 import { sqlite } from "./sqliteCompletions";
-import { getQuery } from "../../sql/sqlNodes";
 
 export const FromNodeConfig = {
   ...SQLFromNodeConfig,
@@ -28,16 +29,15 @@ export const FromNodeConfig = {
   columnNames(appState, node) {
     return new Set(appState.editorConfig.tableColumns(nodeName(node)));
   },
-  Results({ appState, node }) {
+  Results() {
+    const { appState, node } = useSQLResultsNodeContext();
     if (nodeName(node) === "") {
       if (!isOnlySelected(appState, node)) {
         return null;
       }
       return <SelectTable node={node} />;
     }
-    return (
-      <SQLResultsTable appState={appState} node={node} getQuery={getQuery} />
-    );
+    return <SQLResultsTable getQuery={getQuery} />;
   },
 };
 
@@ -53,7 +53,8 @@ function hasValidName(appState, node) {
   return appState.editorConfig.tableExists(nodeName(node)) != null;
 }
 
-function SelectTable({ node }) {
+function SelectTable() {
+  const { node } = useSQLResultsNodeContext();
   const { schema } = useEditorConfig();
   const setNodeState = useSetNodeState(node);
   const tableNames = Object.keys(schema);

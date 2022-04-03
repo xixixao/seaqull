@@ -7,13 +7,15 @@ import { styled } from "ui/styled/style";
 
 export function SQLDisplay({ background, label, children }) {
   return (
-    <Row css={{ padding: "$8" }}>
-      <Column css={{ background, padding: "$12", borderRadius: "$4" }}>
-        {label}
-        {label != null ? <VerticalSpace /> : null}
-        <SQL>{children}</SQL>
-      </Column>
-    </Row>
+    <div>
+      <Row css={{ padding: "$8" }}>
+        <Column css={{ background, padding: "$12", borderRadius: "$4" }}>
+          {label}
+          {label != null ? <VerticalSpace /> : null}
+          <SQL>{children}</SQL>
+        </Column>
+      </Row>
+    </div>
   );
 }
 

@@ -1,28 +1,27 @@
 import { DropdownMenuIcon } from "@modulz/radix-icons";
-import Input from "seaqull/Input";
-import { useNode } from "seaqull/react-flow/components/Nodes/wrapNode";
-import { useSetNodeState } from "seaqull/state";
-import { Button } from "ui/interactive/Button";
-import { Column } from "ui/layout/Column";
-import HorizontalSpace from "ui/layout/HorizontalSpace";
-import { IconButton } from "ui/interactive/IconButton";
-import { Row } from "ui/layout/Row";
-import ShowOnClick from "ui/interactions/ShowOnClick";
 import * as Nodes from "graph/Nodes";
 import * as Arrays from "js/Arrays";
 import { first, second } from "js/Arrays";
 import * as Objects from "js/Objects";
 import * as Sets from "js/Sets";
+import Input from "seaqull/Input";
+import { useNode } from "seaqull/react-flow/components/Nodes/wrapNode";
+import { useSetNodeState } from "seaqull/state";
+import ShowOnClick from "ui/interactions/ShowOnClick";
+import { Button } from "ui/interactive/Button";
+import { IconButton } from "ui/interactive/IconButton";
+import { Column } from "ui/layout/Column";
+import HorizontalSpace from "ui/layout/HorizontalSpace";
+import { Row } from "ui/layout/Row";
+import ColumnCheckbox from "../results/ColumnCheckbox";
+import { SQLResultsTables } from "../results/SQLResultsTable";
 import {
   getColumnNames,
   getQuery,
   getQueryOrNull,
-  isSelectingThisNode,
   useNodeConfig,
 } from "../sqlNodes";
-import ColumnCheckbox from "../results/ColumnCheckbox";
 import SQLNodeUI, { useStandardControls } from "../ui/SQLNodeUI";
-import { SQLResultsTable } from "../results/SQLResultsTable";
 
 function JoinNode() {
   const node = useNode();
@@ -119,18 +118,14 @@ export const SQLJoinNodeConfig = {
     // validParents(appState, node)
     // return (name ?? "").length > 0 ? `SELECT * from ${name}` : null;
   },
-  Results({ appState, node }) {
+  Results() {
     return (
-      <SQLResultsTable
-        appState={appState}
-        node={node}
-        getQuery={
-          isSelectingThisNode(appState)
-            ? SQLJoinNodeConfig.queryBothSides
-            : getQuery
-        }
-        columnHeader={ColumnHeader}
-      />
+      <SQLResultsTables getQuery={getQuery}>
+        <SQLResultsTables.Table
+          getQuery={SQLJoinNodeConfig.queryBothSides}
+          columnHeader={ColumnHeader}
+        />
+      </SQLResultsTables>
     );
   },
 };
@@ -329,7 +324,7 @@ function prefixed(index, columnName) {
 }
 
 function alias(index, columnName) {
-  return `${columnName}_${tableAlias(index)}`;
+  return `${tableAlias(index)}_${columnName}`;
 }
 
 function tableAlias(index) {

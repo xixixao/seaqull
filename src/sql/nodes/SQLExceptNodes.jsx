@@ -32,11 +32,9 @@ export const SQLExceptNodeConfig = {
     const [a, b] = parents;
     return sql(appState, "INTERSECT", a, b);
   },
-  Results({ appState, node }) {
+  Results() {
     return (
       <SQLResultsTableWithRemainingRows
-        appState={appState}
-        node={node}
         getQuery={getQuery}
         getQueryForRemainingRows={SQLExceptNodeConfig.queryAdditionalValues}
       />

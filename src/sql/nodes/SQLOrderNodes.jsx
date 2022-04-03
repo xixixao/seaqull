@@ -1,12 +1,18 @@
-import Input from "seaqull/Input";
-import { useNode } from "seaqull/react-flow/components/Nodes/wrapNode";
-import { useSetNodeState } from "seaqull/state";
-import { Button } from "ui/interactive/Button";
-import HorizontalSpace from "ui/layout/HorizontalSpace";
-import { Row } from "ui/layout/Row";
+import {
+  DashIcon,
+  TriangleDownIcon,
+  TriangleUpIcon,
+} from "@modulz/radix-icons";
 import * as Nodes from "graph/Nodes";
 import { only } from "js/Arrays";
 import React from "react";
+import Input from "seaqull/Input";
+import { useNode } from "seaqull/react-flow/components/Nodes/wrapNode";
+import { useSetNodeState } from "seaqull/state";
+import { IconButton } from "ui/interactive/IconButton";
+import HorizontalSpace from "ui/layout/HorizontalSpace";
+import { Row } from "ui/layout/Row";
+import { SQLResultsTable } from "../results/SQLResultsTable";
 import { getColumnNames, getQuery, useNodeConfig } from "../sqlNodes";
 import SQLNodeUI, { useStandardControls } from "../ui/SQLNodeUI";
 import {
@@ -14,7 +20,6 @@ import {
   joinList,
   suffixedExpressionList,
 } from "./sqlExpressions";
-import { SQLResultsTable } from "../results/SQLResultsTable";
 
 function OrderNode() {
   const node = useNode();
@@ -64,15 +69,8 @@ export const SQLOrderNodeConfig = {
     }
     return getColumnNames(appState, sourceNode);
   },
-  Results({ appState, node }) {
-    return (
-      <SQLResultsTable
-        appState={appState}
-        node={node}
-        getQuery={getQuery}
-        columnHeader={ColumnHeader}
-      />
-    );
+  Results() {
+    return <SQLResultsTable getQuery={getQuery} columnHeader={ColumnHeader} />;
   },
 };
 
@@ -80,7 +78,7 @@ function ColumnHeader({ node, columnName }) {
   const setNodeState = useSetNodeState(node);
   return (
     <Row>
-      <Button
+      <IconButton
         onClick={() => {
           setNodeState((node) => {
             updateColumnOrder(node, columnName);
@@ -90,14 +88,14 @@ function ColumnHeader({ node, columnName }) {
         {(() => {
           switch (columnState(node, columnName)) {
             case "ASC":
-              return "▲";
+              return <TriangleUpIcon />;
             case "DESC":
-              return "▼";
+              return <TriangleDownIcon />;
             default:
-              return "-";
+              return <DashIcon />;
           }
         })()}
-      </Button>
+      </IconButton>
       <HorizontalSpace />
       {columnName}
     </Row>

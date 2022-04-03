@@ -1,9 +1,19 @@
 import * as Nodes from "graph/Nodes";
 import { only } from "js/Arrays";
-import React, { Fragment } from "react";
+import React, { createContext, Fragment, useContext } from "react";
 import HorizontalSpace from "ui/layout/HorizontalSpace";
 import { Row } from "ui/layout/Row";
 import { useGetNodeConfig } from "../sqlNodes";
+
+const Context = createContext();
+export function useSQLResultsNodeContext() {
+  return useContext(Context);
+}
+
+export function useIsThisOnlySelectedNode() {
+  const { appState } = useSQLResultsNodeContext();
+  return only(Nodes.selected(appState)) != null;
+}
 
 export function SQLResults({ appState }) {
   const selected = Nodes.selected(appState);
@@ -14,6 +24,11 @@ export function SQLResults({ appState }) {
       : selected;
   // const singleSelectedNode = only(selected);
   const getConfig = useGetNodeConfig();
+  // const onlyShown = only(shown);
+  // if (onlyShown != null) {
+  //   const { OnlyResults, Results } = getConfig(node);
+  //   <Results node={onlyShown} appState={appState} />;
+  // }
   return (
     <Row
       css={{
@@ -31,7 +46,9 @@ export function SQLResults({ appState }) {
           });
         return (
           <Fragment key={i}>
-            <Temp node={node} appState={appState} />
+            <Context.Provider value={{ appState, node }}>
+              <Temp />
+            </Context.Provider>
             <HorizontalSpace />
             <HorizontalSpace />
           </Fragment>
