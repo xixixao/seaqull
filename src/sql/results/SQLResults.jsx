@@ -18,17 +18,14 @@ export function useIsThisOnlySelectedNode() {
 export function SQLResults({ appState }) {
   const selected = Nodes.selected(appState);
   const onlyLastSelected = only(Nodes.lastSelected(appState));
+  const getConfig = useGetNodeConfig();
+  if (selected.length > 2) {
+    return null;
+  }
   const shown =
     selected.length === 0 && onlyLastSelected != null
       ? [onlyLastSelected]
       : selected;
-  // const singleSelectedNode = only(selected);
-  const getConfig = useGetNodeConfig();
-  // const onlyShown = only(shown);
-  // if (onlyShown != null) {
-  //   const { OnlyResults, Results } = getConfig(node);
-  //   <Results node={onlyShown} appState={appState} />;
-  // }
   return (
     <Row
       css={{
