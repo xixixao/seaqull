@@ -1,3 +1,8 @@
-import { createContext } from "react";
+import { createContext, useContext } from "react";
 
-export const LayoutRequestContext = createContext();
+const LayoutRequestContext = createContext();
+
+export const LayourRequestProvider = LayoutRequestContext.Provider;
+export function useLayoutRequest() {
+  return useContext(LayoutRequestContext);
+}

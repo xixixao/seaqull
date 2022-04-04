@@ -13,21 +13,21 @@ import React, {
 } from "react";
 import * as History from "seaqull/History";
 import * as Layout from "seaqull/Layout";
+import { PaneControls } from "seaqull/react-flow/additional-components/PaneControls";
 import { useStore } from "seaqull/react-flow/store/hooks";
 import {
   AppStateContextProvider,
   useAppStateContext,
   useSetAppStateContext,
 } from "seaqull/state";
-import { PaneControls } from "seaqull/react-flow/additional-components/PaneControls";
 import { useEventListener } from "../react/useEventListener";
 import { useAppRedo, useAppUndo } from "./historyHooks";
 import { buildKeyMap } from "./keybindings";
-import { LayoutRequestContext } from "./layoutRequest";
+import { LayourRequestProvider } from "./layoutRequest";
 import { Background } from "./react-flow/additional-components/Background";
-import { ReactFlowProvider } from "./react-flow/container/ReactFlowProvider";
 import { BezierEdge } from "./react-flow/components/Edges/BezierEdge";
 import { ReactFlow } from "./react-flow/container/ReactFlow";
+import { ReactFlowProvider } from "./react-flow/container/ReactFlowProvider";
 import {
   mouseEventToRendererPosition,
   positionToRendererPosition,
@@ -79,7 +79,7 @@ function NodesPane({ nodeTypes, onKeyDown, onDoubleClick, children }) {
   const [mousePosition, mouseHandlers] = useMousePosition();
   useClipboardListeners(mousePosition);
   return (
-    <LayoutRequestContext.Provider value={onRequestLayout}>
+    <LayourRequestProvider value={onRequestLayout}>
       <ReactFlow
         {...mouseHandlers}
         nodeTypes={nodeTypes}
@@ -106,7 +106,7 @@ function NodesPane({ nodeTypes, onKeyDown, onDoubleClick, children }) {
         <div style={{ zIndex: 5 }}>{children}</div>
         <Background color="#aaa" gap={16} />
       </ReactFlow>
-    </LayoutRequestContext.Provider>
+    </LayourRequestProvider>
   );
 }
 
@@ -213,7 +213,9 @@ function useKeyListeners(onRequestLayout, onKeyDown) {
           if (event.key === "Alt") {
             appState.modes.alt = true;
           } else if (!handled) {
-            onRequestLayout(onKeyDown(appState, event));
+            if (onKeyDown != null) {
+              onRequestLayout(onKeyDown(appState, event));
+            }
           }
         });
       },

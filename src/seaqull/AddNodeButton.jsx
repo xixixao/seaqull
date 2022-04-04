@@ -4,26 +4,48 @@ import * as Edges from "graph/Edges";
 import * as Node from "graph/Node";
 import * as Nodes from "graph/Nodes";
 import { onlyWarns } from "js/Arrays";
-import { useContext } from "react";
-import { LayoutRequestContext } from "./layoutRequest";
+import { useLayoutRequest } from "./layoutRequest";
 import { useSetAppStateContext } from "./state";
 import { ButtonWithIcon } from "../ui/interactive/ButtonWithIcon";
+import { useRefEventListener } from "../react/useRefEventListener";
+import { useNodeUIProps } from "./react-flow/components/Nodes/wrapNode";
 
 export function AddNodeButton({ icon, children, onAdd }) {
-  const setAppState = useSetAppStateContext();
-  const onRequestLayout = useContext(LayoutRequestContext);
   return (
-    <ButtonWithIcon
-      icon={icon}
-      onClick={() => {
-        setAppState((appState) => {
-          onRequestLayout(onAdd(appState, appState.modes.alt));
-        });
-      }}
-    >
+    <ButtonWithIcon icon={icon} onClick={useAddNode(onAdd)}>
       {children}
     </ButtonWithIcon>
   );
+}
+
+export function AddNodeButtonWithKeyBinding({
+  keyBinding,
+  icon,
+  children,
+  onAdd,
+}) {
+  const addNode = useAddNode(onAdd);
+  const node = useNodeUIProps();
+  useRefEventListener(node.nodeElement, "keydown", (event) => {
+    if (event.code.substr(3, 1).toLowerCase() === keyBinding) {
+      addNode();
+    }
+  });
+  return (
+    <AddNodeButton icon={icon} onAdd={onAdd}>
+      {children}
+    </AddNodeButton>
+  );
+}
+
+function useAddNode(onAdd) {
+  const setAppState = useSetAppStateContext();
+  const onRequestLayout = useLayoutRequest();
+  return () => {
+    setAppState((appState) => {
+      onRequestLayout(onAdd(appState, appState.modes.alt));
+    });
+  };
 }
 
 // Adds to the first selected node, but language should ensure that only

@@ -36,10 +36,12 @@ export function SQLResultsChart() {
 
   // For now we're gonna assume that first column contains x values
   // and second column contains y values
+  const isDates = !isNaN(Date.parse(values[0][0]));
+  const xAxisType = isDates ? "datetime" : "linear";
   const series = [
     {
       name: columns[1],
-      data: values,
+      data: isDates ? values.map(([x, y]) => [Date.parse(x), y]) : values,
     },
   ];
   const xAxisName = columns[0];
@@ -65,7 +67,7 @@ export function SQLResultsChart() {
           },
           title: { text: "" },
           xAxis: {
-            // type: "datetime",
+            type: xAxisType,
             categories,
             crosshair: true,
           },

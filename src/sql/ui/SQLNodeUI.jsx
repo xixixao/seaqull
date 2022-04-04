@@ -2,6 +2,7 @@ import { PlusIcon, UpdateIcon } from "@modulz/radix-icons";
 import {
   addDetachedNode,
   AddNodeButton,
+  AddNodeButtonWithKeyBinding,
   addStandaloneNode,
   addTightNode,
   replaceDetachedNode,
@@ -110,14 +111,15 @@ function TightChildStepButtons({ action, icon }) {
   const nodeConfigs = useNodeConfigs();
   return (
     <>
-      {Arrays.map(TIGHT_CHILD_NODES, ({ label }, type) => (
+      {Arrays.map(TIGHT_CHILD_NODES, ({ label, key }, type) => (
         <Fragment key={type}>
-          <AddNodeButton
+          <AddNodeButtonWithKeyBinding
+            keyBinding={key}
             icon={icon}
             onAdd={action(getEmptyNode({ nodeConfigs }, type))}
           >
             {label}
-          </AddNodeButton>
+          </AddNodeButtonWithKeyBinding>
           <HorizontalSpace />
         </Fragment>
       ))}
@@ -128,12 +130,13 @@ function TightChildStepButtons({ action, icon }) {
 function AddChart() {
   const nodeConfigs = useNodeConfigs();
   return (
-    <AddNodeButton
+    <AddNodeButtonWithKeyBinding
+      keyBinding="c"
       icon={<PlusIcon />}
       onAdd={addTightNode(getEmptyNode({ nodeConfigs }, "chart"))}
     >
       Chart
-    </AddNodeButton>
+    </AddNodeButtonWithKeyBinding>
   );
 }
 
@@ -141,14 +144,15 @@ function MultipleParentStepButtons({ action, icon }) {
   const nodeConfigs = useNodeConfigs();
   return (
     <>
-      {Arrays.map(MULTIPLE_PARENT_NODES, ({ label }, type) => (
+      {Arrays.map(MULTIPLE_PARENT_NODES, ({ label, key }, type) => (
         <Fragment key={type}>
-          <AddNodeButton
+          <AddNodeButtonWithKeyBinding
+            keyBinding={key}
             icon={icon}
             onAdd={action(getEmptyNode({ nodeConfigs }, type))}
           >
             {label}
-          </AddNodeButton>
+          </AddNodeButtonWithKeyBinding>
           <HorizontalSpace />
         </Fragment>
       ))}
@@ -166,32 +170,6 @@ export function AddFromNodeButton() {
       FROM
     </AddNodeButton>
   );
-}
-
-const KEY_LOOKUP = new Map(
-  Arrays.map(TIGHT_CHILD_NODES, ({ key }, type) => [key, type])
-);
-
-export function addNodeFromKey(nodeConfigs) {
-  return (appState, event) => {
-    const selectedNode = Arrays.only(Nodes.selected(appState));
-    if (selectedNode == null) {
-      return;
-    }
-    const type = KEY_LOOKUP.get(
-      event.altKey ? event.code.substr(3, 1).toLowerCase() : event.key
-    );
-    if (type == null) {
-      return;
-    }
-    return addOrReplaceQueryStep(appState, nodeConfigs, type);
-  };
-}
-
-function addOrReplaceQueryStep(appState, nodeConfigs, type) {
-  return (
-    isShouldReplaceMode(appState.modes) ? replaceTightNode : addTightNode
-  )(getEmptyNode({ nodeConfigs }, type))(appState);
 }
 
 function isShouldReplaceMode(modes) {

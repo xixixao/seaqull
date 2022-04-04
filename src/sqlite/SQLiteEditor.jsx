@@ -8,10 +8,9 @@ import { Button } from "ui/interactive/Button";
 import { IconButton } from "ui/interactive/IconButton";
 import { RelativeColumn } from "ui/layout/RelativeColumn";
 import { RelativeRow } from "ui/layout/RelativeRow";
-import { Row } from "ui/layout/Row";
 import { SQLNodeConfigsProvider } from "../sql/SQLNodeConfigsProvider";
 import { getEmptyNode } from "../sql/sqlNodes";
-import { AddFromNodeButton, addNodeFromKey } from "../sql/ui/SQLNodeUI";
+import { AddFromNodeButton } from "../sql/ui/SQLNodeUI";
 import { ThemeProvider } from "../theme/useTheme";
 import { SplitView } from "../ui/layout/SplitView";
 import { NODE_CONFIGS } from "./sqliteNodes";
@@ -32,7 +31,6 @@ export function SQLiteEditor() {
           topUI={<AddFromNodeButton />}
           nodeTypes={NODE_TYPES}
           onDoubleClick={addFromNodeOnDoubleClick}
-          onKeyDown={addNodeFromKey(NODE_CONFIGS)}
         >
           <SQLiteLocalStorage />
           <SQLiteResults />
