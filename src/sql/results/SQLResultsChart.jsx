@@ -18,30 +18,14 @@ export function SQLResultsChart() {
   const { columns, values } = state.table;
 
   // const size = useResizeHandler(ref);
-  // const results = tables[0];
-  // const xs = ["2012", "2013", "2014", "2015", "2016"];
-  // .map(
-  // (year) => new Date(Date.UTC(year))
-  // );
-  // const results = {
-  //   name: "Foo",
-  //   data: [
-  //     [2012, 2],
-  //     [2013, 1],
-  //     [2014, 5],
-  //     [2015, 4],
-  //     [2016, 3],
-  //   ].map(([year, y]) => [+new Date(Date.UTC(year)), y]),
-  // };
 
   // For now we're gonna assume that first column contains x values
   // and second column contains y values
-  const isDates = !isNaN(Date.parse(values[0][0]));
-  const xAxisType = isDates ? "datetime" : "linear";
+  const xAxis = getXAxis({ columns, values });
   const series = [
     {
       name: columns[1],
-      data: isDates ? values.map(([x, y]) => [Date.parse(x), y]) : values,
+      data: values.map(([x, y]) => [xAxis.parse(x), y]),
     },
   ];
   const xAxisName = columns[0];
@@ -67,7 +51,7 @@ export function SQLResultsChart() {
           },
           title: { text: "" },
           xAxis: {
-            type: xAxisType,
+            type: xAxis.type,
             categories,
             crosshair: true,
           },
@@ -93,6 +77,22 @@ export function SQLResultsChart() {
         }}
       />
     </Box>
+  );
+}
+
+function getXAxis({ columns, values }) {
+  const isDates = isDateLike(values[0][0]);
+  const isNumerical = !isNaN(parseInt(values[0][0]));
+  const type = isDates ? "datetime" : isNumerical ? "linear" : "category";
+  const parse = isDates ? (x) => Date.parse(x) : (x) => x;
+  return { type, parse };
+}
+
+function isDateLike(string) {
+  return (
+    /(^\d{1,4}[.|\\/|-]\d{1,2}[.|\\/|-]\d{1,4})(\s*(?:0?[1-9]:[0-5]|1(?=[012])\d:[0-5])\d\s*[ap]m)?/.test(
+      string
+    ) && !isNaN(Date.parse(string))
   );
 }
 
