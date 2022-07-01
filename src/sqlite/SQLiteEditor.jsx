@@ -31,8 +31,8 @@ export function SQLiteEditor() {
           topUI={<AddFromNodeButton />}
           nodeTypes={NODE_TYPES}
           onDoubleClick={addFromNodeOnDoubleClick}
+          inContext={<SQLiteLocalStorage />}
         >
-          <SQLiteLocalStorage />
           <SQLiteResults />
         </Editor>
       </SQLiteStateProvider>
@@ -47,6 +47,7 @@ function Editor({
   onDoubleClick,
   onKeyDown,
   children,
+  inContext,
 }) {
   return (
     <ThemeProvider>
@@ -68,9 +69,9 @@ function Editor({
               <Seaqull.NodeEditor.PaneControls />
             </RelativeColumn>
           </Seaqull.NodeEditor>
-          <SQLiteResults />
+          {children}
         </SplitView>
-        <SQLiteLocalStorage />
+        {inContext}
       </Seaqull>
     </ThemeProvider>
   );

@@ -14,7 +14,7 @@ import {
 } from "./SQLResults";
 import { useSQLResultsContext } from "./SQLResultsContext";
 
-export function SQLResultsTableOrQuery({ getQuery, children }) {
+export function SQLResultsTableOrQueryWrapper({ getQuery, children }) {
   const isThisOnlySelectedNode = useIsThisOnlySelectedNode();
   if (!isThisOnlySelectedNode) {
     return children;

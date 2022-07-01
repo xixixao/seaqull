@@ -2,6 +2,7 @@ export const HighchartsTheme = {
   $$gridColor: "$colors$slate5",
   $$crosshairColor: "$colors$slate11",
   $$axisColor: "$colors$slate9",
+  $$dataLabelColor: "currentColor",
 
   ".highcharts-color-0": {
     fill: "$blue9",
@@ -131,10 +132,10 @@ export const HighchartsTheme = {
   ".highcharts-markers": { strokeWidth: "1px", stroke: "$background-color" },
   ".highcharts-point": { strokeWidth: "1px" },
   ".highcharts-dense-data .highcharts-point": { strokeWidth: 0 },
-  ".highcharts-data-label": { fontSize: "0.9em", fontWeight: "bold" },
+  // ".highcharts-data-label": { fontSize: "0.9em", fontWeight: "bold" },
   ".highcharts-data-label-box": { fill: "none", strokeWidth: 0 },
   ".highcharts-data-label text, text.highcharts-data-label": {
-    fill: "$data-label-color",
+    fill: "$$dataLabelColor",
   },
   ".highcharts-data-label-connector": { fill: "none" },
   ".highcharts-halo": { fillOpacity: 0.25, strokeWidth: 0 },

@@ -10,7 +10,7 @@ import {
 } from "../sqlNodes";
 import Input from "seaqull/Input";
 import SQLNodeUI, { useStandardControls } from "../ui/SQLNodeUI";
-import { SQLResultsTable } from "../results/SQLResultsTable";
+import { SQLResultsTableOrQuery } from "../results/SQLResultsTable";
 
 function UnionNode() {
   const node = useNode();
@@ -56,7 +56,7 @@ export const SQLUnionNodeConfig = {
     return getColumnNames(appState, parent);
   },
   Results() {
-    return <SQLResultsTable getQuery={getQuery} />;
+    return <SQLResultsTableOrQuery getQuery={getQuery} />;
   },
 };
 

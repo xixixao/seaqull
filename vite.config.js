@@ -15,5 +15,5 @@ export default defineConfig({
       ui: path.resolve(__dirname, "./src/ui"),
     },
   },
-  plugins: [react(), reactSvgPlugin()],
+  plugins: [react({ fastRefresh: false }), reactSvgPlugin()],
 });

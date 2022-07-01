@@ -4,6 +4,16 @@ import { useSetNodeState } from "seaqull/state";
 import { useNodeConfig } from "../sqlNodes";
 import SQLNodeUI, { useStandardControls } from "../ui/SQLNodeUI";
 
+export const SQLFromNodeConfig = {
+  Component: SQLFromNode,
+  useControls: useStandardControls,
+  emptyNodeData: empty,
+  query(appState, node) {
+    const name = nodeName(node);
+    return name.length > 0 ? `SELECT * from ${name}` : null;
+  },
+};
+
 function SQLFromNode() {
   const node = useNode();
   const name = nodeName(node);
@@ -25,16 +35,6 @@ function SQLFromNode() {
     </SQLNodeUI>
   );
 }
-
-export const SQLFromNodeConfig = {
-  Component: SQLFromNode,
-  useControls: useStandardControls,
-  emptyNodeData: empty,
-  query(appState, node) {
-    const name = nodeName(node);
-    return name.length > 0 ? `SELECT * from ${name}` : null;
-  },
-};
 
 function empty() {
   return { name: "" };

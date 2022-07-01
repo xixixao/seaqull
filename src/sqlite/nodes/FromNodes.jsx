@@ -10,7 +10,7 @@ import {
   SQLFromNodeConfig,
 } from "../../sql/nodes/SQLFromNodes";
 import { useSQLResultsNodeContext } from "../../sql/results/SQLResults";
-import { SQLResultsTable } from "../../sql/results/SQLResultsTable";
+import { SQLResultsTableOrQuery } from "../../sql/results/SQLResultsTable";
 import { getQuery } from "../../sql/sqlNodes";
 import { useEditorConfig } from "../sqliteState";
 import { sqlite } from "./sqliteCompletions";
@@ -37,7 +37,7 @@ export const FromNodeConfig = {
       }
       return <SelectTable node={node} />;
     }
-    return <SQLResultsTable getQuery={getQuery} />;
+    return <SQLResultsTableOrQuery getQuery={getQuery} />;
   },
 };
 

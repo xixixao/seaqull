@@ -1,8 +1,11 @@
+import { invariant } from "js/invariant";
 import { Children } from "react";
 import { Box } from "./Box";
 
 export function SplitView({ children }) {
-  const [first, second] = Children.toArray(children);
+  const childrenArray = Children.toArray(children);
+  invariant(childrenArray.length === 2, "Split view can have only 2 children");
+  const [first, second] = childrenArray;
   return (
     <Box
       css={{

@@ -12,7 +12,7 @@ import { useSetNodeState } from "seaqull/state";
 import { IconButton } from "ui/interactive/IconButton";
 import HorizontalSpace from "ui/layout/HorizontalSpace";
 import { Row } from "ui/layout/Row";
-import { SQLResultsTable } from "../results/SQLResultsTable";
+import { SQLResultsTableOrQuery } from "../results/SQLResultsTable";
 import { getColumnNames, getQuery, useNodeConfig } from "../sqlNodes";
 import SQLNodeUI, { useStandardControls } from "../ui/SQLNodeUI";
 import {
@@ -70,7 +70,9 @@ export const SQLOrderNodeConfig = {
     return getColumnNames(appState, sourceNode);
   },
   Results() {
-    return <SQLResultsTable getQuery={getQuery} columnHeader={ColumnHeader} />;
+    return (
+      <SQLResultsTableOrQuery getQuery={getQuery} columnHeader={ColumnHeader} />
+    );
   },
 };
 

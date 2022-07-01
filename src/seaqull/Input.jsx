@@ -39,6 +39,7 @@ import { codeMirrorStyles } from "./codeMirrorStyles";
 export default function Input({
   extensions,
   emptyDisplayValue,
+  emptyDisplayValueColor,
   autoFocus,
   label,
   value,
@@ -112,6 +113,7 @@ export default function Input({
     handleGivenValueChanged,
   });
   const isEmpty = isBlank(emptyDisplayValue ?? value);
+  const color = isBlank(value) ? emptyDisplayValueColor : null;
   return (
     <div style={{ display: "inline-block" }}>
       {label != null ? <Label>{label}</Label> : null}
@@ -121,6 +123,7 @@ export default function Input({
             borderWidth: "0 0 1px 0",
             minWidth: "100px",
             cursor: "text",
+            color,
           }}
           extensions={extensions}
           click={click}
@@ -143,6 +146,7 @@ export default function Input({
             borderWidth: isEmpty ? "0 0 1px 0" : "0",
             cursor: "pointer",
             minWidth: isEmpty ? "100px" : undefined,
+            color,
           }}
           extensions={extensions}
           ref={setEditorRef}

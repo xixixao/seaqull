@@ -101,13 +101,14 @@ export class ResultErrorDisplayBoundary extends React.Component {
   }
 
   static getDerivedStateFromError(thrown) {
-    return thrown instanceof ThrownDisplay ? { thrown } : {};
+    return { thrown };
+    // return thrown instanceof ThrownDisplay ? { thrown } : {};
   }
 
   render() {
     const { thrown } = this.state;
     if (thrown != null) {
-      return thrown;
+      return thrown.message;
     }
     return this.props.children;
   }

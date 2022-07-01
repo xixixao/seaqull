@@ -10,6 +10,13 @@ import {
   useEditorConfig,
 } from "../sqliteState";
 
+// TODO: I need to push this context around the whole editor
+// to be able to query data from inside the node editor
+// which I need for inferring chart type from inside
+// the chart nodes
+// The only thing to worry about is that now the context
+// value might have to be null before the db is loaded
+// but that's probably good to guard against in all situations
 export function SQLiteResults() {
   const appState = useAppGraphWithSelectionAndEditorConfig();
   const editorConfig = useEditorConfig();

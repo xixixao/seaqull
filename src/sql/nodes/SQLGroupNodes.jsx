@@ -36,6 +36,7 @@ function GroupNode() {
       GROUP BY{" "}
       <Input
         emptyDisplayValue="∅"
+        emptyDisplayValueColor="$slate11"
         extensions={groupByExtensions}
         value={groupedBy(node)}
         onChange={(groupedBy) => {

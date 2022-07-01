@@ -35,16 +35,15 @@ export function SQLResults({ appState }) {
       }}
     >
       {shown.map((node, i) => {
-        const { Results } = getConfig(node);
-        const Temp =
-          Results ??
+        const Results =
+          getConfig(node).Results ??
           (() => {
             return null;
           });
         return (
           <Fragment key={i}>
             <Context.Provider value={{ appState, node }}>
-              <Temp />
+              <Results />
             </Context.Provider>
             <HorizontalSpace />
             <HorizontalSpace />

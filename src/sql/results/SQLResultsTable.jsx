@@ -4,27 +4,27 @@ import {
   useIsThisOnlySelectedNode,
   useSQLResultsNodeContext,
 } from "./SQLResults";
-import { SQLResultsTableOrQuery } from "./SQLResultsTableOrQuery";
+import { SQLResultsTableOrQueryWrapper } from "./SQLResultsTableOrQueryWrapper";
 import { useExecuteSQLQuery } from "./useExecuteSQLQuery";
 
-export function SQLResultsTable({ getQuery, columnHeader, color }) {
+export function SQLResultsTableOrQuery({ getQuery, columnHeader, color }) {
   return (
-    <SQLResultsTableOrQuery getQuery={getQuery}>
+    <SQLResultsTableOrQueryWrapper getQuery={getQuery}>
       <ResultsTable
         getQuery={getQuery}
         columnHeader={columnHeader}
         color={color}
       />
-    </SQLResultsTableOrQuery>
+    </SQLResultsTableOrQueryWrapper>
   );
 }
 
 export function SQLResultsTables({ getQuery, children }) {
   const isThisOnlySelectedNode = useIsThisOnlySelectedNode();
   return (
-    <SQLResultsTableOrQuery getQuery={getQuery}>
+    <SQLResultsTableOrQueryWrapper getQuery={getQuery}>
       {isThisOnlySelectedNode ? children : <ResultsTable getQuery={getQuery} />}
-    </SQLResultsTableOrQuery>
+    </SQLResultsTableOrQueryWrapper>
   );
 }
 SQLResultsTables.Table = ResultsTable;
@@ -35,7 +35,7 @@ export function SQLResultsTableWithRemainingRows({
 }) {
   const isThisOnlySelectedNode = useIsThisOnlySelectedNode();
   return (
-    <SQLResultsTableOrQuery getQuery={getQuery}>
+    <SQLResultsTableOrQueryWrapper getQuery={getQuery}>
       {isThisOnlySelectedNode ? (
         <ResultsTable getQuery={getQuery}>
           <RemainingRows
@@ -46,7 +46,7 @@ export function SQLResultsTableWithRemainingRows({
       ) : (
         <ResultsTable getQuery={getQuery} />
       )}
-    </SQLResultsTableOrQuery>
+    </SQLResultsTableOrQueryWrapper>
   );
 }
 
@@ -59,6 +59,10 @@ function RemainingRows({ getQuery, css }) {
     return null;
   }
   return <TableBodyRows css={css} values={state.table.values} />;
+}
+
+export function SQLResultsTable({ getQuery }) {
+  return <ResultsTable getQuery={getQuery} />;
 }
 
 function ResultsTable({ columnHeader, color, getQuery, results, children }) {
