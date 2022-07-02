@@ -6,9 +6,10 @@ import Input from "seaqull/Input";
 import { useNode } from "seaqull/react-flow/components/Nodes/wrapNode";
 import { useAppGraphContext, useSetNodeState } from "seaqull/state";
 import HorizontalSpace from "ui/layout/HorizontalSpace";
+import { HorizontalSplitView } from "ui/layout/HorizontalSplitView";
 import { Row } from "ui/layout/Row";
 import ColumnCheckbox from "../results/ColumnCheckbox";
-import { SQLResultsTables } from "../results/SQLResultsTable";
+import { SQLResultsTable, SQLResultsTables } from "../results/SQLResultsTable";
 import { getColumnNames, getQuery, useNodeConfig } from "../sqlNodes";
 import SQLNodeUI, { useStandardControls } from "../ui/SQLNodeUI";
 import {
@@ -96,15 +97,17 @@ export const SQLSelectNodeConfig = {
   Results() {
     return (
       <SQLResultsTables getQuery={getQuery}>
-        <SQLResultsTables.Table
-          getQuery={SQLSelectNodeConfig.querySelected}
-          columnHeader={ColumnHeader}
-        />
-        <SQLResultsTables.Table
-          getQuery={SQLSelectNodeConfig.queryUnselected}
-          columnHeader={ColumnHeader}
-          color="$$secondary"
-        />
+        <HorizontalSplitView>
+          <SQLResultsTable
+            getQuery={SQLSelectNodeConfig.querySelected}
+            columnHeader={ColumnHeader}
+          />
+          <SQLResultsTable
+            getQuery={SQLSelectNodeConfig.queryUnselected}
+            columnHeader={ColumnHeader}
+            color="$$secondary"
+          />
+        </HorizontalSplitView>
       </SQLResultsTables>
     );
   },

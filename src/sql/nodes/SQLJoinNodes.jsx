@@ -14,7 +14,7 @@ import { Column } from "ui/layout/Column";
 import HorizontalSpace from "ui/layout/HorizontalSpace";
 import { Row } from "ui/layout/Row";
 import ColumnCheckbox from "../results/ColumnCheckbox";
-import { SQLResultsTables } from "../results/SQLResultsTable";
+import { SQLResultsTable, SQLResultsTables } from "../results/SQLResultsTable";
 import {
   getColumnNames,
   getQuery,
@@ -121,7 +121,7 @@ export const SQLJoinNodeConfig = {
   Results() {
     return (
       <SQLResultsTables getQuery={getQuery}>
-        <SQLResultsTables.Table
+        <SQLResultsTable
           getQuery={SQLJoinNodeConfig.queryBothSides}
           columnHeader={ColumnHeader}
         />
