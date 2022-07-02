@@ -8,6 +8,8 @@ import Input from "seaqull/Input";
 import { useNode } from "seaqull/react-flow/components/Nodes/wrapNode";
 import { useSetNodeState } from "seaqull/state";
 import { Box } from "ui/layout/Box";
+import HorizontalSpace from "ui/layout/HorizontalSpace";
+import { HorizontalSplitView } from "ui/layout/HorizontalSplitView";
 import { HighchartsTheme } from "../..//chart/HighchartsTheme";
 import { useAppGraphWithEditorConfig } from "../../sqlite/sqliteState";
 import {
@@ -46,10 +48,31 @@ export const SQLChartNodeConfig = {
     if (isThisOnlySelectedNode) {
       return (
         <>
-          <ResultErrorDisplayBoundary>
-            <SQLResultsChart />
-          </ResultErrorDisplayBoundary>
-          <SQLResultsTable getQuery={getQuery} />
+          <Box
+            css={{
+              height: "100%",
+              flex: "1 0 0",
+              minWidth: "50%",
+              borderRight: "1px solid $slate7",
+            }}
+          >
+            <ResultErrorDisplayBoundary>
+              <SQLResultsChart />
+            </ResultErrorDisplayBoundary>
+          </Box>
+          <HorizontalSpace />
+          <HorizontalSpace />
+          <Box
+            css={{
+              maxHeight: "100%",
+              overflow: "scroll",
+              flex: "1 0 0",
+              overflowX: "scroll",
+              maxWidth: "fit-content",
+            }}
+          >
+            <SQLResultsTable getQuery={getQuery} />
+          </Box>
         </>
       );
     }
@@ -178,10 +201,11 @@ function SQLResultsChart() {
   if (xAxis == null) {
     return `\`${defaultedDimension(appState, node)}\` is not a valid column`;
   }
+  const yAxis = getYAxis(appState, node, { columns, values });
   const series = [
     {
-      name: columns[1],
-      data: values.map(([x, y]) => [xAxis.parse(x), y]),
+      name: yAxis.name,
+      data: values.map((row) => [xAxis.parse(row), yAxis.parse(row)]),
     },
   ];
   console.log(series);
@@ -302,28 +326,32 @@ function chartOptions({ chart, xAxis, yAxis, plotOptions, ...rest }) {
   };
 }
 
-function dimensionIndex(appState, node, columns) {
-  const name = defaultedDimension(appState, node);
+function findColumnByName(columns, name) {
   return columns.findIndex((column) => column === name);
 }
 
-function defaultedDimension(appState, node) {
-  const chosenDimension = dimension(node);
-  return chosenDimension !== ""
-    ? chosenDimension
-    : dimensionDefault(appState, node);
-}
-
 function getXAxis(appState, node, { columns, values }) {
-  const index = dimensionIndex(appState, node, columns);
+  const index = findColumnByName(columns, defaultedDimension(appState, node));
   if (index === -1) {
     return null;
   }
   const isDates = isDateLike(values[index][0]);
   const isNumerical = !isNaN(parseInt(values[index][0]));
   const type = isDates ? "datetime" : isNumerical ? "linear" : "category";
-  const parse = isDates ? (x) => Date.parse(x) : (x) => x;
+  const parse = isDates ? (row) => Date.parse(row[index]) : (row) => row[index];
   return { type, parse, name: columns[index] };
+}
+
+function getYAxis(appState, node, { columns, values }) {
+  const index = findColumnByName(columns, defaultedMetric(appState, node));
+  if (index === -1) {
+    return null;
+  }
+  // const isDates = isDateLike(values[index][0]);
+  // const isNumerical = !isNaN(parseInt(values[index][0]));
+  // const type = isDates ? "datetime" : isNumerical ? "linear" : "category";
+  // const parse = isDates ? (x) => Date.parse(x) : (x) => x;
+  return { parse: (row) => row[index], name: columns[index] };
 }
 
 function isDateLike(string) {
@@ -370,6 +398,13 @@ function dimensionDefault(appState, node) {
   return parent != null ? Sets.first(getColumnNames(appState, parent)) : null;
 }
 
+function defaultedDimension(appState, node) {
+  const chosenDimension = dimension(node);
+  return chosenDimension !== ""
+    ? chosenDimension
+    : dimensionDefault(appState, node);
+}
+
 function breakdowns(node) {
   return node.data.breakdowns;
 }
@@ -381,6 +416,11 @@ function metrics(node) {
 function metricDefault(appState, node) {
   const parent = only(Nodes.parents(appState, node));
   return parent != null ? Sets.second(getColumnNames(appState, parent)) : null;
+}
+
+function defaultedMetric(appState, node) {
+  const chosenMetrics = metrics(node);
+  return chosenMetrics !== "" ? chosenMetrics : metricDefault(appState, node);
 }
 
 function chartType(node) {
