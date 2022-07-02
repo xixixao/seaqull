@@ -12,7 +12,7 @@ import { SQLNodeConfigsProvider } from "../sql/SQLNodeConfigsProvider";
 import { getEmptyNode } from "../sql/sqlNodes";
 import { AddFromNodeButton } from "../sql/ui/SQLNodeUI";
 import { ThemeProvider } from "../theme/useTheme";
-import { SplitView } from "../ui/layout/SplitView";
+import { VerticalSplitView } from "../ui/layout/VerticalSplitView";
 import { NODE_CONFIGS } from "./sqliteNodes";
 import { SQLiteStateContext, SQLiteStateProvider } from "./sqliteState";
 import { DialogTrigger } from "./ui/Dialog";
@@ -52,7 +52,7 @@ function Editor({
   return (
     <ThemeProvider>
       <Seaqull>
-        <SplitView>
+        <VerticalSplitView>
           <Seaqull.NodeEditor
             nodeTypes={nodeTypes}
             onDoubleClick={onDoubleClick}
@@ -70,7 +70,7 @@ function Editor({
             </RelativeColumn>
           </Seaqull.NodeEditor>
           {children}
-        </SplitView>
+        </VerticalSplitView>
         {inContext}
       </Seaqull>
     </ThemeProvider>

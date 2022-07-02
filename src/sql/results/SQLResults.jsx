@@ -7,6 +7,7 @@ import { Row } from "ui/layout/Row";
 import { useGetNodeConfig } from "../sqlNodes";
 import { Children } from "react";
 import { invariant } from "js/invariant";
+import { HorizontalSplitView } from "ui/layout/HorizontalSplitView";
 
 const Context = createContext();
 export function useSQLResultsNodeContext() {
@@ -60,38 +61,5 @@ function Result({ appState, node }) {
     <Context.Provider value={{ appState, node }}>
       <Results />
     </Context.Provider>
-  );
-}
-
-function HorizontalSplitView({ children }) {
-  const childrenArray = Children.toArray(children);
-  invariant(childrenArray.length === 2, "Split view can have only 2 children");
-  const [first, second] = childrenArray;
-  return (
-    <>
-      <Box
-        css={{
-          height: "fit-content",
-          flex: "1 0 0",
-          overflowX: "scroll",
-          maxWidth: "fit-content",
-          borderRight: "1px solid $slate7",
-        }}
-      >
-        {first}
-      </Box>
-      <HorizontalSpace />
-      <HorizontalSpace />
-      <Box
-        css={{
-          height: "fit-content",
-          flex: "1 0 0",
-          overflowX: "scroll",
-          maxWidth: "fit-content",
-        }}
-      >
-        {second}
-      </Box>
-    </>
   );
 }

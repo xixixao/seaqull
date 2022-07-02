@@ -71,23 +71,20 @@ function useTableQueryToggle() {
 
 function ButtonBarWrapper({ children }) {
   return (
-    <>
-      <Box css={{ paddingLeft: "$8", flexGrow: 1 }}>
-        {/* // Rendered twice, to create correct scroll buffer space */}
-        <Row justify="end">{children}</Row>
-      </Box>
-      <Box
-        css={{
-          padding: "$8",
-          top: 0,
-          right: 0,
-          position: "absolute",
-          background: "$panel",
-          borderBottomLeftRadius: "$4",
-        }}
-      >
-        <Row justify="end">{children}</Row>
-      </Box>
-    </>
+    <Box
+      css={{
+        padding: "$8",
+        top: -45,
+        right: 0,
+        position: "absolute",
+        background: "$panel",
+        borderTopLeftRadius: "$4",
+        borderLeft: "1px solid $slate7",
+        borderTop: "1px solid $slate7",
+        zIndex: "$aboveSelectedNodes",
+      }}
+    >
+      <Row justify="end">{children}</Row>
+    </Box>
   );
 }

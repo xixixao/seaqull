@@ -12,8 +12,9 @@ import { IconButton } from "ui/interactive/IconButton";
 import { Box } from "ui/layout/Box";
 import { Column } from "ui/layout/Column";
 import HorizontalSpace from "ui/layout/HorizontalSpace";
+import { HorizontalSplitView } from "ui/layout/HorizontalSplitView";
 import { Row } from "ui/layout/Row";
-import { SQLResultsTables } from "../results/SQLResultsTable";
+import { SQLResultsTable, SQLResultsTables } from "../results/SQLResultsTable";
 import { getColumnNames, getQuery, useNodeConfig } from "../sqlNodes";
 import SQLNodeUI, { useStandardControls } from "../ui/SQLNodeUI";
 import {
@@ -126,15 +127,17 @@ export const SQLGroupNodeConfig = {
   Results() {
     return (
       <SQLResultsTables getQuery={getQuery}>
-        <SQLResultsTables.Table
-          getQuery={SQLGroupNodeConfig.queryGrouped}
-          columnHeader={GroupedColumnHeader}
-        />
-        <SQLResultsTables.Table
-          getQuery={SQLGroupNodeConfig.queryUngrouped}
-          columnHeader={ChooseColumnHeader}
-          color="$$secondary"
-        />
+        <HorizontalSplitView>
+          <SQLResultsTable
+            getQuery={SQLGroupNodeConfig.queryGrouped}
+            columnHeader={GroupedColumnHeader}
+          />
+          <SQLResultsTable
+            getQuery={SQLGroupNodeConfig.queryUngrouped}
+            columnHeader={ChooseColumnHeader}
+            color="$$secondary"
+          />
+        </HorizontalSplitView>
       </SQLResultsTables>
     );
   },

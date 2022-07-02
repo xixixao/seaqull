@@ -10,7 +10,7 @@ import { useExecuteSQLQuery } from "./useExecuteSQLQuery";
 export function SQLResultsTableOrQuery({ getQuery, columnHeader, color }) {
   return (
     <SQLResultsTableOrQueryWrapper getQuery={getQuery}>
-      <ResultsTable
+      <SQLResultsTable
         getQuery={getQuery}
         columnHeader={columnHeader}
         color={color}
@@ -23,11 +23,14 @@ export function SQLResultsTables({ getQuery, children }) {
   const isThisOnlySelectedNode = useIsThisOnlySelectedNode();
   return (
     <SQLResultsTableOrQueryWrapper getQuery={getQuery}>
-      {isThisOnlySelectedNode ? children : <ResultsTable getQuery={getQuery} />}
+      {isThisOnlySelectedNode ? (
+        children
+      ) : (
+        <SQLResultsTable getQuery={getQuery} />
+      )}
     </SQLResultsTableOrQueryWrapper>
   );
 }
-SQLResultsTables.Table = ResultsTable;
 
 export function SQLResultsTableWithRemainingRows({
   getQuery,
@@ -37,14 +40,14 @@ export function SQLResultsTableWithRemainingRows({
   return (
     <SQLResultsTableOrQueryWrapper getQuery={getQuery}>
       {isThisOnlySelectedNode ? (
-        <ResultsTable getQuery={getQuery}>
+        <SQLResultsTable getQuery={getQuery}>
           <RemainingRows
             getQuery={getQueryForRemainingRows}
             css={{ color: "$slate11" }}
           />
-        </ResultsTable>
+        </SQLResultsTable>
       ) : (
-        <ResultsTable getQuery={getQuery} />
+        <SQLResultsTable getQuery={getQuery} />
       )}
     </SQLResultsTableOrQueryWrapper>
   );
@@ -61,11 +64,13 @@ function RemainingRows({ getQuery, css }) {
   return <TableBodyRows css={css} values={state.table.values} />;
 }
 
-export function SQLResultsTable({ getQuery }) {
-  return <ResultsTable getQuery={getQuery} />;
-}
-
-function ResultsTable({ columnHeader, color, getQuery, results, children }) {
+export function SQLResultsTable({
+  columnHeader,
+  color,
+  getQuery,
+  results,
+  children,
+}) {
   const { node } = useSQLResultsNodeContext();
   const state = useExecuteSQLQuery(getQuery);
   if (state == null) {
